@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TiffinTrack — Tiffin Subscription & Delivery Management</title>
+  <meta name="description" content="TiffinTrack helps PG and flat-based college students subscribe to local tiffin vendors, track deliveries, and manage meal plans." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- App Shell -->
+  <div id="app">
+
+    <!-- Top Navigation Bar (hidden on role switcher) -->
+    <nav id="navbar" class="navbar hidden" role="navigation" aria-label="Main navigation">
+      <div class="navbar-brand" onclick="currentRole && navigateTo(navConfig[currentRole][0].page)" style="cursor:pointer" role="button" tabindex="0" aria-label="TiffinTrack home">
+        <span class="brand-icon" aria-hidden="true">🍱</span>
+        <span class="brand-name">TiffinTrack</span>
+      </div>
+      <ul id="nav-links" class="nav-links" role="menubar"></ul>
+      <div class="navbar-right">
+        <span id="nav-role-badge" class="role-badge" aria-live="polite"></span>
+        <button id="btn-switch-role" class="btn btn-outline btn-sm" onclick="switchRole()" aria-label="Switch demo role">Switch Role</button>
+        <button class="hamburger" id="hamburger-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Demo mode banner -->
+    <div id="demo-banner" class="demo-banner hidden">
+      🎓 Demo Mode — Authentication simplified for academic prototype
+    </div>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="main-content" role="main" aria-live="polite">
+      <!-- Pages are injected here by app.js -->
+    </main>
+
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- Back to Top Button -->
+  <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top" title="Back to top">↑</button>
+
+  <!-- Scripts — order matters -->
+  <script src="/js/service.js"></script>
+  <script src="/js/pages/roleSwitcher.js"></script>
+  <script src="/js/pages/studentDashboard.js"></script>
+  <script src="/js/pages/findTiffin.js"></script>
+  <script src="/js/pages/vendorDetails.js"></script>
+  <script src="/js/pages/mySubscription.js"></script>
+  <script src="/js/pages/todayMeal.js"></script>
+  <script src="/js/pages/studentRatings.js"></script>
+  <script src="/js/pages/studentComplaints.js"></script>
+  <script src="/js/pages/vendorDashboard.js"></script>
+  <script src="/js/pages/vendorMealPlans.js"></script>
+  <script src="/js/pages/vendorMenu.js"></script>
+  <script src="/js/pages/vendorSubscribers.js"></script>
+  <script src="/js/pages/vendorDeliveries.js"></script>
+  <script src="/js/pages/vendorRatings.js"></script>
+  <script src="/js/pages/vendorComplaints.js"></script>
+  <script src="/js/pages/agentDashboard.js"></script>
+  <script src="/js/pages/agentDeliveries.js"></script>
+  <script src="/js/pages/agentHistory.js"></script>
+  <script src="/js/pages/adminDashboard.js"></script>
+  <script src="/js/pages/adminVendors.js"></script>
+  <script src="/js/pages/adminCustomers.js"></script>
+  <script src="/js/pages/adminComplaints.js"></script>
+  <script src="/js/pages/adminRatings.js"></script>
+  <script src="/js/pages/dbmsDemo.js"></script>
+  <!-- app.js must load last (it references all page functions) -->
+  <script src="/js/app.js"></script>
+
+</body>
+</html>
