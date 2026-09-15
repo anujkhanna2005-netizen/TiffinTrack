@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // TiffinTrack - Admin Vendors Page
 // public/js/pages/adminVendors.js
 // ============================================================
@@ -11,8 +11,8 @@ async function renderAdminVendors() {
 
     showContent(`
       <div class="page-header">
-        <h1>🏪 Vendors</h1>
-        <p>All registered vendors on the TiffinTrack platform</p>
+        <h1>🏪 Vendors Management</h1>
+        <p>Manage, approve, activate, suspend, or disable vendors on the TiffinTrack platform</p>
       </div>
 
       <div class="card">
@@ -20,7 +20,17 @@ async function renderAdminVendors() {
         <div class="table-wrapper">
           <table>
             <thead>
-              <tr><th>ID</th><th>Vendor Name</th><th>Location</th><th>Rating</th><th>Subscribers</th><th>Deliveries Today</th><th>Complaints</th><th>Status</th></tr>
+              <tr>
+                <th>ID</th>
+                <th>Vendor Name</th>
+                <th>Location</th>
+                <th>Rating</th>
+                <th>Subscribers</th>
+                <th>Deliveries Today</th>
+                <th>Complaints</th>
+                <th>Status</th>
+                <th>Admin Actions</th>
+              </tr>
             </thead>
             <tbody>
               ${vendors.map(v => `
@@ -36,7 +46,30 @@ async function renderAdminVendors() {
                       ${v.pending_complaints} pending
                     </span>
                   </td>
-                  <td><span class="badge badge-active">Active</span></td>
+                  <td>
+                    <span class="badge ${v.status === 'active' ? 'badge-active' : (v.status === 'suspended' ? 'badge-pending' : 'badge-cancelled')}">
+                      ${v.status ? (v.status.charAt(0).toUpperCase() + v.status.slice(1)) : 'Active'}
+                    </span>
+                  </td>
+                  <td>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                      ${v.status === 'active' ? `
+                        <button class="btn btn-outline btn-sm" style="color:var(--color-warning);border-color:var(--color-warning);padding:3px 8px;font-size:0.75rem"
+                          onclick="handleToggleVendorStatus('${v.vendor_id}', 'suspended', '${v.name}')">
+                          ⏸ Suspend
+                        </button>
+                      ` : `
+                        <button class="btn btn-outline btn-sm" style="color:var(--color-success);border-color:var(--color-success);padding:3px 8px;font-size:0.75rem"
+                          onclick="handleToggleVendorStatus('${v.vendor_id}', 'active', '${v.name}')">
+                          ✓ Activate
+                        </button>
+                      `}
+                      <button class="btn btn-outline btn-sm" style="color:var(--color-danger);border-color:var(--color-danger);padding:3px 8px;font-size:0.75rem"
+                        onclick="handleDeleteVendor('${v.vendor_id}', '${v.name}')">
+                        🗑 Disable
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               `).join('')}
             </tbody>
@@ -46,5 +79,28 @@ async function renderAdminVendors() {
     `);
   } catch (err) {
     showError('Failed to load vendors: ' + err.message);
+  }
+}
+
+async function handleToggleVendorStatus(vendorId, newStatus, vendorName) {
+  try {
+    await updateVendorStatus(vendorId, newStatus);
+    showToast('Status Updated', `${vendorName} is now ${newStatus}.`, 'success');
+    renderAdminVendors();
+  } catch (err) {
+    showToast('Error', err.message, 'error');
+  }
+}
+
+async function handleDeleteVendor(vendorId, vendorName) {
+  if (!confirm(`Are you sure you want to disable and unlist "${vendorName}" (${vendorId})? All active subscriptions will be cancelled.`)) {
+    return;
+  }
+  try {
+    await deleteVendor(vendorId);
+    showToast('Vendor Disabled', `${vendorName} has been deactivated.`, 'success');
+    renderAdminVendors();
+  } catch (err) {
+    showToast('Error', err.message, 'error');
   }
 }

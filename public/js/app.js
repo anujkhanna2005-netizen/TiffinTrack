@@ -1,59 +1,56 @@
-// ============================================================
-// TiffinTrack - App Router
+﻿// ============================================================
+// TiffinTrack - App Router & Auth Orchestrator
 // public/js/app.js
-//
-// Controls role selection, navigation, and page routing.
-// All state is fetched fresh from the API on each page load.
 // ============================================================
 
-// ---- ROLE TRACKING -----------------------------------------
-// Stores the currently selected role (null until chosen)
 let currentRole = null;
+let currentUser = null;
 
 // Navigation definitions per role
 const navConfig = {
   student: [
-    { label: 'Dashboard',      page: 'studentDashboard' },
-    { label: 'Find Tiffin',    page: 'findTiffin' },
-    { label: 'My Subscription',page: 'mySubscription' },
-    { label: "Today's Meal",   page: 'todayMeal' },
-    { label: 'Ratings',        page: 'studentRatings' },
-    { label: 'Complaints',     page: 'studentComplaints' }
+    { label: 'Dashboard',       page: 'studentDashboard' },
+    { label: 'Find Tiffin',     page: 'findTiffin' },
+    { label: 'My Subscription', page: 'mySubscription' },
+    { label: "Today's Meal",    page: 'todayMeal' },
+    { label: 'Ratings',         page: 'studentRatings' },
+    { label: 'Complaints',      page: 'studentComplaints' }
   ],
   vendor: [
-    { label: 'Dashboard',      page: 'vendorDashboard' },
-    { label: 'Meal Plans',     page: 'vendorMealPlans' },
-    { label: "Today's Menu",   page: 'vendorMenu' },
-    { label: 'Subscribers',    page: 'vendorSubscribers' },
-    { label: 'Deliveries',     page: 'vendorDeliveries' },
-    { label: 'Ratings',        page: 'vendorRatings' },
-    { label: 'Complaints',     page: 'vendorComplaints' }
+    { label: 'Dashboard',       page: 'vendorDashboard' },
+    { label: 'Meal Plans',      page: 'vendorMealPlans' },
+    { label: "Today's Menu",    page: 'vendorMenu' },
+    { label: 'Subscribers',     page: 'vendorSubscribers' },
+    { label: 'Deliveries',      page: 'vendorDeliveries' },
+    { label: 'Ratings',         page: 'vendorRatings' },
+    { label: 'Complaints',      page: 'vendorComplaints' }
   ],
   agent: [
-    { label: 'Dashboard',         page: 'agentDashboard' },
-    { label: "Today's Deliveries",page: 'agentDeliveries' },
-    { label: 'Delivery History',  page: 'agentHistory' }
+    { label: 'Dashboard',          page: 'agentDashboard' },
+    { label: "Today's Deliveries", page: 'agentDeliveries' },
+    { label: 'Delivery History',   page: 'agentHistory' }
   ],
   admin: [
-    { label: 'Dashboard',  page: 'adminDashboard' },
-    { label: 'Vendors',    page: 'adminVendors' },
-    { label: 'Customers',  page: 'adminCustomers' },
-    { label: 'Complaints', page: 'adminComplaints' },
-    { label: 'Ratings',    page: 'adminRatings' },
-    { label: 'DBMS Demo',  page: 'dbmsDemo' }
+    { label: 'Dashboard',   page: 'adminDashboard' },
+    { label: 'Vendors',     page: 'adminVendors' },
+    { label: 'Customers',   page: 'adminCustomers' },
+    { label: 'Complaints',  page: 'adminComplaints' },
+    { label: 'Ratings',     page: 'adminRatings' },
+    { label: 'DBMS Demo',   page: 'dbmsDemo' }
   ]
 };
 
 // Role display labels
 const roleLabels = {
   student: 'Student',
+  customer: 'Student',
   vendor:  'Vendor',
   agent:   'Delivery Agent',
-  admin:   'Admin'
+  delivery_agent: 'Delivery Agent',
+  admin:   'Administrator'
 };
 
-// ---- PAGE REGISTRY -----------------------------------------
-// Maps page name → render function (defined in pages/*.js)
+// Page registry
 const pages = {
   roleSwitcher:      renderRoleSwitcher,
   studentDashboard:  renderStudentDashboard,
@@ -81,16 +78,11 @@ const pages = {
   dbmsDemo:          renderDbmsDemo
 };
 
-// ---- NAVIGATION --------------------------------------------
-
-// Navigate to a page by name (and optional params)
 function navigateTo(pageName, params) {
-  // Highlight active nav link
   document.querySelectorAll('#nav-links a').forEach(a => {
     a.classList.toggle('active', a.dataset.page === pageName);
   });
 
-  // Call the page render function
   if (pages[pageName]) {
     pages[pageName](params);
   } else {
@@ -98,19 +90,14 @@ function navigateTo(pageName, params) {
   }
 }
 
-// Show HTML in main content area — with page fade transition
 function showContent(html) {
   const el = document.getElementById('main-content');
   el.innerHTML = html;
-  // Wrap first child in fade class
   if (el.firstElementChild) el.firstElementChild.classList.add('page-fade');
-  // Close mobile nav on page change
   closeMobileNav();
 }
 
-// Show a skeleton loading state (looks better than plain text)
 function showLoading(type) {
-  // type: 'cards' | 'table' | 'default'
   let skeleton = '';
   if (type === 'cards') {
     skeleton = `
@@ -164,33 +151,26 @@ function showLoading(type) {
   document.getElementById('main-content').innerHTML = skeleton;
 }
 
-// Show an error message
 function showError(msg) {
   showContent('<div class="main-content"><div class="alert alert-error">' + msg + '</div></div>');
 }
 
-// ---- ROLE SELECTION ----------------------------------------
+// ---- AUTH & SESSION MANAGEMENT ------------------------------
 
-// Called when user clicks a role button on the switcher screen
-function selectRole(role) {
-  currentRole = role;
+function setupAuthenticatedView(role, user) {
+  const normRole = role === 'customer' ? 'student' : (role === 'delivery_agent' ? 'agent' : role);
+  currentRole = normRole;
+  currentUser = user;
 
-  // Show navbar and demo banner
   document.getElementById('navbar').classList.remove('hidden');
-  document.getElementById('demo-banner').classList.remove('hidden');
+  document.getElementById('nav-role-badge').textContent = roleLabels[normRole] || normRole;
 
-  // Set role badge
-  document.getElementById('nav-role-badge').textContent = roleLabels[role];
+  buildNav(normRole);
 
-  // Build navigation links
-  buildNav(role);
-
-  // Navigate to the default dashboard for this role
-  const defaultPage = navConfig[role][0].page;
+  const defaultPage = navConfig[normRole] ? navConfig[normRole][0].page : 'studentDashboard';
   navigateTo(defaultPage);
 }
 
-// Build navigation links for the given role
 function buildNav(role) {
   const nav   = navConfig[role] || [];
   const links = document.getElementById('nav-links');
@@ -199,56 +179,63 @@ function buildNav(role) {
   ).join('');
 }
 
-// Switch role back to role switcher
-function switchRole() {
+async function handleLogout() {
   currentRole = null;
+  currentUser = null;
+  try {
+    if (typeof authLogout === 'function') {
+      await authLogout();
+    }
+  } catch (e) {}
   document.getElementById('navbar').classList.add('hidden');
-  document.getElementById('demo-banner').classList.add('hidden');
   navigateTo('roleSwitcher');
+}
+
+// Backward compatibility helper
+function selectRole(role) {
+  const normRole = role === 'customer' ? 'student' : (role === 'delivery_agent' ? 'agent' : role);
+  setupAuthenticatedView(normRole, { role: normRole });
+}
+
+function switchRole() {
+  handleLogout();
 }
 
 // ---- HELPERS -----------------------------------------------
 
-// Render star display (e.g. "★★★★☆")
 function renderStars(rating) {
   if (!rating) return '<span class="text-muted">—</span>';
   const full  = Math.floor(rating);
   const empty = 5 - full;
   return '<span class="stars">' + '★'.repeat(full) + '☆'.repeat(empty) + '</span> ' +
-         '<span style="font-size:0.85rem;color:var(--color-text-muted)">' + rating.toFixed(1) + '</span>';
+         '<span style="font-size:0.85rem;color:var(--color-text-muted)">' + Number(rating).toFixed(1) + '</span>';
 }
 
-// Format delivery status to a readable badge
 function deliveryStatusBadge(status) {
   const labels = {
     pending:          'Preparing',
     out_for_delivery: 'Out for Delivery',
-    delivered:        'Delivered'
+    delivered:        'Delivered',
+    skipped:          'Skipped'
   };
   return `<span class="badge badge-${status}">${labels[status] || status}</span>`;
 }
 
-// Format a date string to readable format
 function formatDate(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
   return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-// Format INR
 function formatINR(amount) {
   return '₹' + Number(amount).toLocaleString('en-IN');
 }
 
-// Close any open modal
 function closeModal() {
   const overlay = document.getElementById('modal-overlay');
   if (overlay) overlay.remove();
 }
 
-// ---- TOAST SYSTEM ------------------------------------------
-// showToast(title, message, type)
-// type: 'success' | 'error' | 'info' | 'warning'
 function showToast(title, message, type) {
   type = type || 'info';
   const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
@@ -263,9 +250,11 @@ function showToast(title, message, type) {
       <button class="toast-close" onclick="dismissToast('${id}')" aria-label="Dismiss notification">&times;</button>
     </div>
   `;
-  document.getElementById('toast-container').insertAdjacentHTML('beforeend', html);
-  // Auto dismiss after 4 seconds
-  setTimeout(() => dismissToast(id), 4000);
+  const container = document.getElementById('toast-container');
+  if (container) {
+    container.insertAdjacentHTML('beforeend', html);
+    setTimeout(() => dismissToast(id), 4000);
+  }
 }
 
 function dismissToast(id) {
@@ -275,14 +264,12 @@ function dismissToast(id) {
   setTimeout(() => el.remove(), 260);
 }
 
-// ---- BACK TO TOP -------------------------------------------
 window.addEventListener('scroll', () => {
   const btn = document.getElementById('back-to-top');
   if (!btn) return;
   btn.classList.toggle('visible', window.scrollY > 300);
 });
 
-// ---- MOBILE NAV --------------------------------------------
 function toggleMobileNav() {
   const nav = document.getElementById('nav-links');
   const btn = document.getElementById('hamburger-btn');
@@ -298,8 +285,14 @@ function closeMobileNav() {
   if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
 }
 
-// ---- INIT --------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
-  // Start at the role switcher
+// Check existing session on load
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const data = await getAuthMe();
+    if (data && data.user) {
+      setupAuthenticatedView(data.user.role, data.user);
+      return;
+    }
+  } catch (e) {}
   navigateTo('roleSwitcher');
 });

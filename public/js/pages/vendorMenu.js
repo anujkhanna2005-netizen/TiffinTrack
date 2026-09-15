@@ -3,12 +3,14 @@
 // public/js/pages/vendorMenu.js
 // ============================================================
 
-const VENDOR_ID = 'V001'; // Demo vendor
+let currentVendorId = null;
 
 async function renderVendorMenu() {
   showLoading();
   try {
-    const menu = await getVendorMenu(VENDOR_ID);
+    const data = await getVendorData();
+    currentVendorId = data.vendor ? data.vendor.vendor_id : null;
+    const menu = await getVendorMenu(currentVendorId);
     renderMenuPage(menu);
   } catch (err) {
     showError('Failed to load menu: ' + err.message);
@@ -116,7 +118,7 @@ async function handleAddMenuItem() {
   btn.textContent = 'Adding...';
 
   try {
-    const result = await addMenuItem(VENDOR_ID, name, category, quantity);
+    const result = await addMenuItem(currentVendorId, name, category, quantity);
     alertDiv.innerHTML = '<div class="alert alert-success">✅ Item added!</div>';
     document.getElementById('item-name').value = '';
     document.getElementById('item-quantity').value = '';
@@ -132,7 +134,7 @@ async function handleAddMenuItem() {
 async function handleDeleteMenuItem(itemId) {
   if (!confirm('Delete this menu item?')) return;
   try {
-    await deleteMenuItem(VENDOR_ID, itemId);
+    await deleteMenuItem(currentVendorId, itemId);
     const row = document.getElementById('row-' + itemId);
     if (row) row.remove();
     const alertDiv = document.getElementById('menu-alert');
@@ -147,7 +149,7 @@ async function handlePublishMenu() {
   btn.disabled = true;
   btn.textContent = 'Publishing...';
   try {
-    await publishMenu(VENDOR_ID);
+    await publishMenu(currentVendorId);
     showToast("✅ Menu published! Students can now see today's menu.", 'success');
     const alertDiv = document.getElementById('menu-alert');
     if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-success">✅ Menu published! Students can now see today\'s menu.</div>';

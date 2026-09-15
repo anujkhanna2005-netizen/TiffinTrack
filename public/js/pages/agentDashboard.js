@@ -12,10 +12,15 @@ async function renderAgentDashboard() {
     const onRoute    = deliveries.filter(d => d.status === 'out_for_delivery').length;
     const delivered  = deliveries.filter(d => d.status === 'delivered').length;
 
+    const agentName = (currentUser && (currentUser.name || currentUser.email)) || 'Agent';
+    const agentZone = (currentUser && (currentUser.locality || (currentUser.profile && currentUser.profile.assigned_locality))) || 'Campus & Surrounding Area';
+    const agentPhone = (currentUser && (currentUser.phone || (currentUser.profile && currentUser.profile.phone))) || '—';
+    const agentId = (currentUser && (currentUser.agent_id || (currentUser.profile && currentUser.profile.agent_id))) || 'A001';
+
     showContent(`
       <div class="page-header">
         <h1>🛵 Agent Dashboard</h1>
-        <p>Welcome, Amit Kumar &nbsp;|&nbsp; Zone: Koramangala / HSR Layout</p>
+        <p>Welcome, ${agentName} &nbsp;|&nbsp; Zone: ${agentZone}</p>
       </div>
 
       <div class="stat-grid">
@@ -58,9 +63,9 @@ async function renderAgentDashboard() {
       <div class="card" style="margin-top:20px">
         <div class="card-title"><span class="icon">ℹ️</span> Agent Info</div>
         <div style="font-size:0.875rem;color:var(--color-text-muted);display:flex;gap:24px;flex-wrap:wrap">
-          <div>👤 Amit Kumar &nbsp;(A001)</div>
-          <div>📍 Zone: Koramangala / HSR Layout</div>
-          <div>📞 9700001001</div>
+          <div>👤 ${agentName} &nbsp;(${agentId})</div>
+          <div>📍 Zone: ${agentZone}</div>
+          <div>📞 ${agentPhone}</div>
         </div>
       </div>
     `);
