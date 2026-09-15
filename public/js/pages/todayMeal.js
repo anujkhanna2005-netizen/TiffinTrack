@@ -30,19 +30,9 @@ async function renderTodayMeal() {
 
     showContent(`
       <div class="page-header">
-        <h1>🍽️ Today's Meal</h1>
+        <h1>🍽️ Today's Menu</h1>
         <p>${subscription.vendor.name} • ${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </div>
-
-      <!-- Delivery Status (Vendor Handled) -->
-      ${todayDelivery ? `
-      <div class="card" style="margin-bottom:20px">
-        <div class="card-title" style="margin-bottom:12px"><span class="icon">🍱</span> Meal Preparation & Delivery Status</div>
-        ${renderDeliveryTracker(todayDelivery.status)}
-        <p style="text-align:center;font-size:0.85rem;color:var(--color-text-muted);margin-top:12px">
-          ${getDeliveryStatusText(todayDelivery.status)}
-        </p>
-      </div>` : ''}
 
       <!-- Menu -->
       <div class="card" style="margin-bottom:20px">

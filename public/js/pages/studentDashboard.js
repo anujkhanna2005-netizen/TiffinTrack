@@ -47,9 +47,9 @@ async function renderStudentDashboard() {
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Today's Delivery</div>
+          <div class="stat-label">Subscription Status</div>
           <div class="stat-value" style="font-size:1rem;margin-top:6px">
-            ${todayDelivery ? deliveryStatusBadge(todayDelivery.status) : '<span style="color:var(--color-text-muted);font-size:0.85rem">No delivery today</span>'}
+            ${subscription ? '<span class="badge badge-active">Active</span>' : '<span style="color:var(--color-text-muted);font-size:0.85rem">No plan</span>'}
           </div>
         </div>
       </div>
@@ -63,16 +63,9 @@ async function renderStudentDashboard() {
 
         <!-- Today's Meal Card -->
         <div class="card" id="meal-card">
-          <div class="card-title"><span class="icon">🍽️</span> Today's Meal</div>
-          ${todayDelivery ? renderTodayMealCard(todayDelivery) : '<div class="empty-state"><div class="empty-icon">🍽️</div><p>No meal delivery scheduled for today.</p><p class="mt-8 text-small text-muted">Subscribe to a plan to get daily meals.</p></div>'}
+          <div class="card-title"><span class="icon">🍽️</span> Today's Menu</div>
+          ${subscription ? renderTodayMealCard(subscription) : '<div class="empty-state"><div class="empty-icon">🍽️</div><p>No active subscription for today.</p><p class="mt-8 text-small text-muted">Subscribe to a plan to see menus.</p></div>'}
         </div>
-
-        <!-- Delivery Status Card -->
-        ${todayDelivery ? `
-        <div class="card">
-          <div class="card-title"><span class="icon">🛵</span> Delivery Status</div>
-          ${renderDeliveryTracker(todayDelivery.status)}
-        </div>` : ''}
 
         <!-- Quick Actions -->
         <div class="card">
@@ -138,12 +131,12 @@ function renderNoSubscriptionCard() {
   `;
 }
 
-function renderTodayMealCard(delivery) {
+function renderTodayMealCard(sub) {
   return `
     <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:8px">
-      ${delivery.vendor ? delivery.vendor.name : ''} • Lunch
+      ${sub && sub.vendor ? sub.vendor.name : 'Kitchen'} • ${sub && sub.plan ? sub.plan.name : 'Daily Homestyle'}
     </p>
-    <p style="font-size:0.875rem">View today's full menu on the <a href="#" onclick="navigateTo('todayMeal');return false">Today's Meal</a> page.</p>
+    <p style="font-size:0.875rem">View today's published menu and vote on the <a href="#" onclick="navigateTo('todayMeal');return false">Today's Menu</a> page.</p>
   `;
 }
 
