@@ -95,6 +95,16 @@ router.post('/signup', async (req, res) => {
           [nextId, newUserId, name, kitchen_address || 'Bhopal Market Kitchen', locality || 'Market', 'FSSAI' + Date.now().toString().slice(-6), phone || '9876543210', cuisine_type || 'North Indian']
         );
         profileId = nextId;
+
+        // Auto-create starter meal plans for new vendor
+        const p1Id = 'P' + nextId + '1';
+        const p2Id = 'P' + nextId + '2';
+        await conn.query(
+          'INSERT INTO meal_plans (plan_id, vendor_id, name, plan_type, price, meals_included, veg_or_nonveg, description, status) VALUES ' +
+          '(?, ?, ?, "monthly", 2400.00, 30, "veg", "Complete homestyle monthly lunch box with 4 Rotis, Dal, Sabzi, Rice, Salad", "active"), ' +
+          '(?, ?, ?, "weekly", 650.00, 7, "veg", "7-day weekly trial meal box", "active")',
+          [p1Id, nextId, name + ' Monthly Lunch', p2Id, nextId, name + ' Weekly Trial']
+        );
       } else if (role === 'delivery_agent') {
         const [countRes] = await conn.query('SELECT COUNT(*) as c FROM delivery_agents');
         const nextId = 'A' + String(countRes[0].c + 1).padStart(3, '0');

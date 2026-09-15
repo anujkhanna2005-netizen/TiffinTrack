@@ -148,7 +148,9 @@ function renderVendorCard(vendor, hasActiveSub) {
 async function openSubscribeModal(vendorId) {
   try {
     const vendor = await getVendorById(vendorId);
-    const plans  = vendor.meal_plans;
+    const plans  = vendor.meal_plans || vendor.plans || [];
+
+    const hasPlans = plans && plans.length > 0;
 
     const modalHtml = `
       <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -157,27 +159,41 @@ async function openSubscribeModal(vendorId) {
           <h3 id="modal-title">Subscribe to ${vendor.name}</h3>
           <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:16px">📍 ${vendor.locality} &nbsp;|&nbsp; 🍽️ ${vendor.cuisine}</p>
 
-          <div class="form-group">
-            <label for="plan-select">Choose a Meal Plan</label>
-            <select id="plan-select" class="form-control" onchange="updatePlanPreview('${vendorId}')" aria-required="true">
-              ${plans.map(p => `<option value="${p.plan_id}" data-price="${p.price}">${p.name} — ${formatINR(p.price)}/mo (${p.veg ? '🟢 Veg' : '🔴 Non-Veg'})</option>`).join('')}
-            </select>
-          </div>
+          ${hasPlans ? `
+            <div class="form-group">
+              <label for="plan-select">Choose a Meal Plan</label>
+              <select id="plan-select" class="form-control" onchange="updatePlanPreview('${vendorId}')" aria-required="true">
+                ${plans.map(p => `<option value="${p.plan_id}" data-price="${p.price}">${p.name} — ${formatINR(p.price)}/mo (${p.veg ? '🟢 Veg' : '🔴 Non-Veg'})</option>`).join('')}
+              </select>
+            </div>
 
-          <div id="plan-preview" class="card" style="background:#faf7f3;margin:12px 0;padding:14px">
-            ${renderPlanPreview(plans[0])}
-          </div>
+            <div id="plan-preview" class="card" style="background:#faf7f3;margin:12px 0;padding:14px">
+              ${renderPlanPreview(plans[0])}
+            </div>
 
-          <div class="modal-actions">
-            <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="confirmSubscription('${vendorId}')" id="btn-confirm-sub">Confirm Subscription</button>
-          </div>
+            <div class="modal-actions">
+              <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+              <button class="btn btn-primary" onclick="confirmSubscription('${vendorId}')" id="btn-confirm-sub">Confirm Subscription</button>
+            </div>
+          ` : `
+            <div class="alert alert-warning" style="margin:16px 0">
+              ⚠️ <strong>No Active Meal Plans</strong><br>
+              This vendor has not published any meal plans yet. Please check back soon or choose another vendor.
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-primary" onclick="closeModal()" style="width:100%">Close</button>
+            </div>
+          `}
         </div>
       </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    // Focus the select for accessibility
-    setTimeout(() => document.getElementById('plan-select').focus(), 100);
+    if (hasPlans) {
+      setTimeout(() => {
+        const sel = document.getElementById('plan-select');
+        if (sel) sel.focus();
+      }, 100);
+    }
   } catch (err) {
     showToast('Error', err.message, 'error');
   }

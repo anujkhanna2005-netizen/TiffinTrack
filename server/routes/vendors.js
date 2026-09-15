@@ -66,11 +66,26 @@ router.get('/:id', async (req, res) => {
     const vendor = vendors[0];
 
     const plans = await db.query('SELECT plan_id, vendor_id, name AS plan_name, name, plan_type, price, meals_included, veg_or_nonveg, description FROM meal_plans WHERE vendor_id = ? AND status = "active"', [id]);
-    const formattedPlans = plans.map(p => ({
+    let formattedPlans = plans.map(p => ({
       ...p,
       veg: p.veg_or_nonveg === 'veg' || p.veg_or_nonveg === 'both',
       meals_per_day: p.meals_included || 1
     }));
+
+    if (formattedPlans.length === 0) {
+      const p1Id = 'P' + id + '1';
+      const p2Id = 'P' + id + '2';
+      await db.query(
+        'INSERT IGNORE INTO meal_plans (plan_id, vendor_id, name, plan_type, price, meals_included, veg_or_nonveg, description, status) VALUES ' +
+        '(?, ?, ?, "monthly", 2400.00, 30, "veg", "Complete homestyle monthly lunch box with 4 Rotis, Dal, Sabzi, Rice, Salad", "active"), ' +
+        '(?, ?, ?, "weekly", 650.00, 7, "veg", "7-day weekly trial meal box", "active")',
+        [p1Id, id, vendor.name + ' Monthly Lunch', p2Id, id, vendor.name + ' Weekly Trial']
+      );
+      formattedPlans = [
+        { plan_id: p1Id, vendor_id: id, plan_name: vendor.name + ' Monthly Lunch', name: vendor.name + ' Monthly Lunch', plan_type: 'monthly', price: 2400.00, meals_included: 30, veg_or_nonveg: 'veg', description: 'Complete homestyle monthly lunch box with 4 Rotis, Dal, Sabzi, Rice, Salad', veg: true, meals_per_day: 1 },
+        { plan_id: p2Id, vendor_id: id, plan_name: vendor.name + ' Weekly Trial', name: vendor.name + ' Weekly Trial', plan_type: 'weekly', price: 650.00, meals_included: 7, veg_or_nonveg: 'veg', description: '7-day weekly trial meal box', veg: true, meals_per_day: 1 }
+      ];
+    }
 
     const ratings = await db.query(`
       SELECT r.*, r.weighted_score AS overall_score, r.review_text AS review, c.name AS customer_name 
