@@ -140,24 +140,6 @@ function renderTodayMealCard(sub) {
   `;
 }
 
-function renderDeliveryTracker(status) {
-  const steps = [
-    { ids: ['prepared', 'pending'],            label: 'Prepared',    icon: '🍳' },
-    { ids: ['dispatched', 'out_for_delivery'], label: 'Dispatched',  icon: '🛵' },
-    { ids: ['delivered'],                      label: 'Delivered',   icon: '✅' }
-  ];
-  const idx = steps.findIndex(s => s.ids.includes(status));
-  return `
-    <div class="delivery-status-track">
-      ${steps.map((s, i) => `
-        <div class="delivery-step ${i < idx ? 'done' : i === idx ? 'active' : ''}">
-          <div class="dot">${s.icon}</div>
-          <span class="label">${s.label}</span>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
 
 async function handleCancelSubscription() {
   if (!confirm('Are you sure you want to cancel your subscription?')) return;

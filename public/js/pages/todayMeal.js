@@ -114,14 +114,3 @@ async function handleCastVote(dishName, vendorId) {
   }
 }
 
-function getDeliveryStatusText(status) {
-  const texts = {
-    prepared:         'Your meal is freshly prepared in the vendor kitchen and ready for dispatch.',
-    pending:          'Your meal is being prepared in the vendor kitchen.',
-    dispatched:       'Your tiffin has been dispatched from the kitchen and is on the way to your residence.',
-    out_for_delivery: 'Your tiffin is on the way to your residence.',
-    delivered:        'Your meal has been delivered. Enjoy your food! 🎉',
-    skipped:          'Meal paused/skipped for today (₹80 credited to your wallet).'
-  };
-  return texts[status] || 'Meal delivery in progress.';
-}
