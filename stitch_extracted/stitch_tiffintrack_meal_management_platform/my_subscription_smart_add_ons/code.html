@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#897367", "on-primary-container": "#4f2100", "secondary-container": "#a0f2af", "inverse-primary": "#ffb68c", "on-background": "#201b15", "inverse-surface": "#352f29", "surface-bright": "#fff8f4", "surface-tint": "#9a4601", "on-secondary": "#ffffff", "primary": "#9a4601", "tertiary": "#5d5d6f", "on-tertiary-fixed-variant": "#464557", "on-error": "#ffffff", "surface-container": "#f7ece2", "primary-fixed": "#ffdbc9", "surface-container-highest": "#ece1d7", "primary-fixed-dim": "#ffb68c", "surface-container-high": "#f1e6dc", "on-surface": "#201b15", "on-primary": "#ffffff", "on-secondary-fixed-variant": "005225", "tertiary-container": "#9594a8", "background": "#fff8f4", "on-secondary-fixed": "#00210b", "on-primary-fixed": "#321200", "on-tertiary-fixed": "#1a1a2a", "surface-variant": "#ece1d7", "surface": "#fff8f4", "surface-container-lowest": "#ffffff", "error": "#ba1a1a", "tertiary-fixed": "#e3e0f7", "secondary-fixed-dim": "#87d898", "surface-dim": "#e3d8ce", "on-secondary-container": "#1e713b", "on-error-container": "#93000a", "secondary": "#186c37", "secondary-fixed": "#a3f5b2", "on-primary-fixed-variant": "#763400", "tertiary-fixed-dim": "#c6c4da", "on-tertiary": "#ffffff", "on-surface-variant": "#554339", "outline-variant": "#dcc1b4", "primary-container": "#e07b39", "on-tertiary-container": "#2d2d3e", "inverse-on-surface": "#faefe5", "surface-container-low": "#fdf2e7", "error-container": "#ffdad6" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-2xl": "3rem", "margin": "2rem", "space-md": "1rem", "space-sm": "0.5rem", "gutter": "1.5rem", "margin-mobile": "1rem", "space-xl": "2rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "gutter-mobile": "1rem" }, "fontFamily": { "body-lg": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "label-sm": ["Inter"], "label-md": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "label-xs": ["Inter"], "headline-lg-mobile": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "display": ["Plus Jakarta Sans"], "body-sm": ["Inter"], "body-md": ["Inter"] }, "fontSize": { "body-lg": ["1rem", { "lineHeight": "1.6rem", "fontWeight": "400" }], "headline-sm": ["1.25rem", { "lineHeight": "1.75rem", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-sm": ["0.75rem", { "lineHeight": "1rem", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-md": ["0.875rem", { "lineHeight": "1.25rem", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-md": ["1.5rem", { "lineHeight": "2rem", "letterSpacing": "-0.02em", "fontWeight": "700" }], "title-md": ["1.125rem", { "lineHeight": "1.5rem", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-xs": ["0.6875rem", { "lineHeight": "0.875rem", "letterSpacing": "0.04em", "fontWeight": "700" }], "headline-lg-mobile": ["1.75rem", { "lineHeight": "2.25rem", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-lg": ["2.25rem", { "lineHeight": "2.75rem", "letterSpacing": "-0.025em", "fontWeight": "700" }], "display": ["3rem", { "lineHeight": "3.5rem", "letterSpacing": "-0.03em", "fontWeight": "800" }], "body-sm": ["0.75rem", { "lineHeight": "1.2rem", "fontWeight": "400" }], "body-md": ["0.875rem", { "lineHeight": "1.4rem", "fontWeight": "400" }] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col justify-between"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="max-w-7xl mx-auto px-margin"><div class="h-20 flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><img alt="TiffinTrack Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Vf08lUcAfltHRYkOiloHrHT9MimYfMZ1Wvn9GYUSU2YkPMavbZxwyfEQZjWIar7pP4yGaLRN9keDXaS-xkNq3XNi-MSBKK76igPVhPYTzspizrX8C9XYAlASRB8Qs4rJNuDUZd1xbBHMNBN-fhf5xi9uOwtmVhV_0gsyxDxW5QfiGQrRObVi1o4uVXGbGzh8HNWMxUi4CSfa91w-DDbl3zEjL2EsGwotdoTHQ0DBOwjIF8RA8MxWX10g"/><span class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">TiffinTrack</span></div><div class="hidden xl:flex items-center bg-surface-container-high p-space-xs rounded-full"><a class="px-space-md py-space-xs rounded-full font-label-sm text-label-sm bg-primary text-on-primary transition-colors" data-path="dashboard" href="#">Student</a><a class="px-space-md py-space-xs rounded-full font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="kitchen-orders" href="#">Vendor Kitchen</a><a class="px-space-md py-space-xs rounded-full font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="campus-audit" href="#">Campus Admin</a></div></div><nav class="hidden lg:flex items-center gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-bold rounded-full"><a class="px-space-md py-space-xs font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded-full" data-path="dashboard" href="#">Dashboard</a><a class="px-space-md py-space-xs font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded-full" data-path="find-tiffin" href="#">Find Tiffin</a><a aria-current="page" class="px-space-md py-space-xs transition-colors bg-primary-container text-on-primary font-bold rounded-full" data-path="my-subscription" href="#">My Subscription</a><a class="px-space-md py-space-xs font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded-full" data-path="today-meal-live-tracking" href="#">Today's Meal &amp; Live Tracking</a><a class="px-space-md py-space-xs font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded-full" data-path="reviews-complaints" href="#">Reviews &amp; Complaints</a></nav><div class="flex items-center gap-space-sm"><span class="hidden sm:inline-flex items-center px-space-sm py-space-xs rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-xs text-label-xs font-semibold uppercase">🎓 STUDENT VIEW</span><div class="flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold"><span class="material-symbols-outlined text-[16px]">account_balance_wallet</span><span>₹240 Credits</span></div><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4PbOzDMVVOcfSoeGnSnvDYkdSVnWzi698OvRh6je1HtcfIkD8lGTnVlc15d-0wNPSDz1sgm2ig1UKkeehdGrbw0ZFADnoKOfJ4WSktNTSdNCjSimEyTzz8-Oi9V9sz9wmU6ldTzKNFGflYCc6GkufZNEnLL9mCa3xoLfstR6HjgBlyyktAadx_GwRyC_t-_wrpsieGvZw8Budx6FvRjTTpbZw505jqf5egPjpyn7AZkNVhgpYgSfh"/><div class="hidden md:flex flex-col text-left"><span class="font-label-sm text-label-sm text-on-surface font-semibold leading-tight">Rahul Sharma</span><span class="font-label-xs text-label-xs text-on-surface-variant leading-tight">Room 304, Block A</span></div></div><a class="p-space-xs rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="login" href="#" title="Switch Account or Logout"><span class="material-symbols-outlined text-[20px]">logout</span></a></div></div></div></header><main class="w-full pt-20 bg-surface flex-1"><div class="max-w-7xl mx-auto px-margin"><div class="flex flex-col w-full pb-space-2xl">
+<!-- Status Feedback Banner (Dynamic) -->
+<div class="hidden fixed bottom-6 right-6 z-50 bg-inverse-surface text-inverse-on-surface px-space-lg py-space-md rounded-xl shadow-xl flex items-center gap-space-sm transition-all duration-300 transform translate-y-2" id="toastNotification">
+<span class="material-symbols-outlined text-secondary-fixed text-[20px]" id="toastIcon">check_circle</span>
+<span class="font-label-md text-label-md" id="toastMessage">Changes updated successfully!</span>
+</div>
+<!-- Hero Subscription Master Card -->
+<section class="w-full mb-space-xl relative">
+<div class="relative overflow-hidden rounded-2xl bg-surface-container-low shadow-md p-space-lg md:p-space-xl">
+<!-- Decorative Backdrop Ambience -->
+<div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-primary-fixed/30 blur-3xl pointer-events-none"></div>
+<div class="absolute right-1/3 bottom-0 w-64 h-64 rounded-full bg-secondary-fixed/20 blur-2xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-xl">
+<!-- Identity & Kitchen Profile -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center gap-space-lg max-w-2xl">
+<div class="relative">
+<img class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shadow-sm" data-alt="Close-up gourmet photo of authentic North Indian Punjabi thali with fresh phulkas, rich dal makhani, shahi paneer in copper bowls, and seasoned mint raita under natural daylight on a warm rustic ceramic surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRvOzM04eehONb6cGeBnU8Q3X8ywwfZEt8gKCg_gQVPi47ICom_hYzBhRVf9oB8ABImdTLjTcCOTawGC1nblmu3OKVBFvks4xgx95pEE1cdjgwBZ3oZkLaTsyv0QiRuLJRbq3Usj69KjZ9RmqJW0MsOdxUfD2sAQcujmtm6g5xUZ1nvUOoXeviDqnawTAhoPid3tv_HdX4qCrFsyP7k5b7S3FSgbXZ0RSv6rIwbhGsKQZyNtuEuYIY"/>
+<span class="absolute -bottom-2 -right-2 bg-secondary-container text-on-secondary-container px-space-xs py-0.5 rounded-full font-label-xs text-label-xs font-bold flex items-center gap-0.5 shadow-sm">
+<span class="material-symbols-outlined text-[14px]">verified</span> 4.8★
+            </span>
+</div>
+<div class="space-y-space-xs">
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="px-space-sm py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs uppercase font-bold tracking-wider">Active Plan</span>
+<span class="px-space-sm py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs font-medium">Auto-renew enabled</span>
+<span class="px-space-sm py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-xs text-label-xs font-bold">18 Days Remaining</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-on-surface font-extrabold tracking-tight">Shree Annapurna Kitchen</h1>
+<p class="font-title-md text-title-md text-primary font-semibold flex items-center gap-space-xs">
+<span>Executive Punjabi Veg Thali</span>
+<span class="text-on-surface-variant text-label-sm font-normal">•</span>
+<span class="text-on-surface-variant text-label-md font-medium">₹2,600 / month</span>
+</p>
+<div class="flex items-center gap-space-md text-on-surface-variant font-body-sm text-body-sm pt-space-xs">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">event_available</span>
+                Cycle: 16 Sep – 15 Oct 2026
+              </span>
+<span>•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">schedule</span>
+                Lunch (12:45 PM) &amp; Dinner (8:15 PM)
+              </span>
+</div>
+</div>
+</div>
+<!-- Ledger & Master CTAs -->
+<div class="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end gap-space-sm pt-space-sm lg:pt-0">
+<div class="bg-surface-container-lowest/80 backdrop-blur px-space-md py-space-sm rounded-xl text-left lg:text-right shadow-sm mb-space-xs">
+<div class="text-on-surface-variant font-label-xs text-label-xs uppercase tracking-wider font-semibold">Remaining Prorated Value</div>
+<div class="font-headline-sm text-headline-sm text-secondary font-black" id="activeProratedBalance">₹1,560.00</div>
+<div class="text-on-surface-variant font-body-sm text-body-sm">Guaranteed transferable balance</div>
+</div>
+<div class="flex items-center gap-space-sm w-full">
+<button class="flex-1 lg:flex-none flex items-center justify-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md font-bold shadow-md hover:shadow-lg transition-all active:scale-95" onclick="openVendorSwitchModal()">
+<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
+<span>1-Click Vendor Switch</span>
+</button>
+<button class="px-space-md py-space-sm rounded-lg bg-surface-container-highest hover:bg-surface-container text-on-surface font-label-md text-label-md font-semibold transition-colors" onclick="openPauseFlowModal()">
+              Manage / Pause
+            </button>
+</div>
+</div>
+</div>
+<!-- Quick Metrics Ribbon -->
+<div class="mt-space-lg pt-space-md grid grid-cols-2 md:grid-cols-4 gap-space-md bg-surface-container-lowest/70 rounded-xl p-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">lunch_dining</span>
+</div>
+<div>
+<div class="font-label-xs text-label-xs text-on-surface-variant uppercase font-semibold">Delivered This Month</div>
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface">24 Meals</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">currency_rupee</span>
+</div>
+<div>
+<div class="font-label-xs text-label-xs text-on-surface-variant uppercase font-semibold">Wallet Balance</div>
+<div class="font-headline-sm text-headline-sm font-bold text-secondary" id="globalHeaderWallet">₹240</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[20px]">groups</span>
+</div>
+<div>
+<div class="font-label-xs text-label-xs text-on-surface-variant uppercase font-semibold">Flat Pool Status</div>
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface" id="statGroupStatus">2 / 3 Joined</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">eco</span>
+</div>
+<div>
+<div class="font-label-xs text-label-xs text-on-surface-variant uppercase font-semibold">Dietary Compliance</div>
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface">100% Pure Veg</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive Add-ons & Smart Utilities (2x2 Grid) -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg mb-space-2xl">
+<!-- ADD-ON 1: Pause & Skip Meal Engine -->
+<div class="flex flex-col bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm hover:shadow-md transition-shadow justify-between">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">event_busy</span>
+</div>
+<div>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">Pause &amp; Skip Meal Engine</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Automated campus refund logic with zero hassle</p>
+</div>
+</div>
+<span class="px-space-sm py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs font-bold uppercase tracking-wider">Instant Refund</span>
+</div>
+<!-- Meal Skip Selector Form -->
+<div class="space-y-space-md">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+<div>
+<label class="block font-label-xs text-label-xs text-on-surface-variant font-bold uppercase mb-1">Target Date</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg px-space-sm py-2.5 outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer" id="skipDateSelect">
+<option value="tomorrow">Tomorrow, 12 Oct (Fri)</option>
+<option value="sat">13 Oct (Saturday)</option>
+<option value="sun">14 Oct (Sunday)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-on-surface-variant pointer-events-none text-[18px]">calendar_today</span>
+</div>
+</div>
+<div>
+<label class="block font-label-xs text-label-xs text-on-surface-variant font-bold uppercase mb-1">Meal Slot</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg px-space-sm py-2.5 outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer" id="skipMealSlot">
+<option value="lunch">Lunch (Cutoff: 10:30 AM)</option>
+<option value="dinner">Dinner (Cutoff: 5:00 PM)</option>
+<option value="both">Full Day (Lunch + Dinner)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-on-surface-variant pointer-events-none text-[18px]">restaurant</span>
+</div>
+</div>
+</div>
+<div>
+<label class="block font-label-xs text-label-xs text-on-surface-variant font-bold uppercase mb-1">Reason (Optional for Kitchen Waste Audit)</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg px-space-sm py-2.5 outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer" id="skipReason">
+<option value="exam">Midterm Exam at Central Library</option>
+<option value="home">Heading Home for Weekend</option>
+<option value="treat">College Fest / Treating Friends</option>
+<option value="fast">Fasting / Religious Observance</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-on-surface-variant pointer-events-none text-[18px]">expand_more</span>
+</div>
+</div>
+<!-- Highlight Box Refund Credit Calculation -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[22px] shrink-0 mt-0.5">account_balance_wallet</span>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Automated Refund Credit</span>
+<span class="font-label-md text-label-md font-extrabold text-secondary" id="previewRefundAmount">+₹80.00</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Funds are immediately credited to your TiffinTrack Wallet for rollover billing or snack add-ons. Cutoff time is strictly enforced by DBMS triggers.
+              </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Footer -->
+<div class="pt-space-md mt-space-md">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span>Projected Wallet:</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-mono font-bold" id="walletProjectionPill">₹240 → ₹320</span>
+</div>
+<button class="px-space-md py-2.5 rounded-lg bg-secondary hover:bg-on-secondary-container text-on-secondary font-label-md text-label-md font-bold flex items-center gap-space-xs shadow-sm active:scale-95 transition-all" id="btnSkipMeal" onclick="executeMealSkip()">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+<span>Skip &amp; Claim ₹80</span>
+</button>
+</div>
+</div>
+</div>
+<!-- ADD-ON 2: Meal Customization & Spice Preferences -->
+<div class="flex flex-col bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm hover:shadow-md transition-shadow justify-between">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">tune</span>
+</div>
+<div>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">Kitchen Preferences &amp; Customization</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Instruct Shree Annapurna's head chef for upcoming dispatches</p>
+</div>
+</div>
+<span class="px-space-sm py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-xs text-label-xs font-bold uppercase">Next Meal: Lunch</span>
+</div>
+<div class="space-y-space-md">
+<!-- Spice Preference Selector -->
+<div>
+<label class="block font-label-xs text-label-xs text-on-surface-variant font-bold uppercase mb-2">Spice Calibration</label>
+<div class="grid grid-cols-3 gap-space-xs" id="spiceGroup">
+<button class="spice-btn py-2 px-2 rounded-lg font-label-sm text-label-sm font-semibold transition-all bg-surface-container-low text-on-surface-variant hover:bg-surface-container text-center" onclick="setSpiceLevel('mild')" type="button">
+                🌶️ Mild
+              </button>
+<button class="spice-btn py-2 px-2 rounded-lg font-label-sm text-label-sm font-bold transition-all bg-primary-container text-on-primary text-center shadow-sm" onclick="setSpiceLevel('medium')" type="button">
+                🌶️🌶️ Medium
+              </button>
+<button class="spice-btn py-2 px-2 rounded-lg font-label-sm text-label-sm font-semibold transition-all bg-surface-container-low text-on-surface-variant hover:bg-surface-container text-center" onclick="setSpiceLevel('desi')" type="button">
+                🌶️🌶️🌶️ Desi Teekha
+              </button>
+</div>
+</div>
+<!-- Bread / Carb Selection -->
+<div>
+<label class="block font-label-xs text-label-xs text-on-surface-variant font-bold uppercase mb-2">Staple Carb Configuration</label>
+<div class="space-y-1.5" id="breadOptionGroup">
+<label class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm">
+<input checked="" class="accent-primary w-4 h-4 cursor-pointer" name="breadOption" type="radio" value="standard"/>
+<span class="font-body-md text-body-md text-on-surface font-medium">Standard Fresh Phulkas (4 Pcs)</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-semibold">Included</span>
+</label>
+<label class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm">
+<input class="accent-primary w-4 h-4 cursor-pointer" name="breadOption" type="radio" value="butter"/>
+<span class="font-body-md text-body-md text-on-surface font-medium">+1 Extra Butter Roti with Desi Ghee</span>
+</div>
+<span class="font-label-xs text-label-xs text-primary font-bold">+₹10 / meal</span>
+</label>
+<label class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm">
+<input class="accent-primary w-4 h-4 cursor-pointer" name="breadOption" type="radio" value="rice_only"/>
+<span class="font-body-md text-body-md text-on-surface font-medium">No Rotis (Double Jeera Rice Bowl)</span>
+</div>
+<span class="font-label-xs text-label-xs text-secondary font-bold">No Extra Fee</span>
+</label>
+</div>
+</div>
+<!-- Chef Note Field -->
+<div>
+<label class="block font-label-xs text-label-xs text-on-surface-variant font-bold uppercase mb-1">Chef Dietary Special Notes</label>
+<input class="w-full bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded-lg px-space-sm py-2.5 outline-none focus:ring-2 focus:ring-primary transition-all" id="chefInstructionsInput" type="text" value="Less oil in dal, please send extra green chilies and sliced onions."/>
+</div>
+</div>
+</div>
+<div class="pt-space-md mt-space-md">
+<button class="w-full py-2.5 rounded-lg bg-surface-container-highest hover:bg-primary hover:text-on-primary text-on-surface font-label-md text-label-md font-bold transition-all shadow-sm flex items-center justify-center gap-space-xs" onclick="saveKitchenPreferences()">
+<span class="material-symbols-outlined text-[18px]">save</span>
+<span>Update Cooking Preferences for Next Meal</span>
+</button>
+</div>
+</div>
+<!-- ADD-ON 3: Flat / Roommate Group Discount Widget -->
+<div class="flex flex-col bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm hover:shadow-md transition-shadow justify-between">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-[22px]">diversity_3</span>
+</div>
+<div>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">Hostel Flat Group Savings</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Pool subscriptions with roommates to cut mess bills</p>
+</div>
+</div>
+<span class="px-space-sm py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs font-bold uppercase tracking-wider" id="discountBadge">Save 10%</span>
+</div>
+<div class="space-y-space-md">
+<!-- Unique Flat Referral Code Box -->
+<div class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-low">
+<div>
+<div class="text-on-surface-variant font-label-xs text-label-xs uppercase font-bold">Your Room Pooling Code</div>
+<div class="font-mono font-bold text-headline-sm text-primary tracking-wider" id="roomCodeText">HOSTEL-A-304</div>
+</div>
+<button class="flex items-center gap-1 px-space-sm py-1.5 rounded-lg bg-surface-container-highest hover:bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold transition-colors" onclick="copyRoomCode()">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<span id="copyBtnText">Copy Code</span>
+</button>
+</div>
+<!-- Progress Bar & Member List -->
+<div>
+<div class="flex items-center justify-between text-label-sm font-label-sm font-semibold mb-1">
+<span class="text-on-surface" id="groupMemberCountLabel">Members: 2 of 3 joined</span>
+<span class="text-primary font-bold" id="groupProgressPercent">66% Complete</span>
+</div>
+<!-- Dynamic Progress Track -->
+<div class="w-full h-3 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-secondary rounded-full transition-all duration-500" id="roommateProgressBar" style="width: 66.6%;"></div>
+</div>
+<!-- Avatars of Active Flatmates -->
+<div class="flex items-center gap-space-sm mt-3" id="roommateAvatarRow">
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container-low font-label-xs text-label-xs text-on-surface font-semibold">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                Rahul S. (You - Room 304)
+              </div>
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container-low font-label-xs text-label-xs text-on-surface font-semibold">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                Aman V. (Room 304)
+              </div>
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container-high border border-dashed border-outline-variant font-label-xs text-label-xs text-on-surface-variant" id="slotThreePill">
+<span class="material-symbols-outlined text-[14px]">person_add</span>
+                Waiting for Flatmate 3...
+              </div>
+</div>
+</div>
+<!-- Dynamic Alert Banner -->
+<div class="p-space-md rounded-xl bg-primary-fixed/40 flex items-start gap-space-sm transition-all" id="groupAlertCard">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5" id="groupAlertIcon">info</span>
+<div class="flex-1 font-body-sm text-body-sm text-on-surface" id="groupAlertText">
+              Join <strong>1 more flatmate</strong> to unlock <strong>10% FLAT group discount</strong> (Save ₹260/month each on your Shree Annapurna plan!).
+            </div>
+</div>
+</div>
+</div>
+<!-- Action Footer / Simulation Trigger -->
+<div class="pt-space-md mt-space-md">
+<button class="w-full py-2.5 rounded-lg bg-surface-container-high hover:bg-secondary hover:text-on-secondary text-on-surface font-label-md text-label-md font-bold transition-all shadow-sm flex items-center justify-center gap-space-xs" id="btnSimulateJoin" onclick="simulateRoommateJoin()">
+<span class="material-symbols-outlined text-[18px]">group_add</span>
+<span>Simulate Roommate Join (+1)</span>
+</button>
+</div>
+</div>
+<!-- ADD-ON 4: TiffinTrack Wallet & Billing History -->
+<div class="flex flex-col bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm hover:shadow-md transition-shadow justify-between">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+</div>
+<div>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">TiffinTrack Wallet &amp; Ledger</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Automated meal refund records and renewal debits</p>
+</div>
+</div>
+<div class="text-right">
+<span class="font-label-xs text-label-xs text-on-surface-variant uppercase font-semibold block">Available</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-black" id="walletDisplayCard">₹240.00</span>
+</div>
+</div>
+<!-- Ledger Entries Table -->
+<div class="space-y-space-xs overflow-hidden" id="ledgerTransactionList">
+<div class="p-space-sm rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">arrow_downward</span>
+</span>
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">Meal Refund: Dinner Skipped</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">10 Oct 2026 • Cutoff validated (18:15)</div>
+</div>
+</div>
+<span class="font-label-md text-label-md text-secondary font-bold">+₹80.00</span>
+</div>
+<div class="p-space-sm rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-surface-container-highest text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">autorenew</span>
+</span>
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">Monthly Renewal Cycle</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">16 Sep 2026 • Shree Annapurna Veg</div>
+</div>
+</div>
+<span class="font-label-md text-label-md text-on-surface font-bold">-₹2,600.00</span>
+</div>
+<div class="p-space-sm rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+</span>
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">Late Dispatch SLA Penalty</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">08 Sep 2026 • Automated Mess Audit</div>
+</div>
+</div>
+<span class="font-label-md text-label-md text-secondary font-bold">+₹80.00</span>
+</div>
+</div>
+</div>
+<!-- Action Footer -->
+<div class="pt-space-md mt-space-md flex items-center gap-space-sm">
+<button class="flex-1 py-2.5 rounded-lg bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md font-bold shadow-sm transition-all flex items-center justify-center gap-space-xs" onclick="applyWalletToNextBill()">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+<span>Redeem towards Next Billing Cycle</span>
+</button>
+</div>
+</div>
+</section>
+<!-- ACID Transaction Vendor Switch Modal Simulation -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center p-space-md bg-inverse-surface/60 backdrop-blur-sm" id="vendorSwitchModal">
+<div class="bg-surface-container-lowest w-full max-w-xl rounded-2xl shadow-2xl p-space-xl relative overflow-hidden">
+<!-- Modal Header -->
+<div class="flex items-center justify-between mb-space-lg">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">swap_horiz</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">1-Click Seamless Vendor Switch</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Atomic Balance Transfer Guarantee (ACID Compliant)</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface" onclick="closeVendorSwitchModal()">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<!-- Step 1: Transfer Summary -->
+<div class="space-y-space-md">
+<div class="p-space-md rounded-xl bg-surface-container-low space-y-space-sm">
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface-variant">Current Mess Vendor:</span>
+<span class="font-semibold text-on-surface">Shree Annapurna Kitchen</span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface-variant">Remaining Days on Plan:</span>
+<span class="font-semibold text-on-surface">18 Days</span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface-variant">Prorated Carried Value:</span>
+<span class="font-mono font-bold text-secondary text-title-md">₹1,560.00</span>
+</div>
+</div>
+<!-- Target Vendor Selector -->
+<div>
+<label class="block font-label-xs text-label-xs text-on-surface-variant font-bold uppercase mb-1.5">Select New Certified Campus Kitchen</label>
+<div class="space-y-2">
+<label class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container hover:bg-surface-container-high cursor-pointer transition-colors">
+<div class="flex items-center gap-space-sm">
+<input checked="" class="accent-primary w-4 h-4" name="targetVendor" type="radio" value="dakshin"/>
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">Dakshin Flavors Mess</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">South Indian + North Combos • 4.9★</div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-primary">₹2,500/mo</span>
+</label>
+<label class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container hover:bg-surface-container-high cursor-pointer transition-colors">
+<div class="flex items-center gap-space-sm">
+<input class="accent-primary w-4 h-4" name="targetVendor" type="radio" value="royal"/>
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">Royal Rasoi Caterers</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Homestyle Kathiyawadi &amp; Gujarati • 4.7★</div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-primary">₹2,650/mo</span>
+</label>
+</div>
+</div>
+<!-- Transaction Safety Note -->
+<div class="p-space-sm rounded-xl bg-secondary-container/50 flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5">lock</span>
+<p class="font-body-sm text-body-sm text-on-secondary-container">
+<strong>Zero loss policy:</strong> ₹1,560 is immediately credited to Dakshin Flavors Mess. Your tomorrow's lunch will automatically arrive from the new vendor.
+          </p>
+</div>
+</div>
+<!-- Action Footer -->
+<div class="flex items-center justify-end gap-space-sm mt-space-lg pt-space-md">
+<button class="px-space-md py-2 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md font-semibold hover:bg-surface-container-high transition-colors" onclick="closeVendorSwitchModal()">
+          Cancel
+        </button>
+<button class="px-space-lg py-2 rounded-lg bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md font-bold transition-all flex items-center gap-space-xs" id="btnConfirmSwitch" onclick="executeVendorSwitch()">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span>Confirm Instant Switch</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Multi-Step Pause Subscription Modal Simulation -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center p-space-md bg-inverse-surface/60 backdrop-blur-sm" id="pauseFlowModal">
+<div class="bg-surface-container-lowest w-full max-w-lg rounded-2xl shadow-2xl p-space-xl relative">
+<div class="flex items-center justify-between mb-space-md">
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Manage or Pause Subscription</h3>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant" onclick="closePauseFlowModal()">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-lg">
+        Need a study break or going home? You can temporarily pause deliveries rather than canceling your locked student pricing rate.
+      </p>
+<div class="space-y-space-sm mb-space-lg">
+<button class="w-full text-left p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container flex items-center justify-between transition-colors" onclick="confirmPauseDuration('3 days')">
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">Short Break (3 Days)</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Resume on Monday, 15 Oct</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[20px]">arrow_forward</span>
+</button>
+<button class="w-full text-left p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container flex items-center justify-between transition-colors" onclick="confirmPauseDuration('10 days')">
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">Diwali / Semester Break (10 Days)</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Resume on 22 Oct • Preserves full balance</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[20px]">arrow_forward</span>
+</button>
+<button class="w-full text-left p-space-md rounded-xl bg-error-container/40 hover:bg-error-container/70 flex items-center justify-between transition-colors" onclick="confirmCancelPermanent()">
+<div>
+<div class="font-label-md text-label-md font-bold text-error">Permanent Cancellation</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Refund remaining ₹1,560 to original bank UPI</div>
+</div>
+<span class="material-symbols-outlined text-error text-[20px]">cancel</span>
+</button>
+</div>
+<div class="flex justify-end">
+<button class="px-space-md py-2 rounded-lg bg-surface-container-high font-label-md text-label-md font-semibold text-on-surface" onclick="closePauseFlowModal()">Close</button>
+</div>
+</div>
+</div>
+<!-- Client-side Interactive Logic -->
+<script>
+    // State Tracker
+    const state = {
+      walletBalance: 240,
+      roommatesJoined: 2,
+      spiceLevel: 'medium',
+      activeVendor: 'Shree Annapurna Kitchen'
+    };
+
+    function showToast(message, icon = 'check_circle') {
+      const toast = document.getElementById('toastNotification');
+      const msgElem = document.getElementById('toastMessage');
+      const iconElem = document.getElementById('toastIcon');
+      
+      msgElem.innerText = message;
+      iconElem.innerText = icon;
+
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-2');
+        setTimeout(() => toast.classList.add('hidden'), 300);
+      }, 3500);
+    }
+
+    // Modal Control: Vendor Switch
+    function openVendorSwitchModal() {
+      document.getElementById('vendorSwitchModal').classList.remove('hidden');
+    }
+    function closeVendorSwitchModal() {
+      document.getElementById('vendorSwitchModal').classList.add('hidden');
+    }
+
+    // Execute ACID Switch Simulation
+    function executeVendorSwitch() {
+      const btn = document.getElementById('btnConfirmSwitch');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> Transferring Ledger...';
+
+      setTimeout(() => {
+        closeVendorSwitchModal();
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">bolt</span><span>Confirm Instant Switch</span>';
+        
+        showToast('ACID Switch Committed: ₹1,560 prorated balance routed to Dakshin Flavors Mess!');
+      }, 1200);
+    }
+
+    // Modal Control: Pause Flow
+    function openPauseFlowModal() {
+      document.getElementById('pauseFlowModal').classList.remove('hidden');
+    }
+    function closePauseFlowModal() {
+      document.getElementById('pauseFlowModal').classList.add('hidden');
+    }
+
+    function confirmPauseDuration(duration) {
+      closePauseFlowModal();
+      showToast(`Tiffin delivery paused for ${duration}. Your wallet expiration is extended automatically.`, 'pause_circle');
+    }
+
+    function confirmCancelPermanent() {
+      closePauseFlowModal();
+      showToast('Cancellation processed. Prorated ₹1,560 refund initiated to campus UPI ID.', 'info');
+    }
+
+    // Skip Meal Engine Refund Logic
+    function executeMealSkip() {
+      const btn = document.getElementById('btnSkipMeal');
+      if (btn.dataset.skipped === 'true') {
+        showToast('Meal for tomorrow is already marked as skipped.', 'info');
+        return;
+      }
+
+      state.walletBalance += 80;
+      btn.dataset.skipped = 'true';
+      btn.classList.remove('bg-secondary', 'hover:bg-on-secondary-container');
+      btn.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+      btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">check</span><span>Skipped (₹80 Refunded)</span>';
+
+      // Update UI elements
+      document.getElementById('globalHeaderWallet').innerText = `₹${state.walletBalance}`;
+      document.getElementById('walletDisplayCard').innerText = `₹${state.walletBalance}.00`;
+      document.getElementById('walletProjectionPill').innerText = `₹${state.walletBalance} (Credited)`;
+
+      // Prepend transaction in ledger
+      const ledger = document.getElementById('ledgerTransactionList');
+      const newEntry = document.createElement('div');
+      newEntry.className = 'p-space-sm rounded-xl bg-secondary-container/40 flex items-center justify-between border-l-4 border-secondary transition-all';
+      newEntry.innerHTML = `
+        <div class="flex items-center gap-space-sm">
+          <span class="w-8 h-8 rounded-lg bg-secondary text-on-secondary flex items-center justify-center">
+            <span class="material-symbols-outlined text-[16px]">add</span>
+          </span>
+          <div>
+            <div class="font-label-md text-label-md font-bold text-on-surface">Meal Refund: Skipped Lunch (12 Oct)</div>
+            <div class="font-body-sm text-body-sm text-on-surface-variant">Just now • Automated DBMS Credit Engine</div>
+          </div>
+        </div>
+        <span class="font-label-md text-label-md text-secondary font-black">+₹80.00</span>
+      `;
+      ledger.prepend(newEntry);
+
+      showToast('₹80 instantly refunded to your TiffinTrack Wallet!', 'currency_rupee');
+    }
+
+    // Spice Selector
+    function setSpiceLevel(level) {
+      state.spiceLevel = level;
+      const buttons = document.querySelectorAll('.spice-btn');
+      buttons.forEach(b => {
+        b.className = 'spice-btn py-2 px-2 rounded-lg font-label-sm text-label-sm font-semibold transition-all bg-surface-container-low text-on-surface-variant hover:bg-surface-container text-center';
+      });
+
+      const activeBtn = event.currentTarget;
+      activeBtn.className = 'spice-btn py-2 px-2 rounded-lg font-label-sm text-label-sm font-bold transition-all bg-primary-container text-on-primary text-center shadow-sm';
+    }
+
+    // Save Kitchen Preferences
+    function saveKitchenPreferences() {
+      const note = document.getElementById('chefInstructionsInput').value;
+      showToast(`Kitchen dispatched preference saved: "${note}"`, 'done');
+    }
+
+    // Copy Room Code
+    function copyRoomCode() {
+      navigator.clipboard.writeText('HOSTEL-A-304');
+      const btnText = document.getElementById('copyBtnText');
+      btnText.innerText = 'Copied!';
+      setTimeout(() => btnText.innerText = 'Copy Code', 2000);
+      showToast('Group code HOSTEL-A-304 copied to clipboard!');
+    }
+
+    // Simulate Roommate Join
+    function simulateRoommateJoin() {
+      if (state.roommatesJoined >= 3) {
+        showToast('Room group discount is already fully unlocked!', 'celebration');
+        return;
+      }
+
+      state.roommatesJoined = 3;
+      
+      // Update Progress
+      const progressBar = document.getElementById('roommateProgressBar');
+      progressBar.style.width = '100%';
+      
+      document.getElementById('groupMemberCountLabel').innerText = 'Members: 3 of 3 joined (Full Flat)';
+      document.getElementById('groupProgressPercent').innerText = '100% Unlocked!';
+      document.getElementById('statGroupStatus').innerText = '3 / 3 (Active 10%)';
+
+      // Replace placeholder pill
+      const slotThree = document.getElementById('slotThreePill');
+      slotThree.className = 'flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs font-bold';
+      slotThree.innerHTML = '<span class="w-2 h-2 rounded-full bg-secondary"></span>Rohit K. (Joined!)';
+
+      // Update Alert Box
+      const alertBox = document.getElementById('groupAlertCard');
+      alertBox.className = 'p-space-md rounded-xl bg-secondary-container/60 flex items-start gap-space-sm transition-all';
+      
+      const alertIcon = document.getElementById('groupAlertIcon');
+      alertIcon.innerText = 'verified';
+      alertIcon.className = 'material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5';
+
+      const alertText = document.getElementById('groupAlertText');
+      alertText.innerHTML = '🎉 <strong>10% Flat Discount Unlocked!</strong> ₹260 will be auto-deducted from next month bill for Rahul, Aman, and Rohit.';
+
+      const btnJoin = document.getElementById('btnSimulateJoin');
+      btnJoin.disabled = true;
+      btnJoin.classList.add('opacity-50', 'cursor-not-allowed');
+      btnJoin.innerHTML = '<span class="material-symbols-outlined text-[18px]">verified</span><span>Flat Pool Completed (3/3)</span>';
+
+      showToast('Awesome! Flat pool quota reached: 10% OFF applied!', 'celebration');
+    }
+
+    // Redeem Wallet
+    function applyWalletToNextBill() {
+      if (state.walletBalance <= 0) {
+        showToast('Wallet balance is ₹0.', 'info');
+        return;
+      }
+      showToast(`₹${state.walletBalance} allocated to next invoice (New renewal: ₹${2600 - state.walletBalance})`, 'receipt_long');
+    }
+  </script>
+</div></div></main><footer class="w-full bg-surface-container-low mt-space-2xl"><div class="max-w-7xl mx-auto px-margin py-space-xl"><div class="flex flex-col md:flex-row items-center justify-between gap-space-md pb-space-lg"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-secondary text-[22px]">verified</span><div><p class="font-label-md text-label-md text-on-surface font-semibold">Certified Campus Kitchen Partner</p><p class="font-body-sm text-body-sm text-on-surface-variant">Strict adherence to collegiate food safety, hygiene audits, and thermal tiffin seal standards.</p></div></div><div class="flex items-center gap-space-md"><a class="font-label-sm text-label-sm text-primary hover:text-on-primary-fixed-variant font-semibold transition-colors" data-path="campus-audit" href="#">Audit Logs</a><span class="text-outline-variant font-body-sm text-body-sm">•</span><a class="font-label-sm text-label-sm text-primary hover:text-on-primary-fixed-variant font-semibold transition-colors" data-path="dbms-demo-schema" href="#">DBMS ER &amp; Schema</a><span class="text-outline-variant font-body-sm text-body-sm">•</span><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="support-helpdesk" href="#">Support Desk</a></div></div><div class="pt-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm text-on-surface-variant font-body-sm text-body-sm"><p>© 2025 TiffinTrack Platform • Campus Food Logistics &amp; DBMS Project Showcase.</p><p class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary"></span><span>Central Mess Hub: Online &amp; Dispatching</span></p></div></div></footer></body></html>

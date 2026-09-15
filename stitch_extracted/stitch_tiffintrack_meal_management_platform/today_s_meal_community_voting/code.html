@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#897367", "on-primary-container": "#4f2100", "secondary-container": "#a0f2af", "inverse-primary": "#ffb68c", "on-background": "#201b15", "inverse-surface": "#352f29", "surface-bright": "#fff8f4", "surface-tint": "#9a4601", "on-secondary": "#ffffff", "primary": "#9a4601", "tertiary": "#5d5d6f", "on-tertiary-fixed-variant": "#464557", "on-error": "#ffffff", "surface-container": "#f7ece2", "primary-fixed": "#ffdbc9", "surface-container-highest": "#ece1d7", "primary-fixed-dim": "#ffb68c", "surface-container-high": "#f1e6dc", "on-surface": "#201b15", "on-primary": "#ffffff", "on-secondary-fixed-variant": "005225", "tertiary-container": "#9594a8", "background": "#fff8f4", "on-secondary-fixed": "#00210b", "on-primary-fixed": "#321200", "on-tertiary-fixed": "#1a1a2a", "surface-variant": "#ece1d7", "surface": "#fff8f4", "surface-container-lowest": "#ffffff", "error": "#ba1a1a", "tertiary-fixed": "#e3e0f7", "secondary-fixed-dim": "#87d898", "surface-dim": "#e3d8ce", "on-secondary-container": "#1e713b", "on-error-container": "#93000a", "secondary": "#186c37", "secondary-fixed": "#a3f5b2", "on-primary-fixed-variant": "#763400", "tertiary-fixed-dim": "#c6c4da", "on-tertiary": "#ffffff", "on-surface-variant": "#554339", "outline-variant": "#dcc1b4", "primary-container": "#e07b39", "on-tertiary-container": "#2d2d3e", "inverse-on-surface": "#faefe5", "surface-container-low": "#fdf2e7", "error-container": "#ffdad6" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-2xl": "3rem", "margin": "2rem", "space-md": "1rem", "space-sm": "0.5rem", "gutter": "1.5rem", "margin-mobile": "1rem", "space-xl": "2rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "gutter-mobile": "1rem" }, "fontFamily": { "body-lg": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "label-sm": ["Inter"], "label-md": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "label-xs": ["Inter"], "headline-lg-mobile": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "display": ["Plus Jakarta Sans"], "body-sm": ["Inter"], "body-md": ["Inter"] }, "fontSize": { "body-lg": ["1rem", { "lineHeight": "1.6rem", "fontWeight": "400" }], "headline-sm": ["1.25rem", { "lineHeight": "1.75rem", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-sm": ["0.75rem", { "lineHeight": "1rem", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-md": ["0.875rem", { "lineHeight": "1.25rem", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-md": ["1.5rem", { "lineHeight": "2rem", "letterSpacing": "-0.02em", "fontWeight": "700" }], "title-md": ["1.125rem", { "lineHeight": "1.5rem", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-xs": ["0.6875rem", { "lineHeight": "0.875rem", "letterSpacing": "0.04em", "fontWeight": "700" }], "headline-lg-mobile": ["1.75rem", { "lineHeight": "2.25rem", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-lg": ["2.25rem", { "lineHeight": "2.75rem", "letterSpacing": "-0.025em", "fontWeight": "700" }], "display": ["3rem", { "lineHeight": "3.5rem", "letterSpacing": "-0.03em", "fontWeight": "800" }], "body-sm": ["0.75rem", { "lineHeight": "1.2rem", "fontWeight": "400" }], "body-md": ["0.875rem", { "lineHeight": "1.4rem", "fontWeight": "400" }] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col justify-between"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="max-w-7xl mx-auto px-margin"><div class="h-20 flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><img alt="TiffinTrack Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Vf08lUcAfltHRYkOiloHrHT9MimYfMZ1Wvn9GYUSU2YkPMavbZxwyfEQZjWIar7pP4yGaLRN9keDXaS-xkNq3XNi-MSBKK76igPVhPYTzspizrX8C9XYAlASRB8Qs4rJNuDUZd1xbBHMNBN-fhf5xi9uOwtmVhV_0gsyxDxW5QfiGQrRObVi1o4uVXGbGzh8HNWMxUi4CSfa91w-DDbl3zEjL2EsGwotdoTHQ0DBOwjIF8RA8MxWX10g"/><span class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">TiffinTrack</span></div><div class="hidden xl:flex items-center bg-surface-container-high p-space-xs rounded-full"><a class="px-space-md py-space-xs rounded-full font-label-sm text-label-sm bg-primary text-on-primary transition-colors" data-path="dashboard" href="#">Student</a><a class="px-space-md py-space-xs rounded-full font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="kitchen-orders" href="#">Vendor Kitchen</a><a class="px-space-md py-space-xs rounded-full font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="campus-audit" href="#">Campus Admin</a></div></div><nav class="hidden lg:flex items-center gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-bold rounded-full"><a class="px-space-md py-space-xs font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded-full" data-path="dashboard" href="#">Dashboard</a><a class="px-space-md py-space-xs font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded-full" data-path="find-tiffin" href="#">Find Tiffin</a><a class="px-space-md py-space-xs font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded-full" data-path="my-subscription" href="#">My Subscription</a><a class="px-space-md py-space-xs font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded-full" data-path="today-meal-live-tracking" href="#">Today's Meal &amp; Live Tracking</a><a class="px-space-md py-space-xs font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded-full" data-path="reviews-complaints" href="#">Reviews &amp; Complaints</a></nav><div class="flex items-center gap-space-sm"><span class="hidden sm:inline-flex items-center px-space-sm py-space-xs rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-xs text-label-xs font-semibold uppercase">🎓 STUDENT VIEW</span><div class="flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold"><span class="material-symbols-outlined text-[16px]">account_balance_wallet</span><span>₹240 Credits</span></div><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4PbOzDMVVOcfSoeGnSnvDYkdSVnWzi698OvRh6je1HtcfIkD8lGTnVlc15d-0wNPSDz1sgm2ig1UKkeehdGrbw0ZFADnoKOfJ4WSktNTSdNCjSimEyTzz8-Oi9V9sz9wmU6ldTzKNFGflYCc6GkufZNEnLL9mCa3xoLfstR6HjgBlyyktAadx_GwRyC_t-_wrpsieGvZw8Budx6FvRjTTpbZw505jqf5egPjpyn7AZkNVhgpYgSfh"/><div class="hidden md:flex flex-col text-left"><span class="font-label-sm text-label-sm text-on-surface font-semibold leading-tight">Rahul Sharma</span><span class="font-label-xs text-label-xs text-on-surface-variant leading-tight">Room 304, Block A</span></div></div><a class="p-space-xs rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="login" href="#" title="Switch Account or Logout"><span class="material-symbols-outlined text-[20px]">logout</span></a></div></div></div></header><main class="w-full pt-20 bg-surface flex-1"><div class="max-w-7xl mx-auto px-margin"><div class="flex flex-col w-full pb-space-2xl gap-y-space-xl">
+<!-- Top Operational Header -->
+<header class="w-full flex flex-col lg:flex-row lg:items-end justify-between gap-space-md pt-space-md">
+<div class="space-y-space-xs">
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="inline-flex items-center gap-space-xs px-space-sm py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs font-semibold uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+          Live Mess Dispatch #TH-4091
+        </span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">•</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">Hostel Block A Hub (South Wing)</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-extrabold tracking-tight">
+        Today's Meal Board &amp; Democratic Menu Voting
+      </h1>
+<p class="font-title-md text-title-md text-primary font-semibold flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+        Thursday, 12 Oct 2026 • Executive Punjabi Thali Edition
+      </p>
+</div>
+<!-- Cutoff Alert Capsule -->
+<div class="flex items-center gap-space-sm bg-surface-container-high px-space-md py-space-sm rounded-xl shadow-sm self-start lg:self-auto">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface font-bold">Cancellation Window Closed</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">⚡ Cutoff for today's lunch cancellation was 09:30 AM.</p>
+</div>
+</div>
+</header>
+<!-- Real-time 3-Stage Stepper Delivery Tracker -->
+<section class="w-full bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-space-md mb-space-md gap-space-sm">
+<div>
+<span class="font-label-xs text-label-xs uppercase font-bold text-on-surface-variant tracking-wider">Thermal Tiffin Trajectory</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Transit Status &amp; OTP Handover</h2>
+</div>
+<div class="inline-flex items-center gap-space-xs bg-primary-fixed text-on-primary-fixed-variant px-space-md py-space-xs rounded-full font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[16px] animate-spin">sync</span>
+        Live GPS Sync: Central Hub Route
+      </div>
+</div>
+<!-- Tracker Stages -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md relative">
+<!-- Step 1: Completed -->
+<div class="relative flex flex-col bg-surface-container-low p-space-md rounded-xl">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="w-7 h-7 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</span>
+<span class="font-label-xs text-label-xs font-bold text-secondary bg-secondary-container px-space-xs py-0.5 rounded-full">12:20 PM</span>
+</div>
+<h3 class="font-label-md text-label-md font-bold text-on-surface">1. Meal Prepared &amp; Checked</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs">Quality seal #902 applied under ISO mess kitchen norms.</p>
+</div>
+<!-- Step 2: Active Dispatch -->
+<div class="relative flex flex-col bg-primary text-on-primary p-space-md rounded-xl shadow-md">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="w-7 h-7 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center shadow-sm animate-bounce">
+<span class="material-symbols-outlined text-[18px]">two_wheeler</span>
+</span>
+<span class="font-label-xs text-label-xs font-bold bg-primary-container text-on-primary px-space-xs py-0.5 rounded-full">12:48 PM • ACTIVE</span>
+</div>
+<h3 class="font-label-md text-label-md font-bold text-on-primary">2. Out for Dispatch</h3>
+<p class="font-body-sm text-body-sm text-primary-fixed mt-space-xs">Rider Santosh Kumar (+91-9876543210) is 300m away approaching Gate A.</p>
+<div class="mt-space-sm flex items-center justify-between pt-space-xs">
+<span class="font-label-xs text-label-xs text-on-primary/90 flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+            Speed: 18 km/h
+          </span>
+<a class="inline-flex items-center gap-1 font-label-xs text-label-xs bg-surface-container-lowest text-primary px-space-sm py-0.5 rounded-full font-bold" href="tel:+919876543210">
+<span class="material-symbols-outlined text-[14px]">call</span> Call Rider
+          </a>
+</div>
+</div>
+<!-- Step 3: Pending Arrival & OTP -->
+<div class="relative flex flex-col bg-surface-container-low p-space-md rounded-xl">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="w-7 h-7 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">pin_drop</span>
+</span>
+<span class="font-label-xs text-label-xs font-bold text-on-surface-variant bg-surface-container-highest px-space-xs py-0.5 rounded-full">Est 1:15 PM</span>
+</div>
+<h3 class="font-label-md text-label-md font-bold text-on-surface">3. Arrived at Hostel Gate A</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs">Present secret handover token upon crate collection.</p>
+<div class="mt-space-sm bg-surface-container px-space-sm py-space-xs rounded-lg flex items-center justify-between">
+<span class="font-label-xs text-label-xs uppercase font-bold text-on-surface-variant">Gate Handover Code</span>
+<span class="font-mono font-headline-sm text-headline-sm text-primary font-extrabold tracking-widest">4821</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Grid: Today's Thali Tray Breakdown & Democratic Menu Voting -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-xl">
+<!-- LEFT: Today's Thali Visual Tray (7 cols) -->
+<div class="xl:col-span-7 flex flex-col gap-space-lg">
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<!-- Tray Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-md">
+<div>
+<span class="font-label-xs text-label-xs uppercase tracking-widest text-primary font-bold">Campus Culinary Spec</span>
+<h2 class="font-headline-md text-headline-md text-on-surface font-extrabold">Executive Punjabi Lunch Tray</h2>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs font-bold">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+              100% Pure Veg
+            </span>
+<span class="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs font-medium">
+              FSSAI #112243309012
+            </span>
+<span class="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs font-medium">
+              Low Oil Formulation
+            </span>
+</div>
+</div>
+<!-- Featured Thali Hero Shot -->
+<div class="relative w-full h-56 md:h-64 rounded-xl overflow-hidden mb-space-md">
+<img class="w-full h-full object-cover" data-alt="Authentic traditional Punjabi thali plated on polished bronze cookware, showing bowls of rich creamy paneer butter masala, slow cooked black dal makhani, fragrant cumin basmati rice, stacked desi ghee phulkas, fresh sliced cucumber salad, and a glossy gulab jamun in soft natural warm daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcCajUJMSjtBBpFB3EbmfrQkJnzX7P6wPXg0rwmIDRB4JlhkS2TDgATEArwhbA0w38NMPJCn7scWVuTw2OFtmPXGnT3fQGVKrDU-74aS8PEgPjmVgnbSfK8WT4eYp-CcIhvRDiBPMVvXICbQ6x8PK6XzL9p2YyrKjaPvWTphXuX_tuJAokesyRZ3kVMET_L1eHaWRWfeDE4Sy9-LVETgL1KZ2y28pwFAtNCpnA4yW8P0QKOfcuCbOE"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-space-md">
+<div class="text-on-primary">
+<div class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-primary-fixed">Thermal Seal Inspected 12:15 PM</div>
+<p class="font-title-md text-title-md font-bold">Chef Harpreet Kaur’s Signature North Indian Assembly</p>
+</div>
+</div>
+</div>
+<!-- Visual Tray Compartment Breakdown (6 items) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+<!-- Item 1: Phulkas -->
+<div class="flex items-start gap-space-sm p-space-sm rounded-xl bg-surface-container-low">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high shrink-0 overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[28px]">bakery_dining</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate">4 Desi Ghee Phulkas</h3>
+<span class="font-label-xs text-label-xs text-secondary font-bold">Freshly Puffed</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Stone ground MP Sharbati wheat, brushed with A2 cow ghee.</p>
+</div>
+</div>
+<!-- Item 2: Paneer Butter Masala -->
+<div class="flex items-start gap-space-sm p-space-sm rounded-xl bg-surface-container-low">
+<div class="w-12 h-12 rounded-lg bg-primary-fixed shrink-0 overflow-hidden flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined text-[28px]">soup_kitchen</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate">Paneer Butter Masala</h3>
+<span class="font-label-xs text-label-xs text-primary font-bold">Main Curry</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Fresh cottage cheese cubes folded in silk tomato makhani gravy.</p>
+</div>
+</div>
+<!-- Item 3: Dal Makhani -->
+<div class="flex items-start gap-space-sm p-space-sm rounded-xl bg-surface-container-low">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high shrink-0 overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[28px]">skillet</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate">Dal Makhani</h3>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-bold">12h Slow Cook</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Black urad lentils simmered overnight over slow clay tandoor embers.</p>
+</div>
+</div>
+<!-- Item 4: Jeera Basmati -->
+<div class="flex items-start gap-space-sm p-space-sm rounded-xl bg-surface-container-low">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high shrink-0 overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[28px]">rice_bowl</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate">Steamed Jeera Basmati</h3>
+<span class="font-label-xs text-label-xs text-secondary font-bold">Fluffy Grains</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Long-grain Royal Dehraduni rice tempered with roasted cumin seed.</p>
+</div>
+</div>
+<!-- Item 5: Salad -->
+<div class="flex items-start gap-space-sm p-space-sm rounded-xl bg-surface-container-low">
+<div class="w-12 h-12 rounded-lg bg-secondary-container text-on-secondary-container shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-[28px]">nutrition</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate">Fresh Cucumber Salad</h3>
+<span class="font-label-xs text-label-xs text-secondary font-bold">Raw Fiber</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">English cucumber rounds, baby carrots with chaat masala &amp; lemon wedge.</p>
+</div>
+</div>
+<!-- Item 6: Gulab Jamun -->
+<div class="flex items-start gap-space-sm p-space-sm rounded-xl bg-surface-container-low">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high shrink-0 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[28px]">cookie</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate">1 Gulab Jamun</h3>
+<span class="font-label-xs text-label-xs text-primary-container font-bold">Dessert</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Soft khoya dumpling infused with green cardamom and saffron syrup.</p>
+</div>
+</div>
+</div>
+<!-- Caloric & Macro Density Footer -->
+<div class="mt-space-md pt-space-md flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-high px-space-md py-space-sm rounded-xl">
+<div class="flex items-center gap-space-md text-on-surface-variant font-label-sm text-label-sm">
+<span><strong>785</strong> kcal</span>
+<span>•</span>
+<span><strong>26g</strong> Protein</span>
+<span>•</span>
+<span><strong>18g</strong> Healthy Fats</span>
+<span>•</span>
+<span><strong>92g</strong> Carbs</span>
+</div>
+<span class="font-label-xs text-label-xs text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+            Dietitian Approved
+          </span>
+</div>
+</div>
+</div>
+<!-- RIGHT: Democratic Friday Feast Voting Module (5 cols) -->
+<div class="xl:col-span-5 flex flex-col gap-space-lg">
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<!-- Voting Header Card -->
+<div class="flex items-center justify-between gap-space-sm pb-space-sm">
+<span class="inline-flex items-center gap-space-xs px-space-sm py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-xs text-label-xs font-bold uppercase">
+<span class="material-symbols-outlined text-[14px]">how_to_vote</span> Student Democracy
+            </span>
+<div class="flex items-center gap-space-xs text-primary font-label-sm text-label-sm font-bold bg-surface-container-high px-space-sm py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>Closes in 04h 22m</span>
+</div>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-extrabold mt-space-xs">
+            Democratic Friday Feast 🗳️
+          </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+            Cast your vote for tomorrow's community special lunch. The highest voted item will be prepared for all subscribed hostelites!
+          </p>
+<!-- Tally Confirmation Alert (Hidden by default, shown on vote) -->
+<div class="hidden mt-space-md p-space-sm rounded-xl bg-secondary-container text-on-secondary-container transition-all" id="voteBanner">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-secondary">verified</span>
+<div>
+<p class="font-label-sm text-label-sm font-bold" id="voteBannerText">You voted! Live votes updated.</p>
+<p class="font-body-sm text-body-sm">Your hostel room credit priority has been synced to mess server.</p>
+</div>
+</div>
+</div>
+<!-- 4 Interactive Dish Choices -->
+<div class="space-y-space-sm mt-space-md" id="votingDeck">
+<!-- Dish 1 (Leading) -->
+<div class="dish-card relative p-space-md rounded-xl bg-surface-container transition-all hover:bg-surface-container-high group" data-count="142" data-dish="Paneer Butter Masala &amp; Garlic Naan">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex-1">
+<div class="flex items-center gap-space-xs">
+<span class="text-[18px]">🍛</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold group-hover:text-primary transition-colors">
+                      Paneer Butter Masala &amp; Garlic Naan
+                    </h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Clay oven crisp charred naan with aromatic butter gravy.</p>
+</div>
+<button class="vote-btn shrink-0 bg-primary text-on-primary font-label-sm text-label-sm px-space-md py-space-xs rounded-full font-bold shadow-sm hover:bg-on-primary-container transition-colors" onclick="castVote(this, 1)" type="button">
+                  Vote Now
+                </button>
+</div>
+<!-- Bar & Stats -->
+<div class="mt-space-sm">
+<div class="flex items-center justify-between font-label-xs text-label-xs font-bold text-on-surface-variant mb-1">
+<span class="text-primary font-extrabold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">local_fire_department</span>
+                    Leading Pick
+                  </span>
+<span class="vote-stats">142 votes • 42%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="progress-bar h-full bg-primary rounded-full transition-all duration-500" style="width: 42%;"></div>
+</div>
+</div>
+</div>
+<!-- Dish 2 -->
+<div class="dish-card relative p-space-md rounded-xl bg-surface-container transition-all hover:bg-surface-container-high group" data-count="98" data-dish="Rajma Chawal Special">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex-1">
+<div class="flex items-center gap-space-xs">
+<span class="text-[18px]">🍚</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold group-hover:text-primary transition-colors">
+                      Rajma Chawal Special
+                    </h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Jammu Rajma slow-cooked with spiced puree and desi ghee rice.</p>
+</div>
+<button class="vote-btn shrink-0 bg-surface-container-lowest text-on-surface font-label-sm text-label-sm px-space-md py-space-xs rounded-full font-bold shadow-sm hover:bg-primary hover:text-on-primary transition-colors" onclick="castVote(this, 2)" type="button">
+                  Vote Now
+                </button>
+</div>
+<!-- Bar & Stats -->
+<div class="mt-space-sm">
+<div class="flex items-center justify-between font-label-xs text-label-xs font-bold text-on-surface-variant mb-1">
+<span>Hostel Classic</span>
+<span class="vote-stats">98 votes • 29%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="progress-bar h-full bg-surface-tint rounded-full transition-all duration-500" style="width: 29%;"></div>
+</div>
+</div>
+</div>
+<!-- Dish 3 -->
+<div class="dish-card relative p-space-md rounded-xl bg-surface-container transition-all hover:bg-surface-container-high group" data-count="64" data-dish="Hyderabadi Dum Veg Biryani">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex-1">
+<div class="flex items-center gap-space-xs">
+<span class="text-[18px]">🥘</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold group-hover:text-primary transition-colors">
+                      Hyderabadi Dum Veg Biryani
+                    </h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Layered basmati cooked in clay handi with fiery Mirchi ka Salan.</p>
+</div>
+<button class="vote-btn shrink-0 bg-surface-container-lowest text-on-surface font-label-sm text-label-sm px-space-md py-space-xs rounded-full font-bold shadow-sm hover:bg-primary hover:text-on-primary transition-colors" onclick="castVote(this, 3)" type="button">
+                  Vote Now
+                </button>
+</div>
+<!-- Bar & Stats -->
+<div class="mt-space-sm">
+<div class="flex items-center justify-between font-label-xs text-label-xs font-bold text-on-surface-variant mb-1">
+<span>Spicy Palette</span>
+<span class="vote-stats">64 votes • 19%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="progress-bar h-full bg-tertiary-container rounded-full transition-all duration-500" style="width: 19%;"></div>
+</div>
+</div>
+</div>
+<!-- Dish 4 -->
+<div class="dish-card relative p-space-md rounded-xl bg-surface-container transition-all hover:bg-surface-container-high group" data-count="34" data-dish="Delhi Style Chole Bhature">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex-1">
+<div class="flex items-center gap-space-xs">
+<span class="text-[18px]">🫓</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold group-hover:text-primary transition-colors">
+                      Delhi Style Chole Bhature
+                    </h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Puffed crispy paneer-stuffed bhaturas with amritsari chole &amp; achar.</p>
+</div>
+<button class="vote-btn shrink-0 bg-surface-container-lowest text-on-surface font-label-sm text-label-sm px-space-md py-space-xs rounded-full font-bold shadow-sm hover:bg-primary hover:text-on-primary transition-colors" onclick="castVote(this, 4)" type="button">
+                  Vote Now
+                </button>
+</div>
+<!-- Bar & Stats -->
+<div class="mt-space-sm">
+<div class="flex items-center justify-between font-label-xs text-label-xs font-bold text-on-surface-variant mb-1">
+<span>Weekend Mood</span>
+<span class="vote-stats">34 votes • 10%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="progress-bar h-full bg-outline rounded-full transition-all duration-500" style="width: 10%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Transparency Guarantee Note -->
+<div class="mt-space-md pt-space-sm flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">gavel</span>
+            1 Student = 1 Verified Vote (Room 304 Locked)
+          </span>
+<span class="font-mono font-bold text-on-surface text-label-xs">338 Voters Total</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Floating / Persistent Quick Feedback Bar -->
+<section class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex flex-col md:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">rate_review</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md font-bold text-on-surface">How was yesterday's dinner?</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Wednesday Night: Dal Tadka, Jeera Aloo, Tawa Rotis (Delivered 8:14 PM)</p>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm w-full md:w-auto justify-end">
+<!-- Interactive Star Rating Button -->
+<button class="inline-flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md font-bold hover:bg-secondary hover:text-on-secondary transition-colors" id="starRateBtn" onclick="handleRateDinner()" type="button">
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span>Rate 5 Stars</span>
+</button>
+<!-- Issue Escalation Button -->
+<button class="inline-flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md font-semibold hover:bg-error-container hover:text-on-error-container transition-colors" onclick="handleReportIssue()" type="button">
+<span class="material-symbols-outlined text-[18px]">report_problem</span>
+<span>Report Issue</span>
+</button>
+<!-- Skip Feedback -->
+<button class="p-space-xs text-on-surface-variant hover:text-on-surface transition-colors" onclick="this.closest('section').remove()" title="Dismiss feedback request" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+<script>
+  function castVote(button, cardIndex) {
+    const card = button.closest('.dish-card');
+    const dishName = card.getAttribute('data-dish');
+    const allButtons = document.querySelectorAll('.vote-btn');
+    
+    // Disable re-voting on other cards
+    allButtons.forEach(btn => {
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+      btn.innerText = 'Voted';
+    });
+
+    // Highlight chosen card
+    button.innerText = '✓ Cast';
+    button.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-surface-container-lowest', 'text-on-surface');
+    button.classList.add('bg-secondary', 'text-on-secondary');
+
+    // Reveal live confirmation banner
+    const banner = document.getElementById('voteBanner');
+    const bannerText = document.getElementById('voteBannerText');
+    bannerText.innerText = "You voted for " + dishName + "! Live votes updated.";
+    banner.classList.remove('hidden');
+
+    // Optimistically bump vote count display
+    const statsEl = card.querySelector('.vote-stats');
+    let currentCount = parseInt(card.getAttribute('data-count'), 10) + 1;
+    card.setAttribute('data-count', currentCount);
+    statsEl.innerText = currentCount + " votes • Just Updated!";
+  }
+
+  function handleRateDinner() {
+    const btn = document.getElementById('starRateBtn');
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">thumb_up</span> Thank You! (5★ Recorded)';
+    btn.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+    btn.classList.add('bg-secondary', 'text-on-secondary');
+    btn.disabled = true;
+  }
+
+  function handleReportIssue() {
+    alert("Ticket generated for Hostel Mess Quality Inspector. Ticket ID: #ISSUE-7731. Mess coordinator will contact you via WhatsApp.");
+  }
+</script></div></main><footer class="w-full bg-surface-container-low mt-space-2xl"><div class="max-w-7xl mx-auto px-margin py-space-xl"><div class="flex flex-col md:flex-row items-center justify-between gap-space-md pb-space-lg"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-secondary text-[22px]">verified</span><div><p class="font-label-md text-label-md text-on-surface font-semibold">Certified Campus Kitchen Partner</p><p class="font-body-sm text-body-sm text-on-surface-variant">Strict adherence to collegiate food safety, hygiene audits, and thermal tiffin seal standards.</p></div></div><div class="flex items-center gap-space-md"><a class="font-label-sm text-label-sm text-primary hover:text-on-primary-fixed-variant font-semibold transition-colors" data-path="campus-audit" href="#">Audit Logs</a><span class="text-outline-variant font-body-sm text-body-sm">•</span><a class="font-label-sm text-label-sm text-primary hover:text-on-primary-fixed-variant font-semibold transition-colors" data-path="dbms-demo-schema" href="#">DBMS ER &amp; Schema</a><span class="text-outline-variant font-body-sm text-body-sm">•</span><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="support-helpdesk" href="#">Support Desk</a></div></div><div class="pt-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm text-on-surface-variant font-body-sm text-body-sm"><p>© 2025 TiffinTrack Platform • Campus Food Logistics &amp; DBMS Project Showcase.</p><p class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary"></span><span>Central Mess Hub: Online &amp; Dispatching</span></p></div></div></footer></body></html>

@@ -4,58 +4,80 @@
    Clean academic prototype UI — functional, readable, clear
    ============================================================ */
 
-/* ---- CSS VARIABLES (Design Tokens) ----------------------- */
+/* ---- CSS VARIABLES (Stitch Design System Tokens) ----------------------- */
 :root {
-  --color-primary:      #e07b39;   /* warm saffron-orange */
-  --color-primary-dark: #c4612a;
-  --color-primary-light:#f5a96a;
-  --color-secondary:    #2d7d46;   /* muted green */
-  --color-danger:       #d93025;
-  --color-warning:      #f29900;
-  --color-success:      #1e8e3e;
-  --color-info:         #1a73e8;
+  --color-primary:               #e07b39;   /* warm saffron-orange */
+  --color-primary-dark:          #9a4601;   /* stitch primary */
+  --color-primary-light:         #ffb68c;   /* primary-fixed-dim */
+  --color-primary-container:     #e07b39;
+  --color-on-primary-container:  #4f2100;
+  --color-secondary:             #186c37;   /* stitch secondary green */
+  --color-secondary-container:   #a0f2af;   /* stitch secondary container */
+  --color-on-secondary-container:#1e713b;
+  --color-danger:                #ba1a1a;   /* stitch error */
+  --color-warning:               #f59e0b;
+  --color-success:               #186c37;
+  --color-info:                  #2563eb;
 
-  --color-bg:           #f7f4f0;   /* warm off-white */
-  --color-surface:      #ffffff;
-  --color-border:       #e0d9d1;
-  --color-text:         #2c2416;
-  --color-text-muted:   #7a6e60;
-  --color-text-light:   #a89f94;
+  --color-bg:                    #fff8f4;   /* stitch warm surface */
+  --color-surface:               #ffffff;   /* surface-container-lowest */
+  --color-surface-low:           #fdf2e7;   /* surface-container-low */
+  --color-surface-high:          #f1e6dc;   /* surface-container-high */
+  --color-border:                #dcc1b4;   /* outline-variant */
+  --color-border-subtle:         #ece1d7;   /* surface-container-highest */
+  --color-text:                  #201b15;   /* on-surface */
+  --color-text-muted:            #554339;   /* on-surface-variant */
+  --color-text-light:            #897367;   /* outline */
 
-  --radius:             8px;
-  --radius-lg:          12px;
-  --shadow-sm:          0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md:          0 2px 8px rgba(0,0,0,0.10);
-  --shadow-lg:          0 4px 16px rgba(0,0,0,0.12);
+  --radius-sm:                   0.25rem;   /* 4px */
+  --radius:                      0.5rem;    /* 8px */
+  --radius-md:                   0.75rem;   /* 12px */
+  --radius-lg:                   1rem;      /* 16px */
+  --radius-xl:                   1.5rem;    /* 24px */
+  --radius-full:                 9999px;
 
-  --font:               'Inter', system-ui, sans-serif;
-  --transition:         0.2s ease;
+  --shadow-sm:                   0 1px 3px rgba(32, 27, 21, 0.05);
+  --shadow-md:                   0 4px 16px -2px rgba(32, 27, 21, 0.08);
+  --shadow-lg:                   0 12px 32px -4px rgba(32, 27, 21, 0.12);
+  --shadow-xl:                   0 20px 48px -8px rgba(32, 27, 21, 0.16);
+
+  --font:                        'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading:                'Plus Jakarta Sans', var(--font);
+  --transition:                  0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ---- RESET ------------------------------------------------ */
+/* ---- RESET & TYPOGRAPHY ----------------------------------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
+html { font-size: 16px; scroll-behavior: smooth; }
 body {
   font-family: var(--font);
   background:  var(--color-bg);
   color:        var(--color-text);
   line-height:  1.6;
   min-height:   100vh;
+  -webkit-font-smoothing: antialiased;
 }
-a { color: var(--color-primary); text-decoration: none; }
-a:hover { text-decoration: underline; }
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+a { color: var(--color-primary); text-decoration: none; transition: color var(--transition); }
+a:hover { text-decoration: none; color: var(--color-primary-dark); }
 ul { list-style: none; }
-img { max-width: 100%; }
+img { max-width: 100%; display: block; }
 
-/* ---- NAVBAR ---------------------------------------------- */
+/* ---- NAVBAR (Stitch App Header) -------------------------- */
 .navbar {
   display:          flex;
   align-items:      center;
   justify-content:  space-between;
-  background:       var(--color-surface);
+  background:       rgba(255, 255, 255, 0.94);
+  backdrop-filter:  blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom:    1px solid var(--color-border);
-  padding:          0 24px;
-  height:           60px;
+  padding:          0 28px;
+  height:           68px;
   position:         sticky;
   top: 0;
   z-index:          100;
@@ -64,60 +86,72 @@ img { max-width: 100%; }
 .navbar-brand {
   display:     flex;
   align-items: center;
-  gap:         8px;
-  font-weight: 700;
-  font-size:   1.2rem;
-  color:       var(--color-primary);
+  gap:         10px;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size:   1.35rem;
+  color:       var(--color-primary-dark);
   cursor:      pointer;
+  letter-spacing: -0.02em;
 }
-.brand-icon { font-size: 1.4rem; }
+.brand-icon { font-size: 1.5rem; }
+.brand-name {
+  background: linear-gradient(135deg, #e07b39 0%, #9a4601 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 .nav-links {
   display:    flex;
-  gap:        4px;
+  gap:        6px;
   flex:       1;
   justify-content: center;
 }
 .nav-links a {
-  padding:       8px 14px;
-  border-radius: var(--radius);
-  color:         var(--color-text);
-  font-size:     0.9rem;
-  font-weight:   500;
-  transition:    background var(--transition), color var(--transition);
+  padding:       7px 16px;
+  border-radius: var(--radius-full);
+  color:         var(--color-text-muted);
+  font-size:     0.875rem;
+  font-weight:   600;
+  transition:    all var(--transition);
 }
-.nav-links a:hover { background: var(--color-bg); text-decoration: none; }
+.nav-links a:hover {
+  background: var(--color-surface-high);
+  color:      var(--color-text);
+}
 .nav-links a.active {
-  background: #fff3e8;
-  color:      var(--color-primary);
+  background: var(--color-primary);
+  color:      #ffffff;
+  box-shadow: 0 2px 8px rgba(224, 123, 57, 0.3);
 }
 .navbar-right { display: flex; align-items: center; gap: 12px; }
 .role-badge {
-  font-size:     0.75rem;
-  font-weight:   600;
-  padding:       3px 10px;
-  border-radius: 20px;
-  background:    #fff3e8;
-  color:         var(--color-primary);
+  font-size:     0.7rem;
+  font-weight:   700;
+  padding:       4px 12px;
+  border-radius: var(--radius-full);
+  background:    var(--color-surface-low);
+  color:         var(--color-primary-dark);
+  border:        1px solid var(--color-border);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
 /* ---- DEMO BANNER ----------------------------------------- */
 .demo-banner {
-  background:  #fff8e1;
-  border-bottom: 1px solid #ffe082;
-  color:       #7a5200;
+  background:  var(--color-surface-low);
+  border-bottom: 1px solid var(--color-border);
+  color:       var(--color-text-muted);
   text-align:  center;
-  padding:     6px 16px;
+  padding:     8px 16px;
   font-size:   0.82rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* ---- MAIN CONTENT ---------------------------------------- */
 .main-content {
-  max-width:  1200px;
+  max-width:  1280px;
   margin:     0 auto;
-  padding:    28px 24px;
+  padding:    32px 24px 64px 24px;
 }
 
 /* ---- UTILITY CLASSES ------------------------------------- */
@@ -140,122 +174,184 @@ img { max-width: 100%; }
 
 /* ---- PAGE HEADER ----------------------------------------- */
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  position: relative;
 }
 .page-header h1 {
-  font-size:   1.6rem;
-  font-weight: 700;
+  font-size:   2rem;
+  font-weight: 800;
   color:       var(--color-text);
+  line-height: 1.25;
 }
 .page-header p {
   color:     var(--color-text-muted);
   font-size: 0.95rem;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
-/* ---- CARDS ----------------------------------------------- */
+/* ---- CARDS (Stitch Surfaces) ----------------------------- */
 .card {
   background:    var(--color-surface);
   border:        1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding:       20px;
+  padding:       24px;
   box-shadow:    var(--shadow-sm);
+  transition:    box-shadow var(--transition), border-color var(--transition);
+}
+.card:hover {
+  border-color: #d8cec4;
 }
 .card-title {
-  font-size:   1rem;
+  font-family: var(--font-heading);
+  font-size:   1.1rem;
   font-weight: 700;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   color:       var(--color-text);
   display:     flex;
   align-items: center;
-  gap:         8px;
+  gap:         10px;
 }
-.card-title span.icon { font-size: 1.1rem; }
+.card-title span.icon { font-size: 1.2rem; }
 
-/* ---- STAT GRID (dashboard cards) ------------------------- */
+/* ---- STAT GRID (Stitch KPI Cards) ------------------------ */
 .stat-grid {
   display:               grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap:                   16px;
-  margin-bottom:         24px;
+  margin-bottom:         28px;
 }
 .stat-card {
   background:    var(--color-surface);
   border:        1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding:       18px 20px;
+  padding:       20px 22px;
   box-shadow:    var(--shadow-sm);
+  transition:    all var(--transition);
+  position:      relative;
+  overflow:      hidden;
+}
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  transform:  translateY(-2px);
 }
 .stat-card .stat-label {
-  font-size:  0.8rem;
-  color:      var(--color-text-muted);
-  font-weight:500;
+  font-size:      0.75rem;
+  color:          var(--color-text-muted);
+  font-weight:    700;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.6px;
 }
 .stat-card .stat-value {
-  font-size:   1.8rem;
-  font-weight: 700;
-  color:       var(--color-primary);
+  font-family: var(--font-heading);
+  font-size:   2rem;
+  font-weight: 800;
+  color:       var(--color-primary-dark);
   line-height: 1.2;
-  margin-top:  4px;
+  margin-top:  6px;
+  letter-spacing: -0.02em;
 }
 .stat-card .stat-sub {
   font-size: 0.78rem;
   color:     var(--color-text-muted);
-  margin-top:2px;
+  margin-top:4px;
 }
 
 /* ---- DASHBOARD GRID -------------------------------------- */
 .dashboard-grid {
   display:               grid;
   grid-template-columns: 1fr 1fr;
-  gap:                   20px;
+  gap:                   24px;
 }
 .dashboard-grid .full-width { grid-column: 1 / -1; }
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .dashboard-grid { grid-template-columns: 1fr; }
 }
 
-/* ---- BUTTONS --------------------------------------------- */
+/* ---- BUTTONS (Stitch Design Buttons) --------------------- */
 .btn {
   display:       inline-flex;
   align-items:   center;
-  gap:           6px;
-  padding:       9px 18px;
+  justify-content: center;
+  gap:           8px;
+  padding:       10px 20px;
   border-radius: var(--radius);
-  font-size:     0.9rem;
+  font-size:     0.875rem;
   font-weight:   600;
   cursor:        pointer;
-  border:        none;
-  transition:    background var(--transition), transform var(--transition), opacity var(--transition);
+  border:        1px solid transparent;
+  transition:    all var(--transition);
   font-family:   var(--font);
-  line-height:   1;
+  line-height:   1.2;
+  text-decoration: none;
 }
-.btn:hover:not(:disabled) { transform: translateY(-1px); }
-.btn:active:not(:disabled){ transform: translateY(0); }
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.btn:active:not(:disabled){
+  transform: translateY(0);
+}
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor:  not-allowed;
   transform: none;
+  box-shadow: none;
 }
-.btn-primary   { background: var(--color-primary); color: #fff; }
-.btn-primary:hover:not(:disabled) { background: var(--color-primary-dark); }
-.btn-secondary { background: var(--color-secondary); color: #fff; }
-.btn-secondary:hover:not(:disabled) { background: #235f35; }
-.btn-danger    { background: var(--color-danger); color: #fff; }
-.btn-danger:hover:not(:disabled) { background: #b32217; }
-.btn-outline   {
+.btn-primary {
+  background: var(--color-primary);
+  color:      #ffffff;
+  box-shadow: 0 2px 6px rgba(224, 123, 57, 0.25);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  color:      #ffffff;
+}
+.btn-secondary {
+  background: var(--color-secondary);
+  color:      #ffffff;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #14592d;
+  color:      #ffffff;
+}
+.btn-danger {
+  background: #ba1a1a;
+  color:      #ffffff;
+}
+.btn-danger:hover:not(:disabled) {
+  background: #93000a;
+}
+.btn-outline {
+  background:   var(--color-surface);
+  border:       1px solid var(--color-border);
+  color:        var(--color-text);
+}
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color:        var(--color-primary-dark);
+  background:   var(--color-surface-low);
+}
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  border-radius: var(--radius);
+}
+.btn-lg {
+  padding: 14px 28px;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+}
+.btn-ghost {
   background: transparent;
-  border:     2px solid var(--color-border);
-  color:      var(--color-text);
+  color:      var(--color-primary-dark);
 }
-.btn-outline:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); background: #fff3e8; }
-.btn-sm { padding: 6px 12px; font-size: 0.82rem; }
-.btn-lg { padding: 12px 24px; font-size: 1rem; }
-.btn-ghost { background: transparent; color: var(--color-primary); }
-.btn-ghost:hover:not(:disabled) { background: #fff3e8; }
-.btn-info   { background: var(--color-info); color: #fff; }
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-surface-low);
+}
+.btn-info {
+  background: var(--color-info);
+  color:      #ffffff;
+}
 
 /* ---- TABLES ---------------------------------------------- */
 .table-wrapper {
@@ -333,73 +429,106 @@ tr:hover td { background: #faf7f3; }
 }
 .star-btn.active, .star-btn:hover { color: #f4b942; }
 
-/* ---- FORMS ----------------------------------------------- */
+/* ---- FORMS & INPUTS (Stitch Design Inputs) ---------------- */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 .form-group label {
-  display:     block;
-  font-size:   0.875rem;
-  font-weight: 600;
+  display:       block;
+  font-size:     0.875rem;
+  font-weight:   600;
   margin-bottom: 6px;
-  color:       var(--color-text);
+  color:         var(--color-text);
 }
 .form-control {
   width:         100%;
-  padding:       9px 12px;
+  padding:       10px 14px;
   border:        1px solid var(--color-border);
   border-radius: var(--radius);
   font-size:     0.9rem;
   font-family:   var(--font);
   color:         var(--color-text);
   background:    var(--color-surface);
-  transition:    border-color var(--transition);
+  transition:    all var(--transition);
   outline:       none;
 }
-.form-control:focus { border-color: var(--color-primary); }
+.form-control:focus {
+  border-color: var(--color-primary);
+  background:   var(--color-surface-low);
+  box-shadow:   0 0 0 3px rgba(224, 123, 57, 0.18);
+}
 select.form-control { cursor: pointer; }
-textarea.form-control { resize: vertical; min-height: 80px; }
+textarea.form-control { resize: vertical; min-height: 90px; }
 
-/* ---- VENDOR CARDS ---------------------------------------- */
+/* ---- VENDOR CARDS (Stitch Food Cards) -------------------- */
 .vendor-grid {
   display:               grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap:                   20px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap:                   24px;
 }
 .vendor-card {
   background:    var(--color-surface);
   border:        1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding:       20px;
+  padding:       24px;
   box-shadow:    var(--shadow-sm);
-  transition:    box-shadow var(--transition), transform var(--transition);
+  transition:    all var(--transition);
+  position:      relative;
+  display:       flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 .vendor-card:hover {
   box-shadow: var(--shadow-md);
-  transform:  translateY(-2px);
+  transform:  translateY(-3px);
+  border-color: #d8cec4;
 }
 .vendor-card-header {
   display:       flex;
   align-items:   flex-start;
   justify-content: space-between;
+  gap:           12px;
   margin-bottom: 12px;
 }
-.vendor-name   { font-size: 1.05rem; font-weight: 700; }
-.vendor-locale { color: var(--color-text-muted); font-size: 0.85rem; margin-top: 2px; }
-.vendor-price  { font-size: 1.1rem; font-weight: 700; color: var(--color-primary); }
-.vendor-meta   {
+.vendor-name   {
+  font-family: var(--font-heading);
+  font-size:   1.15rem;
+  font-weight: 700;
+  color:       var(--color-text);
+}
+.vendor-locale {
+  color:      var(--color-text-muted);
+  font-size:  0.85rem;
+  margin-top: 3px;
+}
+.vendor-price {
+  font-family: var(--font-heading);
+  font-size:   1.15rem;
+  font-weight: 800;
+  color:       var(--color-primary-dark);
+  white-space: nowrap;
+}
+.vendor-meta {
   display:    flex;
-  gap:        12px;
+  gap:        10px;
   font-size:  0.82rem;
   color:      var(--color-text-muted);
-  margin:     10px 0;
+  margin:     12px 0 16px 0;
   flex-wrap:  wrap;
 }
-.vendor-meta span { display: flex; align-items: center; gap: 4px; }
+.vendor-meta span {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           4px;
+  background:    var(--color-surface-low);
+  padding:       4px 10px;
+  border-radius: var(--radius-full);
+  font-weight:   500;
+}
 .vendor-actions {
   display:    flex;
-  gap:        8px;
-  margin-top: 14px;
+  gap:        10px;
+  margin-top: auto;
 }
 
 /* ---- ROLE SWITCHER --------------------------------------- */
@@ -741,20 +870,20 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .plan-tag.veg   { background: #e6f4ea; color: #1e5e31; }
 .plan-tag.nonveg{ background: #fce8e6; color: #831f15; }
 
-/* ---- DELIVERY STATUS ------------------------------------- */
+/* ---- DELIVERY STATUS (Stitch 3-Stage Trajectory Stepper) -- */
 .delivery-status-track {
   display:    flex;
   gap:        0;
-  margin:     12px 0;
+  margin:     16px 0 12px 0;
   position:   relative;
 }
 .delivery-status-track::before {
   content:    '';
   position:   absolute;
-  top:        16px;
-  left:       20px;
-  right:      20px;
-  height:     2px;
+  top:        20px;
+  left:       30px;
+  right:      30px;
+  height:     3px;
   background: var(--color-border);
   z-index:    0;
 }
@@ -763,26 +892,44 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   display:     flex;
   flex-direction:column;
   align-items:center;
-  gap:         6px;
-  font-size:   0.75rem;
+  gap:         8px;
+  font-size:   0.8rem;
   color:       var(--color-text-muted);
   position:    relative;
   z-index:     1;
 }
 .delivery-step .dot {
-  width:         32px;
-  height:        32px;
+  width:         40px;
+  height:        40px;
   border-radius: 50%;
-  background:    var(--color-border);
+  background:    var(--color-surface);
+  border:        2px solid var(--color-border);
   display:       flex;
   align-items:   center;
   justify-content:center;
-  font-size:     1rem;
+  font-size:     1.2rem;
+  box-shadow:    var(--shadow-sm);
+  transition:    all var(--transition);
 }
-.delivery-step.active .dot { background: var(--color-primary); }
-.delivery-step.done   .dot { background: var(--color-success); }
-.delivery-step.active .label,
-.delivery-step.done   .label { color: var(--color-text); font-weight: 600; }
+.delivery-step.active .dot {
+  background:   var(--color-primary);
+  border-color: var(--color-primary-dark);
+  box-shadow:   0 0 0 4px rgba(224, 123, 57, 0.2);
+  transform:    scale(1.08);
+}
+.delivery-step.done .dot {
+  background:   var(--color-secondary);
+  border-color: var(--color-secondary);
+  color:        #ffffff;
+}
+.delivery-step.active .label {
+  color:       var(--color-primary-dark);
+  font-weight: 700;
+}
+.delivery-step.done .label {
+  color:       var(--color-secondary);
+  font-weight: 700;
+}
 
 /* ---- MODAL OVERLAY --------------------------------------- */
 .modal-overlay {

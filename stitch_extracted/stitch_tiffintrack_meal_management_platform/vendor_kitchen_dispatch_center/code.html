@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#897367", "on-primary-container": "#4f2100", "secondary-container": "#a0f2af", "inverse-primary": "#ffb68c", "on-background": "#201b15", "inverse-surface": "#352f29", "surface-bright": "#fff8f4", "surface-tint": "#9a4601", "on-secondary": "#ffffff", "primary": "#9a4601", "tertiary": "#5d5d6f", "on-tertiary-fixed-variant": "#464557", "on-error": "#ffffff", "surface-container": "#f7ece2", "primary-fixed": "#ffdbc9", "surface-container-highest": "#ece1d7", "primary-fixed-dim": "#ffb68c", "surface-container-high": "#f1e6dc", "on-surface": "#201b15", "on-primary": "#ffffff", "on-secondary-fixed-variant": "005225", "tertiary-container": "#9594a8", "background": "#fff8f4", "on-secondary-fixed": "#00210b", "on-primary-fixed": "#321200", "on-tertiary-fixed": "#1a1a2a", "surface-variant": "#ece1d7", "surface": "#fff8f4", "surface-container-lowest": "#ffffff", "error": "#ba1a1a", "tertiary-fixed": "#e3e0f7", "secondary-fixed-dim": "#87d898", "surface-dim": "#e3d8ce", "on-secondary-container": "#1e713b", "on-error-container": "#93000a", "secondary": "#186c37", "secondary-fixed": "#a3f5b2", "on-primary-fixed-variant": "#763400", "tertiary-fixed-dim": "#c6c4da", "on-tertiary": "#ffffff", "on-surface-variant": "#554339", "outline-variant": "#dcc1b4", "primary-container": "#e07b39", "on-tertiary-container": "#2d2d3e", "inverse-on-surface": "#faefe5", "surface-container-low": "#fdf2e7", "error-container": "#ffdad6" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-2xl": "3rem", "margin": "2rem", "space-md": "1rem", "space-sm": "0.5rem", "gutter": "1.5rem", "margin-mobile": "1rem", "space-xl": "2rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "gutter-mobile": "1rem" }, "fontFamily": { "body-lg": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "label-sm": ["Inter"], "label-md": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "label-xs": ["Inter"], "headline-lg-mobile": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "display": ["Plus Jakarta Sans"], "body-sm": ["Inter"], "body-md": ["Inter"] }, "fontSize": { "body-lg": ["1rem", { "lineHeight": "1.6rem", "fontWeight": "400" }], "headline-sm": ["1.25rem", { "lineHeight": "1.75rem", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-sm": ["0.75rem", { "lineHeight": "1rem", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-md": ["0.875rem", { "lineHeight": "1.25rem", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-md": ["1.5rem", { "lineHeight": "2rem", "letterSpacing": "-0.02em", "fontWeight": "700" }], "title-md": ["1.125rem", { "lineHeight": "1.5rem", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-xs": ["0.6875rem", { "lineHeight": "0.875rem", "letterSpacing": "0.04em", "fontWeight": "700" }], "headline-lg-mobile": ["1.75rem", { "lineHeight": "2.25rem", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-lg": ["2.25rem", { "lineHeight": "2.75rem", "letterSpacing": "-0.025em", "fontWeight": "700" }], "display": ["3rem", { "lineHeight": "3.5rem", "letterSpacing": "-0.03em", "fontWeight": "800" }], "body-sm": ["0.75rem", { "lineHeight": "1.2rem", "fontWeight": "400" }], "body-md": ["0.875rem", { "lineHeight": "1.4rem", "fontWeight": "400" }] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between pt-space-lg pb-space-lg"><div class="flex flex-col gap-space-lg"><div class="px-space-lg flex items-center gap-space-sm"><img alt="TiffinTrack Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Vf08lUcAfltHRYkOiloHrHT9MimYfMZ1Wvn9GYUSU2YkPMavbZxwyfEQZjWIar7pP4yGaLRN9keDXaS-xkNq3XNi-MSBKK76igPVhPYTzspizrX8C9XYAlASRB8Qs4rJNuDUZd1xbBHMNBN-fhf5xi9uOwtmVhV_0gsyxDxW5QfiGQrRObVi1o4uVXGbGzh8HNWMxUi4CSfa91w-DDbl3zEjL2EsGwotdoTHQ0DBOwjIF8RA8MxWX10g"/><span class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">TiffinTrack Ops</span></div><div class="px-space-md"><div class="bg-surface-container-high p-space-xs rounded-full flex items-center justify-between"><a class="px-space-sm py-space-xs font-label-xs text-label-xs text-on-surface-variant hover:text-on-surface rounded-full transition-colors" data-path="dashboard" href="#">Student</a><a class="px-space-sm py-space-xs font-label-xs text-label-xs bg-primary text-on-primary rounded-full transition-colors" data-path="kitchen-orders" href="#">Kitchen</a><a class="px-space-sm py-space-xs font-label-xs text-label-xs text-on-surface-variant hover:text-on-surface rounded-full transition-colors" data-path="campus-audit" href="#">Admin</a></div></div><nav class="flex flex-col gap-space-xs px-space-md" data-active-classes="bg-primary-container text-on-primary font-bold rounded-lg"><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-label-md text-label-md transition-colors" data-path="kitchen-orders" href="#"><span class="material-symbols-outlined text-[20px]">table_restaurant</span>Kitchen Orders</a><a aria-current="page" class="flex items-center gap-space-sm px-space-md py-space-sm transition-colors bg-primary-container text-on-primary font-bold rounded-lg" data-path="meal-dispatch" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span>Dispatch Queue</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-label-md text-label-md transition-colors" data-path="vendor-menu-planner" href="#"><span class="material-symbols-outlined text-[20px]">menu_book</span>Menu Planner</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-label-md text-label-md transition-colors" data-path="campus-audit" href="#"><span class="material-symbols-outlined text-[20px]">verified_user</span>Campus Compliance</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-label-md text-label-md transition-colors" data-path="dbms-demo-schema" href="#"><span class="material-symbols-outlined text-[20px]">schema</span>Database Schema</a></nav></div><div class="px-space-lg flex flex-col gap-space-md"><div class="p-space-sm bg-surface-container rounded-lg"><p class="font-label-xs text-label-xs uppercase text-on-surface-variant font-bold">Campus Kitchen Hub #2</p><p class="font-body-sm text-body-sm text-on-surface">North Sector Hostel Mess</p></div><a class="flex items-center gap-space-sm px-space-sm py-space-xs font-label-sm text-label-sm text-error hover:bg-error-container hover:text-on-error-container rounded-lg transition-colors" data-path="login" href="#"><span class="material-symbols-outlined text-[20px]">logout</span>Exit Session</a></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-md"><span class="px-space-sm py-space-xs rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs font-bold">KITCHEN DISPATCH CONSOLE</span><div class="flex items-center gap-space-xs text-on-surface-variant font-body-sm text-body-sm"><span class="material-symbols-outlined text-[16px]">schedule</span><span>Live Batch: Lunch Cycle A</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm"><span class="material-symbols-outlined text-[16px] text-secondary">sync</span><span>Auto-syncing (30s)</span></div><div class="flex items-center gap-space-sm"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4PbOzDMVVOcfSoeGnSnvDYkdSVnWzi698OvRh6je1HtcfIkD8lGTnVlc15d-0wNPSDz1sgm2ig1UKkeehdGrbw0ZFADnoKOfJ4WSktNTSdNCjSimEyTzz8-Oi9V9sz9wmU6ldTzKNFGflYCc6GkufZNEnLL9mCa3xoLfstR6HjgBlyyktAadx_GwRyC_t-_wrpsieGvZw8Budx6FvRjTTpbZw505jqf5egPjpyn7AZkNVhgpYgSfh"/><span class="font-label-sm text-label-sm text-on-surface font-semibold">Supervisor Desk</span></div></div></header><main class="relative pt-16 bg-surface px-space-xl py-space-lg min-h-screen"><div class="flex flex-col w-full gap-space-lg">
+<!-- Operational Header Card -->
+<div class="relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm p-space-lg">
+<div class="absolute -right-12 -top-12 w-64 h-64 bg-gradient-to-br from-primary-fixed/30 to-secondary-fixed/20 rounded-full blur-2xl pointer-events-none"></div>
+<div class="relative flex flex-col xl:flex-row items-start xl:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="px-space-sm py-space-xs rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs uppercase tracking-wider font-bold">
+            Vendor Portal • Hub #02
+          </span>
+<span class="flex items-center gap-1.5 px-space-sm py-space-xs rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs font-bold">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+            Accepting Orders
+          </span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-extrabold tracking-tight">
+          Shree Annapurna Central Kitchen (Gate 2)
+        </h1>
+<div class="flex items-center gap-space-md text-on-surface-variant font-body-sm text-body-sm flex-wrap">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-primary">schedule</span>
+            Lunch Dispatch Window: <strong class="text-on-surface font-semibold">12:00 PM – 01:30 PM</strong>
+</span>
+<span class="text-outline-variant">•</span>
+<span class="px-space-sm py-0.5 rounded bg-error-container text-on-error-container font-label-xs text-label-xs font-bold animate-pulse">
+            Window Closes in 45m
+          </span>
+</div>
+</div>
+<!-- Action Cluster: Live Switch & Batch Bulk Actions -->
+<div class="flex items-center gap-space-md self-stretch xl:self-auto justify-between xl:justify-end bg-surface-container-low p-space-sm rounded-xl">
+<div class="flex items-center gap-space-sm pr-space-md">
+<div class="flex flex-col text-left">
+<span class="font-label-xs text-label-xs uppercase text-on-surface-variant font-bold">Kitchen State</span>
+<span class="font-label-md text-label-md text-on-surface font-bold" id="kitchenStatusText">Live Dispatch</span>
+</div>
+<button aria-checked="true" class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full bg-secondary transition-colors duration-200 ease-in-out focus:outline-none" id="toggleKitchenBtn" onclick="toggleKitchenState()" role="switch">
+<span class="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-surface shadow-md ring-0 transition duration-200 ease-in-out mt-1 ml-1" id="toggleKnob"></span>
+</button>
+</div>
+<button class="flex items-center gap-1.5 px-space-md py-space-sm bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-on-primary-container transition-all shadow-sm" onclick="triggerAutoRefresh()">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span>Fast Batch Out</span>
+</button>
+</div>
+</div>
+</div>
+<!-- KPI Metrics 4-Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Active Subscribers -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-on-surface-variant">Active Subscribers</span>
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">groups</span>
+</div>
+</div>
+<div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display font-extrabold text-on-surface">42</span>
+<span class="font-label-xs text-label-xs text-secondary font-bold flex items-center">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +3 today
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs truncate">Hostel Block A (18), B (14), C (10)</p>
+</div>
+</div>
+<!-- Meals to Prepare Today -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-on-surface-variant">Meals Today</span>
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">bento</span>
+</div>
+</div>
+<div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display font-extrabold text-on-surface">84</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">total portions</span>
+</div>
+<div class="flex items-center gap-space-sm mt-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high font-label-xs text-label-xs font-semibold text-on-surface">42 Lunch</span>
+<span class="text-outline-variant">•</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high font-label-xs text-label-xs font-semibold text-on-surface">42 Dinner</span>
+</div>
+</div>
+</div>
+<!-- Kitchen Rating -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-on-surface-variant">Kitchen Rating</span>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display font-extrabold text-on-surface">4.8</span>
+<span class="font-title-md text-title-md text-on-surface-variant font-medium">/ 5.0</span>
+</div>
+<div class="flex items-center gap-1 mt-space-xs text-on-surface-variant font-body-sm text-body-sm">
+<span class="text-primary font-bold">98%</span>
+<span>taste satisfaction (184 reviews)</span>
+</div>
+</div>
+</div>
+<!-- Pending Disputes/Tickets -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-on-surface-variant">Live Issues</span>
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[20px]">notification_important</span>
+</div>
+</div>
+<div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display font-extrabold text-error">1</span>
+<span class="px-space-xs py-0.5 rounded bg-error/10 text-error font-label-xs text-label-xs font-bold">Action Needed</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs truncate">Ticket #884: Block A Delivery Delay query</p>
+</div>
+</div>
+</div>
+<!-- Main Grid: Dispatch Table (8 Cols) + Side Panel (4 Cols) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Dispatch & Delivery Manifest Section (Col 8) -->
+<div class="lg:col-span-8 flex flex-col gap-space-md">
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Top Toolbar & Filter Tabs -->
+<div class="p-space-md bg-surface-container-low flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-sm">
+<div>
+<h2 class="font-title-md text-title-md text-on-surface font-bold">Today's Lunch Manifest</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Live packaging queue &amp; campus dispatch updates</p>
+</div>
+<!-- Quick Stats Pill -->
+<div class="flex items-center gap-2 bg-surface-container-lowest px-space-sm py-1 rounded-full shadow-sm">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-xs text-label-xs font-bold text-on-surface">34 / 42 Fulfilled (81%)</span>
+</div>
+</div>
+<!-- Filter Sub-Nav Buttons -->
+<div class="px-space-md pt-space-sm pb-space-xs bg-surface-container-lowest flex items-center gap-space-xs overflow-x-auto">
+<button class="tab-btn px-space-sm py-1.5 rounded-lg font-label-sm text-label-sm font-bold bg-primary text-on-primary transition-all" onclick="filterManifest('all', this)">
+            All Deliveries (42)
+          </button>
+<button class="tab-btn px-space-sm py-1.5 rounded-lg font-label-sm text-label-sm font-semibold bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all" onclick="filterManifest('prep', this)">
+            🍳 In-Prep (8)
+          </button>
+<button class="tab-btn px-space-sm py-1.5 rounded-lg font-label-sm text-label-sm font-semibold bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all" onclick="filterManifest('dispatch', this)">
+            🛵 Out for Dispatch (18)
+          </button>
+<button class="tab-btn px-space-sm py-1.5 rounded-lg font-label-sm text-label-sm font-semibold bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all" onclick="filterManifest('delivered', this)">
+            ✅ Delivered (16)
+          </button>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container font-label-xs text-label-xs uppercase tracking-wider text-on-surface-variant">
+<th class="py-3 px-space-md">Token / ID</th>
+<th class="py-3 px-space-md">Student &amp; Location</th>
+<th class="py-3 px-space-md">Meal Specifications</th>
+<th class="py-3 px-space-md">Status</th>
+<th class="py-3 px-space-md text-right">Fulfillment Action</th>
+</tr>
+</thead>
+<tbody class="divide-y-0" id="manifestTableBody">
+<!-- Row 1: TT-1041 -->
+<tr class="manifest-row hover:bg-surface-container-high/40 transition-colors" data-status="dispatch">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="font-mono font-bold text-on-surface bg-surface-container px-2 py-1 rounded text-label-sm">#TT-1041</span>
+<span class="block text-[11px] text-on-surface-variant mt-0.5">12:08 PM</span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-bold text-on-surface">Rahul Sharma</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">apartment</span>
+                    Block A, Room 304
+                  </div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="inline-flex items-center gap-1 font-label-sm text-label-sm font-semibold text-on-surface">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    Exec Punjabi Veg
+                  </div>
+<div class="text-[11px] font-bold text-error bg-error-container/40 inline-block px-1.5 py-0.5 rounded mt-0.5">
+                    No Onion
+                  </div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">electric_moped</span> Out for Delivery
+                  </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="px-space-md py-1.5 bg-secondary text-on-secondary rounded-lg font-label-sm text-label-sm font-bold hover:bg-on-secondary-container transition-all shadow-sm flex items-center gap-1 ml-auto" onclick="markDelivered(this, 'TT-1041')">
+<span class="material-symbols-outlined text-[16px]">done_all</span>
+<span>Mark Delivered</span>
+</button>
+</td>
+</tr>
+<!-- Row 2: TT-1042 -->
+<tr class="manifest-row bg-surface-container-lowest hover:bg-surface-container-high/40 transition-colors" data-status="dispatch">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="font-mono font-bold text-on-surface bg-surface-container px-2 py-1 rounded text-label-sm">#TT-1042</span>
+<span class="block text-[11px] text-on-surface-variant mt-0.5">12:10 PM</span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-bold text-on-surface">Aman Verma</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">apartment</span>
+                    Block A, Room 304
+                  </div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="inline-flex items-center gap-1 font-label-sm text-label-sm font-semibold text-on-surface">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    Exec Punjabi Veg
+                  </div>
+<div class="text-[11px] font-semibold text-primary bg-primary-fixed/40 inline-block px-1.5 py-0.5 rounded mt-0.5">
+                    Extra Roti (+1)
+                  </div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">electric_moped</span> Out for Delivery
+                  </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="px-space-md py-1.5 bg-secondary text-on-secondary rounded-lg font-label-sm text-label-sm font-bold hover:bg-on-secondary-container transition-all shadow-sm flex items-center gap-1 ml-auto" onclick="markDelivered(this, 'TT-1042')">
+<span class="material-symbols-outlined text-[16px]">done_all</span>
+<span>Mark Delivered</span>
+</button>
+</td>
+</tr>
+<!-- Row 3: TT-1043 -->
+<tr class="manifest-row hover:bg-surface-container-high/40 transition-colors" data-status="prep">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="font-mono font-bold text-on-surface bg-surface-container px-2 py-1 rounded text-label-sm">#TT-1043</span>
+<span class="block text-[11px] text-on-surface-variant mt-0.5">12:15 PM</span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-bold text-on-surface">Priya Nair</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">apartment</span>
+                    Block B, Room 112
+                  </div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="inline-flex items-center gap-1 font-label-sm text-label-sm font-semibold text-on-surface">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    South Indian Thali
+                  </div>
+<div class="text-[11px] text-on-surface-variant mt-0.5">Sambar, Curd, 3 Idlis</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-xs text-label-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">skillet</span> Packed &amp; Ready
+                  </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="px-space-md py-1.5 bg-primary-container text-on-primary rounded-lg font-label-sm text-label-sm font-bold hover:bg-primary transition-all shadow-sm flex items-center gap-1 ml-auto" onclick="dispatchOrder(this, 'TT-1043')">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span>
+<span>1-Click Dispatch</span>
+</button>
+</td>
+</tr>
+<!-- Row 4: TT-1044 -->
+<tr class="manifest-row bg-surface-container-lowest hover:bg-surface-container-high/40 transition-colors" data-status="prep">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="font-mono font-bold text-on-surface bg-surface-container px-2 py-1 rounded text-label-sm">#TT-1044</span>
+<span class="block text-[11px] text-on-surface-variant mt-0.5">12:18 PM</span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-bold text-on-surface">Karan Patel</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">home_work</span>
+                    PG Cluster 3, Flat 2B
+                  </div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="inline-flex items-center gap-1 font-label-sm text-label-sm font-semibold text-on-surface">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    Jain Special Satvik
+                  </div>
+<div class="text-[11px] font-bold text-secondary bg-secondary-container/50 inline-block px-1.5 py-0.5 rounded mt-0.5">
+                    No Root Veg
+                  </div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-xs text-label-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">skillet</span> Packed &amp; Ready
+                  </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="px-space-md py-1.5 bg-primary-container text-on-primary rounded-lg font-label-sm text-label-sm font-bold hover:bg-primary transition-all shadow-sm flex items-center gap-1 ml-auto" onclick="dispatchOrder(this, 'TT-1044')">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span>
+<span>1-Click Dispatch</span>
+</button>
+</td>
+</tr>
+<!-- Row 5: TT-1045 -->
+<tr class="manifest-row hover:bg-surface-container-high/40 transition-colors" data-status="delivered">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="font-mono font-bold text-on-surface bg-surface-container px-2 py-1 rounded text-label-sm">#TT-1045</span>
+<span class="block text-[11px] text-on-surface-variant mt-0.5">11:52 AM</span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-bold text-on-surface">Rohan Mehta</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">apartment</span>
+                    Block C, Room 201
+                  </div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="inline-flex items-center gap-1 font-label-sm text-label-sm font-semibold text-on-surface">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    High-Protein Veg Meal
+                  </div>
+<div class="text-[11px] text-on-surface-variant mt-0.5">Sprouts &amp; Soya Chunks</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Delivered
+                  </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-space-sm py-1 rounded bg-surface-container font-label-xs text-label-xs font-bold text-on-surface-variant ml-auto">
+<span class="material-symbols-outlined text-[14px]">verified</span> Completed
+                  </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination / Summary Footer -->
+<div class="p-space-md bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-space-sm font-body-sm text-body-sm text-on-surface-variant">
+<div>Showing 5 of 42 active meal dispatches</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-sm py-1 bg-surface-container rounded hover:bg-surface-container-high transition-colors font-label-xs text-label-xs font-bold">Prev</button>
+<span class="px-space-sm py-1 font-label-xs text-label-xs font-bold text-on-surface bg-surface rounded">1</span>
+<span class="px-space-sm py-1 font-label-xs text-label-xs text-on-surface-variant">2</span>
+<span class="px-space-sm py-1 font-label-xs text-label-xs text-on-surface-variant">3</span>
+<button class="px-space-sm py-1 bg-surface-container rounded hover:bg-surface-container-high transition-colors font-label-xs text-label-xs font-bold">Next</button>
+</div>
+</div>
+</div>
+<!-- Quick Delivery Manifest Insights -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Visual Batch Progress -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-md text-label-md font-bold text-on-surface">Hostel Dispatch Density</span>
+<span class="font-label-xs text-label-xs text-secondary font-bold">Gate 2 Hub</span>
+</div>
+<div class="space-y-2">
+<div>
+<div class="flex justify-between font-label-xs text-label-xs mb-1">
+<span>Block A (Boys Hostel)</span>
+<span class="font-bold text-on-surface">18 meals</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 85%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-xs text-label-xs mb-1">
+<span>Block B (Girls Hostel)</span>
+<span class="font-bold text-on-surface">14 meals</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 65%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-xs text-label-xs mb-1">
+<span>PG Cluster &amp; Block C</span>
+<span class="font-bold text-on-surface">10 meals</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 50%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Rider Hub Ping -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[20px] text-primary">sports_motorsports</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">Campus Mess Runner Active</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant my-space-xs">
+            Rider <strong>Mahesh K.</strong> is currently en-route to Hostel Block A with Batch #1 (12 boxes). Next departure scheduled at 12:30 PM.
+          </p>
+<div class="flex items-center justify-between pt-space-xs">
+<span class="font-label-xs text-label-xs text-outline font-bold">AVG DISPATCH: 14 MINS</span>
+<button class="text-primary font-label-xs text-label-xs font-bold hover:underline">Ping Runner</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Panel: Quick Menu Builder & Daily Dish Publisher (Col 4) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md">
+<!-- Daily Dish Publisher Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">restaurant_menu</span>
+</span>
+<div>
+<h3 class="font-title-md text-title-md font-bold text-on-surface">Publish Tomorrow's Menu</h3>
+<p class="font-label-xs text-label-xs text-on-surface-variant">Wednesday Regular Meal Cycle</p>
+</div>
+</div>
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-xs text-label-xs font-bold text-secondary">
+            DRAFT
+          </span>
+</div>
+<!-- Visual Dish Image Preview -->
+<div class="relative rounded-xl overflow-hidden shadow-sm h-36 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Vibrant North Indian thali showcase featuring freshly made soft phulkas, aromatic paneer tikka masala in rich orange gravy, golden yellow dal tadka, steamed basmati rice, and creamy sweet rice kheer garnished with saffron strands, illuminated with warm appetizing restaurant-grade lighting on a warm clay surface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUCBY-Oabi0-6emv2aIxxDIvmCPRRbh169KpLmfNHlmDO1Qvhf8AyVBGnZizUN8qSC1LmWuIq0ksZKHhkwNUs75_1hqTrNC6Tt4YdoJpeMFkMGC6of359NGmVoTFAu-NQcZDOhGKVUxuCxbPcqLsh-HuOyrBFFwBnHzPAxXu2KoHWiUT_DFLYhiOhmZX9cgK1IRjPBHK8a1aUGMfAlAsBGeX2sYjMtCH9ezH0SzAdNcRNMAq87TT1S"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-background/80 via-transparent to-transparent flex items-end p-space-md">
+<div class="text-on-primary">
+<span class="font-label-xs text-label-xs uppercase font-bold tracking-wider text-primary-fixed">Special Deluxe Thali</span>
+<p class="font-title-md text-title-md font-bold leading-tight">North Indian Classic Thali</p>
+</div>
+</div>
+</div>
+<!-- Planned Dishes Pill List -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-xs text-label-xs uppercase text-on-surface-variant font-bold">Planned Thali Items (5 items)</label>
+<div class="space-y-1.5" id="dishList">
+<div class="flex items-center justify-between bg-surface-container-low px-space-sm py-2 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md text-on-surface font-medium">Paneer Tikka Masala</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant bg-surface px-1.5 py-0.5 rounded">Main Curry</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low px-space-sm py-2 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md text-on-surface font-medium">Yellow Dal Tadka</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant bg-surface px-1.5 py-0.5 rounded">Lentils</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low px-space-sm py-2 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md text-on-surface font-medium">4 Phulkas (Tawa Roti)</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant bg-surface px-1.5 py-0.5 rounded">Breads</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low px-space-sm py-2 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md text-on-surface font-medium">Jeera Steamed Rice</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant bg-surface px-1.5 py-0.5 rounded">Grains</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low px-space-sm py-2 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md text-on-surface font-medium">Saffron Rice Kheer</span>
+</div>
+<span class="font-label-xs text-label-xs text-primary font-bold bg-primary-fixed px-1.5 py-0.5 rounded">Sweet</span>
+</div>
+</div>
+</div>
+<!-- Instant Ingredient Estimator Module -->
+<div class="bg-surface-container p-space-md rounded-xl flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-xs text-label-xs uppercase font-bold text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">scale</span>
+              Auto Ingredient Estimator (84 Meals)
+            </span>
+<span class="font-label-xs text-label-xs text-secondary font-bold">Synced</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs mt-1">
+<div class="bg-surface-container-lowest p-2 rounded-lg text-center shadow-sm">
+<span class="block font-label-xs text-label-xs text-on-surface-variant font-semibold">Atta Flour</span>
+<span class="font-label-md text-label-md font-bold text-primary">18 kg</span>
+</div>
+<div class="bg-surface-container-lowest p-2 rounded-lg text-center shadow-sm">
+<span class="block font-label-xs text-label-xs text-on-surface-variant font-semibold">Fresh Paneer</span>
+<span class="font-label-md text-label-md font-bold text-primary">8.5 kg</span>
+</div>
+<div class="bg-surface-container-lowest p-2 rounded-lg text-center shadow-sm">
+<span class="block font-label-xs text-label-xs text-on-surface-variant font-semibold">Basmati Rice</span>
+<span class="font-label-md text-label-md font-bold text-primary">12 kg</span>
+</div>
+</div>
+<p class="font-label-xs text-label-xs text-outline mt-1 text-center">Calculated based on active subscriptions + buffer margin</p>
+</div>
+<!-- Toggle: Lock Menu & Notify -->
+<div class="flex items-center justify-between bg-surface-container-low p-space-sm rounded-lg">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Lock &amp; Push Broadcast</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Notify 42 active students on app</span>
+</div>
+<input checked="" class="w-5 h-5 accent-primary cursor-pointer rounded" id="notifyStudentsCheck" type="checkbox"/>
+</div>
+<!-- Publish Button -->
+<button class="w-full py-2.5 px-space-md bg-primary text-on-primary rounded-lg font-label-md text-label-md font-bold hover:bg-on-primary-container transition-all shadow-sm flex items-center justify-center gap-2" id="publishMenuBtn" onclick="publishTomorrowMenu()">
+<span class="material-symbols-outlined text-[18px]">publish</span>
+<span>Lock Menu &amp; Notify Subscribers</span>
+</button>
+</div>
+<!-- Kitchen Hygiene & Campus Audit Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-secondary-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">verified</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">FSSAI &amp; Campus Grade A</span>
+<span class="block font-label-xs text-label-xs text-on-surface-variant">Next inspection in 14 days</span>
+</div>
+</div>
+<button class="px-space-sm py-1 bg-surface-container font-label-xs text-label-xs font-bold text-on-surface rounded hover:bg-surface-container-high transition-colors">
+          View Audit
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function toggleKitchenState() {
+    const btn = document.getElementById('toggleKitchenBtn');
+    const knob = document.getElementById('toggleKnob');
+    const text = document.getElementById('kitchenStatusText');
+    const isLive = btn.getAttribute('aria-checked') === 'true';
+
+    if (isLive) {
+      btn.setAttribute('aria-checked', 'false');
+      btn.classList.remove('bg-secondary');
+      btn.classList.add('bg-outline-variant');
+      knob.classList.remove('translate-x-5');
+      knob.classList.add('translate-x-0');
+      text.innerText = 'Kitchen Paused';
+    } else {
+      btn.setAttribute('aria-checked', 'true');
+      btn.classList.remove('bg-outline-variant');
+      btn.classList.add('bg-secondary');
+      knob.classList.remove('translate-x-0');
+      knob.classList.add('translate-x-5');
+      text.innerText = 'Live Dispatch';
+    }
+  }
+
+  function filterManifest(status, el) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('bg-primary', 'text-on-primary');
+      btn.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+    });
+    el.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+    el.classList.add('bg-primary', 'text-on-primary');
+
+    const rows = document.querySelectorAll('.manifest-row');
+    rows.forEach(row => {
+      if (status === 'all') {
+        row.style.display = '';
+      } else {
+        const rowStatus = row.getAttribute('data-status');
+        row.style.display = rowStatus === status ? '' : 'none';
+      }
+    });
+  }
+
+  function markDelivered(button, tokenId) {
+    const row = button.closest('tr');
+    row.setAttribute('data-status', 'delivered');
+    const statusCell = row.children[3];
+    const actionCell = row.children[4];
+
+    statusCell.innerHTML = `
+      <span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs font-bold">
+        <span class="material-symbols-outlined text-[14px]">check_circle</span> Delivered
+      </span>
+    `;
+
+    actionCell.innerHTML = `
+      <span class="inline-flex items-center gap-1 px-space-sm py-1 rounded bg-surface-container font-label-xs text-label-xs font-bold text-on-surface-variant ml-auto">
+        <span class="material-symbols-outlined text-[14px]">verified</span> Completed
+      </span>
+    `;
+  }
+
+  function dispatchOrder(button, tokenId) {
+    const row = button.closest('tr');
+    row.setAttribute('data-status', 'dispatch');
+    const statusCell = row.children[3];
+    const actionCell = row.children[4];
+
+    statusCell.innerHTML = `
+      <span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-bold">
+        <span class="material-symbols-outlined text-[14px]">electric_moped</span> Out for Delivery
+      </span>
+    `;
+
+    actionCell.innerHTML = `
+      <button onclick="markDelivered(this, '${tokenId}')" class="px-space-md py-1.5 bg-secondary text-on-secondary rounded-lg font-label-sm text-label-sm font-bold hover:bg-on-secondary-container transition-all shadow-sm flex items-center gap-1 ml-auto">
+        <span class="material-symbols-outlined text-[16px]">done_all</span>
+        <span>Mark Delivered</span>
+      </button>
+    `;
+  }
+
+  function publishTomorrowMenu() {
+    const btn = document.getElementById('publishMenuBtn');
+    btn.innerHTML = `<span class="material-symbols-outlined text-[18px] animate-spin">sync</span><span>Broadcasting to Students...</span>`;
+    btn.classList.add('opacity-75');
+
+    setTimeout(() => {
+      btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">check</span><span>Menu Published &amp; Broadcasted!</span>`;
+      btn.classList.remove('bg-primary', 'hover:bg-on-primary-container', 'opacity-75');
+      btn.classList.add('bg-secondary', 'text-on-secondary');
+    }, 900);
+  }
+
+  function triggerAutoRefresh() {
+    const btns = document.querySelectorAll('[onclick^="dispatchOrder"]');
+    btns.forEach((b, idx) => {
+      setTimeout(() => {
+        b.click();
+      }, idx * 150);
+    });
+  }
+</script></main></div></body></html>
