@@ -225,11 +225,29 @@ async function handlePortalSignup(e) {
 
   try {
     const res = await authSignup(userData);
-    showToast('Registration Complete', 'Account registered and signed in.', 'success');
-    setupAuthenticatedView(res.user.role, res.user);
+    if (res.pendingApproval) {
+      showToast('Registration Submitted', 'Your account is pending Admin approval. Once approved, you can sign in.', 'info');
+      setAuthTab('login');
+      setTimeout(() => {
+        const loginAlert = document.getElementById('login-alert');
+        if (loginAlert) {
+          loginAlert.innerHTML = `
+            <div class="alert alert-info" style="margin-bottom:14px">
+              ⏳ <strong>Registration Submitted!</strong><br>
+              Your account (${email}) has been submitted for <strong>Administrator Verification & Approval</strong>. You will be able to sign in as soon as the Admin approves your account.
+            </div>
+          `;
+        }
+        const emailInput = document.getElementById('login-email');
+        if (emailInput) emailInput.value = email;
+      }, 50);
+    } else {
+      showToast('Registration Complete', 'Account registered and signed in.', 'success');
+      setupAuthenticatedView(res.user.role, res.user);
+    }
   } catch (err) {
     alertDiv.innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
     btn.disabled = false;
-    btn.textContent = 'Create Account & Sign In';
+    btn.textContent = 'Create Account';
   }
 }

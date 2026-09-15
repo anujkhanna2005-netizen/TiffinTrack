@@ -221,6 +221,12 @@ async function getAdminUsers() {
   return apiFetch('/admin/users');
 }
 
+async function approveUser(user_id) {
+  return apiFetch('/admin/users/' + user_id + '/approve', {
+    method: 'PATCH'
+  });
+}
+
 async function updateUserStatus(user_id, status) {
   return apiFetch('/admin/users/' + user_id + '/status', {
     method: 'PATCH',

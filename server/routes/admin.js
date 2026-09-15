@@ -71,17 +71,33 @@ router.get('/', async (req, res) => {
       ORDER BY c.created_at DESC
     `);
 
+    const pendingApprovals = await db.query(`
+      SELECT u.user_id, u.email, u.role, u.status, u.created_at,
+             COALESCE(c.name, v.name, a.name, 'New User') AS name,
+             COALESCE(c.phone, v.contact, a.phone, '—') AS phone,
+             COALESCE(c.locality, v.locality, a.assigned_locality, 'Campus Area') AS locality,
+             c.customer_id, v.vendor_id, a.agent_id
+      FROM users u
+      LEFT JOIN customers c ON u.user_id = c.user_id
+      LEFT JOIN vendors v ON u.user_id = v.user_id
+      LEFT JOIN delivery_agents a ON u.user_id = a.user_id
+      WHERE u.status = 'inactive'
+      ORDER BY u.created_at DESC
+    `);
+
     return res.json({
       stats: {
         total_users: totalUsers[0].cnt || 24,
         total_students: totalStudents[0].cnt || 0,
         total_vendors: totalVendors[0].cnt || 0,
         total_agents: totalAgents[0].cnt || 0,
+        pending_approvals: pendingApprovals.length,
         active_subscriptions: activeSubs[0].cnt || 0,
         today_deliveries: todayDeliveries[0].cnt || 0,
         pending_complaints: pendingComplaints[0].cnt || 0,
         platform_avg_rating: parseFloat(avgRating[0].avg_r) || 4.5
       },
+      pending_approvals: pendingApprovals,
       vendor_performance: vendors.map(v => ({
         ...v,
         overall_rating: parseFloat(v.overall_rating) || 4.5,
@@ -118,6 +134,33 @@ router.get('/users', async (req, res) => {
   }
 });
 
+// PATCH /api/admin/users/:id/approve (Approve Pending User / Vendor / Agent)
+router.patch('/users/:id/approve', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const userRows = await db.query('SELECT * FROM users WHERE user_id = ?', [id]);
+    if (userRows.length === 0) return res.status(404).json({ error: 'User not found' });
+    const user = userRows[0];
+
+    await db.transaction(async (conn) => {
+      await conn.query('UPDATE users SET status = "active" WHERE user_id = ?', [id]);
+      if (user.role === 'vendor') {
+        await conn.query('UPDATE vendors SET status = "active" WHERE user_id = ?', [id]);
+      } else if (user.role === 'delivery_agent') {
+        await conn.query('UPDATE delivery_agents SET status = "active" WHERE user_id = ?', [id]);
+      }
+    });
+
+    await logAuditAction(req, 'ADMIN_APPROVE_USER', 'users', id, 'Admin approved ' + user.role + ' account (' + user.email + ')');
+
+    return res.json({ success: true, message: 'User account ' + user.email + ' approved and granted access!' });
+  } catch (err) {
+    console.error('Approve user error:', err);
+    return res.status(500).json({ error: 'Failed to approve user: ' + err.message });
+  }
+});
+
 // PATCH /api/admin/users/:id/status (Activate / Suspend / Disable User)
 router.patch('/users/:id/status', async (req, res) => {
   try {
@@ -128,11 +171,15 @@ router.patch('/users/:id/status', async (req, res) => {
       return res.status(422).json({ error: 'Invalid status' });
     }
 
-    await db.query('UPDATE users SET status = ? WHERE user_id = ?', [status, id]);
-
-    if (status !== 'active') {
-      await db.query('DELETE FROM sessions WHERE user_id = ?', [id]);
-    }
+    await db.transaction(async (conn) => {
+      await conn.query('UPDATE users SET status = ? WHERE user_id = ?', [status, id]);
+      if (status !== 'active') {
+        await conn.query('DELETE FROM sessions WHERE user_id = ?', [id]);
+      }
+      // Sync vendor or agent status if applicable
+      await conn.query('UPDATE vendors SET status = ? WHERE user_id = ?', [status, id]);
+      await conn.query('UPDATE delivery_agents SET status = ? WHERE user_id = ?', [status, id]);
+    });
 
     await logAuditAction(req, 'ADMIN_USER_STATUS_CHANGE', 'users', id, 'User status changed to ' + status);
 

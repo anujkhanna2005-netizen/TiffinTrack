@@ -58,12 +58,17 @@ async function renderAdminVendors() {
                           onclick="handleToggleVendorStatus('${v.vendor_id}', 'suspended', '${v.name}')">
                           ⏸ Suspend
                         </button>
+                      ` : (v.status === 'inactive' ? `
+                        <button class="btn btn-primary btn-sm" style="background:var(--color-success);border-color:var(--color-success);padding:3px 8px;font-size:0.75rem"
+                          onclick="handleToggleVendorStatus('${v.vendor_id}', 'active', '${v.name}')">
+                          ✓ Approve Vendor
+                        </button>
                       ` : `
                         <button class="btn btn-outline btn-sm" style="color:var(--color-success);border-color:var(--color-success);padding:3px 8px;font-size:0.75rem"
                           onclick="handleToggleVendorStatus('${v.vendor_id}', 'active', '${v.name}')">
-                          ✓ Activate
+                          ✓ Unsuspend
                         </button>
-                      `}
+                      `)}
                       <button class="btn btn-outline btn-sm" style="color:var(--color-danger);border-color:var(--color-danger);padding:3px 8px;font-size:0.75rem"
                         onclick="handleDeleteVendor('${v.vendor_id}', '${v.name}')">
                         🗑 Disable

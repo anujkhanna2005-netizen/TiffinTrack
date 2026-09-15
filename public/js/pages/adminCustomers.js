@@ -67,12 +67,17 @@ async function renderAdminCustomers() {
                           onclick="handleToggleCustomerStatus('${c.user_id}', 'suspended', '${c.name}')">
                           ⏸ Suspend
                         </button>
+                      ` : (c.user_status === 'inactive' ? `
+                        <button class="btn btn-primary btn-sm" style="background:var(--color-success);border-color:var(--color-success);padding:2px 8px;font-size:0.75rem"
+                          onclick="handleApproveCustomer('${c.user_id}', '${c.name}')">
+                          ✓ Approve
+                        </button>
                       ` : `
                         <button class="btn btn-outline btn-sm" style="color:var(--color-success);border-color:var(--color-success);padding:2px 7px;font-size:0.75rem"
                           onclick="handleToggleCustomerStatus('${c.user_id}', 'active', '${c.name}')">
-                          ✓ Activate
+                          ✓ Unsuspend
                         </button>
-                      `}
+                      `)}
                       <button class="btn btn-outline btn-sm" style="color:var(--color-danger);border-color:var(--color-danger);padding:2px 7px;font-size:0.75rem"
                         onclick="handleDeleteUser('${c.user_id}', '${c.name}')">
                         🗑 Deactivate
@@ -88,6 +93,16 @@ async function renderAdminCustomers() {
     `);
   } catch (err) {
     showError('Failed to load customers: ' + err.message);
+  }
+}
+
+async function handleApproveCustomer(userId, userName) {
+  try {
+    await approveUser(userId);
+    showToast('Customer Approved', `${userName} is now approved and active!`, 'success');
+    renderAdminCustomers();
+  } catch (err) {
+    showToast('Error', err.message, 'error');
   }
 }
 

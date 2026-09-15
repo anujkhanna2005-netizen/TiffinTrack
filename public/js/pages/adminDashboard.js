@@ -44,10 +44,59 @@ async function renderAdminDashboard() {
           </div>
         </div>
         <div class="stat-card">
+          <div class="stat-label">Pending Approvals</div>
+          <div class="stat-value" style="color:${stats.pending_approvals > 0 ? '#ea580c' : 'var(--color-text)'}">
+            ${stats.pending_approvals || 0}
+          </div>
+        </div>
+        <div class="stat-card">
           <div class="stat-label">Platform Avg Rating</div>
           <div class="stat-value">${stats.platform_avg_rating ? stats.platform_avg_rating.toFixed(1) : '—'}</div>
         </div>
       </div>
+
+      <!-- Pending Verification & Approval Queue -->
+      ${data.pending_approvals && data.pending_approvals.length > 0 ? `
+        <div class="card" style="margin-bottom:20px;border-left:4px solid #ea580c;background:#fffaf0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="card-title" style="margin-bottom:0;color:#9a3412">
+              <span class="icon">🚨</span> Pending Registration Approvals (${data.pending_approvals.length})
+            </div>
+            <span class="badge" style="background:#fed7aa;color:#9a3412;font-weight:700">Action Required</span>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>Role</th><th>Name</th><th>Email</th><th>Phone</th><th>Locality</th><th>Registered</th><th>Admin Decision</th></tr>
+              </thead>
+              <tbody>
+                ${data.pending_approvals.map(u => `
+                  <tr id="pending-row-${u.user_id}">
+                    <td><span class="badge badge-pending">${u.role.toUpperCase()}</span></td>
+                    <td><strong>${u.name}</strong></td>
+                    <td>${u.email}</td>
+                    <td>${u.phone}</td>
+                    <td>${u.locality}</td>
+                    <td style="font-size:0.8rem;color:var(--color-text-muted)">${formatDate(u.created_at)}</td>
+                    <td>
+                      <div style="display:flex;gap:6px">
+                        <button class="btn btn-primary btn-sm" style="background:var(--color-success);border-color:var(--color-success);padding:4px 10px;font-size:0.8rem"
+                          onclick="handleApproveUser('${u.user_id}', '${u.name}')">
+                          ✓ Approve Access
+                        </button>
+                        <button class="btn btn-outline btn-sm" style="color:var(--color-danger);border-color:var(--color-danger);padding:4px 8px;font-size:0.8rem"
+                          onclick="handleRejectPendingUser('${u.user_id}', '${u.name}')">
+                          ✕ Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ` : ''}
 
       <!-- Vendor Performance Table -->
       <div class="card" style="margin-bottom:20px">
@@ -103,5 +152,26 @@ async function renderAdminDashboard() {
     `);
   } catch (err) {
     showError('Failed to load admin dashboard: ' + err.message);
+  }
+}
+
+async function handleApproveUser(userId, userName) {
+  try {
+    await approveUser(userId);
+    showToast('Registration Approved', `${userName} has been verified and granted access!`, 'success');
+    renderAdminDashboard();
+  } catch (err) {
+    showToast('Approval Error', err.message, 'error');
+  }
+}
+
+async function handleRejectPendingUser(userId, userName) {
+  if (!confirm(`Are you sure you want to reject and remove registration for ${userName}?`)) return;
+  try {
+    await deleteUser(userId);
+    showToast('Registration Rejected', `${userName}'s registration was declined.`, 'info');
+    renderAdminDashboard();
+  } catch (err) {
+    showToast('Rejection Error', err.message, 'error');
   }
 }

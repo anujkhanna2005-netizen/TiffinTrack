@@ -72,7 +72,7 @@ router.post('/signup', async (req, res) => {
 
     const userResult = await db.transaction(async (conn) => {
       const [uRes] = await conn.query(
-        'INSERT INTO users (email, password_hash, role, status) VALUES (?, ?, ?, "active")',
+        'INSERT INTO users (email, password_hash, role, status) VALUES (?, ?, ?, "inactive")',
         [email.toLowerCase().trim(), passwordHash, role]
       );
       const newUserId = uRes.insertId;
@@ -91,7 +91,7 @@ router.post('/signup', async (req, res) => {
         const [countRes] = await conn.query('SELECT COUNT(*) as c FROM vendors');
         const nextId = 'V' + String(countRes[0].c + 1).padStart(3, '0');
         await conn.query(
-          'INSERT INTO vendors (vendor_id, user_id, name, kitchen_address, locality, license_no, contact, cuisine_type, avg_rating, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 4.5, "active")',
+          'INSERT INTO vendors (vendor_id, user_id, name, kitchen_address, locality, license_no, contact, cuisine_type, avg_rating, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 4.5, "inactive")',
           [nextId, newUserId, name, kitchen_address || 'Bhopal Market Kitchen', locality || 'Market', 'FSSAI' + Date.now().toString().slice(-6), phone || '9876543210', cuisine_type || 'North Indian']
         );
         profileId = nextId;
@@ -99,7 +99,7 @@ router.post('/signup', async (req, res) => {
         const [countRes] = await conn.query('SELECT COUNT(*) as c FROM delivery_agents');
         const nextId = 'A' + String(countRes[0].c + 1).padStart(3, '0');
         await conn.query(
-          'INSERT INTO delivery_agents (agent_id, user_id, name, phone, assigned_locality, vehicle_type, status) VALUES (?, ?, ?, ?, ?, ?, "active")',
+          'INSERT INTO delivery_agents (agent_id, user_id, name, phone, assigned_locality, vehicle_type, status) VALUES (?, ?, ?, ?, ?, ?, "inactive")',
           [nextId, newUserId, name, phone || '9876543210', locality || 'Campus Area', vehicle_type || 'bike']
         );
         profileId = nextId;
@@ -108,26 +108,25 @@ router.post('/signup', async (req, res) => {
       return { user_id: newUserId, email: email.toLowerCase().trim(), role, profileId, name };
     });
 
-    const token = await createSessionAndSetCookie(userResult, req, res);
-
     await logAuditAction(
-      { user: userResult, headers: req.headers, socket: req.socket },
-      'SIGNUP',
+      { user: { ...userResult, role: 'unauthenticated' }, headers: req.headers, socket: req.socket },
+      'SIGNUP_PENDING_APPROVAL',
       'users',
       userResult.user_id,
-      'User registered as ' + role + ' (' + name + ')'
+      'User registered as ' + role + ' (' + name + ') - Pending admin approval'
     );
 
     return res.status(201).json({
       success: true,
-      message: 'Account created successfully',
+      pendingApproval: true,
+      message: 'Registration submitted successfully! Your account is pending verification and approval by the Administrator before you can sign in.',
       user: {
         user_id: userResult.user_id,
         email: userResult.email,
         role: userResult.role,
-        name: userResult.name
-      },
-      token
+        name: userResult.name,
+        status: 'inactive'
+      }
     });
   } catch (err) {
     console.error('Signup error:', err);
@@ -156,8 +155,16 @@ router.post('/login', async (req, res) => {
 
     const user = rows[0];
 
-    if (user.status !== 'active') {
-      return res.status(403).json({ error: 'Account is ' + user.status + '. Please contact administrator.' });
+    if (user.status === 'inactive') {
+      return res.status(403).json({
+        error: 'Your account is pending Administrator verification and approval. Access will be enabled once the admin approves your registration.'
+      });
+    }
+
+    if (user.status === 'suspended') {
+      return res.status(403).json({
+        error: 'Your account has been suspended by the administrator. Please contact support.'
+      });
     }
 
     if (password) {
