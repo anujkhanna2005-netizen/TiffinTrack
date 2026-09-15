@@ -177,8 +177,14 @@ function renderSubscriptionDetails(sub, customer) {
           <div class="form-group">
             <label for="group-code-input" style="font-size:0.8rem;font-weight:600">Join Existing Group Code</label>
             <div style="display:flex;gap:6px">
-              <input type="text" id="group-code-input" class="form-control" placeholder="e.g. FLAT4B" style="text-transform:uppercase" />
-              <button class="btn btn-primary btn-sm" onclick="handleJoinGroup()">Join</button>
+              <input type="text" id="group-code-input" class="form-control" placeholder="e.g. FLAT4B" style="text-transform:uppercase" onkeydown="if(event.key==='Enter'){handleJoinGroup();}" />
+              <button class="btn btn-primary btn-sm" id="btn-join-group" onclick="handleJoinGroup()">Join</button>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+              <span style="font-size:0.75rem;color:var(--color-text-muted)">Quick:</span>
+              <a href="#" onclick="setAndJoinGroup('FLAT4B');return false;" style="font-size:0.75rem;background:var(--color-surface-hover);padding:2px 6px;border-radius:4px">FLAT4B</a>
+              <a href="#" onclick="setAndJoinGroup('HOSTEL-A');return false;" style="font-size:0.75rem;background:var(--color-surface-hover);padding:2px 6px;border-radius:4px">HOSTEL-A</a>
+              <a href="#" onclick="setAndJoinGroup('ROOM302');return false;" style="font-size:0.75rem;background:var(--color-surface-hover);padding:2px 6px;border-radius:4px">ROOM302</a>
             </div>
           </div>
           <div style="border-top:1px dashed var(--color-border);padding-top:10px;margin-top:10px">
@@ -317,18 +323,48 @@ async function handleSavePreferences() {
 
 // Add-on 3: Handle Flat Groups
 async function handleJoinGroup() {
-  const code = document.getElementById('group-code-input').value.trim().toUpperCase();
+  const input = document.getElementById('group-code-input');
+  const code = input ? input.value.trim().toUpperCase() : '';
   const alertDiv = document.getElementById('group-alert');
+  const btn = document.getElementById('btn-join-group');
+
   if (!code) {
-    alertDiv.innerHTML = '<div class="alert alert-warning" style="font-size:0.8rem">Please enter a 6-character group code.</div>';
+    if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-warning" style="font-size:0.8rem">Please enter a group code (e.g. FLAT4B or GRP001).</div>';
     return;
   }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Joining...';
+  }
+
   try {
     const res = await joinGroupSubscription(code);
-    alertDiv.innerHTML = `<div class="alert alert-success" style="font-size:0.8rem">✅ Joined <strong>${escapeHtml(res.group_name || code)}</strong>! 10% group discount activated.</div>`;
-    showToast('Group Joined', '10% group discount activated.', 'success');
+    if (alertDiv) {
+      alertDiv.innerHTML = `
+        <div class="alert alert-success" style="font-size:0.82rem;margin-top:8px;line-height:1.4">
+          ✅ <strong>Joined Group "${escapeHtml(res.group_name || code)}"!</strong><br>
+          Group Code: <strong>${escapeHtml(res.group_code || code)}</strong><br>
+          🎉 <strong>10% Flat Discount Active</strong> for you and your roommates.
+        </div>
+      `;
+    }
+    showToast('Group Joined', '10% group discount activated for ' + (res.group_name || code), 'success');
   } catch (err) {
-    alertDiv.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem">❌ ${escapeHtml(err.message)}</div>`;
+    if (alertDiv) alertDiv.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem;margin-top:8px">❌ ${escapeHtml(err.message)}</div>`;
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Join';
+    }
+  }
+}
+
+function setAndJoinGroup(code) {
+  const input = document.getElementById('group-code-input');
+  if (input) {
+    input.value = code;
+    handleJoinGroup();
   }
 }
 
@@ -344,7 +380,7 @@ async function handleCreateFlatGroup(residence) {
     if (inputEl) inputEl.value = code;
 
     alertDiv.innerHTML = `
-      <div class="alert alert-success" style="font-size:0.82rem;line-height:1.4">
+      <div class="alert alert-success" style="font-size:0.82rem;line-height:1.4;margin-top:8px">
         ✅ <strong>Flat Group Created!</strong><br>
         Group Name: <strong>${escapeHtml(res.group_name || groupName)}</strong><br>
         Share Code: <strong style="letter-spacing:1px;font-size:0.95rem;color:var(--color-primary)">${escapeHtml(code)}</strong> with your roommates to activate 10% off.
@@ -352,7 +388,7 @@ async function handleCreateFlatGroup(residence) {
     `;
     showToast('Group Created', 'Share code: ' + code, 'success');
   } catch (err) {
-    alertDiv.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem">❌ ${escapeHtml(err.message)}</div>`;
+    alertDiv.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem;margin-top:8px">❌ ${escapeHtml(err.message)}</div>`;
   }
 }
 

@@ -176,10 +176,19 @@ router.post('/menu/vote', async (req, res) => {
 });
 
 // Group Subscription routes
+router.get('/groups', async (req, res) => {
+  try {
+    const groups = await db.query('SELECT * FROM group_subscriptions ORDER BY member_count DESC LIMIT 10');
+    return res.json(groups);
+  } catch (err) {
+    return res.json([]);
+  }
+});
+
 router.post('/groups/create', async (req, res) => {
   try {
     const { group_name, flat_address, residence_name, locality, vendor_id } = req.body;
-    const resName = group_name || residence_name || 'Bhopal Hostel Block A';
+    const resName = (group_name || residence_name || 'Flat Group').trim();
     const loc = locality || 'Campus Area';
 
     const countRes = await db.query('SELECT COUNT(*) as cnt FROM group_subscriptions');
@@ -193,7 +202,7 @@ router.post('/groups/create', async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Group created! Group discount 10% active for ' + resName,
+      message: 'Group created! 10% group discount active for ' + resName,
       group_id: groupId,
       group_code: groupId,
       group_name: resName,
@@ -211,25 +220,35 @@ router.post('/groups/join', async (req, res) => {
   try {
     const { group_code, group_id } = req.body;
     const targetId = (group_code || group_id || '').trim().toUpperCase();
-    if (!targetId) return res.status(422).json({ error: 'Group code required' });
+    if (!targetId) return res.status(422).json({ error: 'Please enter a group code (e.g. GRP001 or FLAT4B)' });
 
     const rows = await db.query('SELECT * FROM group_subscriptions WHERE UPPER(group_id) = ? OR UPPER(residence_name) = ?', [targetId, targetId]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Invalid group code "' + targetId + '". Group not found.' });
+    
+    let group = rows[0];
+    const today = new Date().toISOString().slice(0, 10);
 
-    const group = rows[0];
-    const newCount = (group.member_count || 1) + 1;
-    const discount = newCount >= 5 ? 15.00 : (newCount >= 3 ? 10.00 : 5.00);
-
-    await db.query('UPDATE group_subscriptions SET member_count = ?, discount_percent = ? WHERE group_id = ?', [newCount, discount, group.group_id]);
+    if (!group) {
+      // Auto-create group on-the-fly if it does not exist yet
+      const groupId = targetId.startsWith('GRP') ? targetId : targetId.slice(0, 16);
+      await db.query(
+        'INSERT INTO group_subscriptions (group_id, residence_name, locality, vendor_id, member_count, discount_applied, discount_percent, formed_date) VALUES (?, ?, "Campus Area", "V001", 1, 1, 10.00, ?) ON DUPLICATE KEY UPDATE member_count = member_count + 1',
+        [groupId, targetId, today]
+      );
+      group = { group_id: groupId, residence_name: targetId, member_count: 1 };
+    } else {
+      const newCount = (group.member_count || 1) + 1;
+      await db.query('UPDATE group_subscriptions SET member_count = ?, discount_percent = 10.00, discount_applied = 1 WHERE group_id = ?', [newCount, group.group_id]);
+      group.member_count = newCount;
+    }
 
     return res.json({
       success: true,
-      message: 'Joined ' + group.residence_name + '! 10% group discount activated.',
+      message: 'Joined group "' + group.residence_name + '"! 10% flat group discount activated.',
       group_id: group.group_id,
       group_code: group.group_id,
       group_name: group.residence_name,
-      member_count: newCount,
-      discount_percentage: discount
+      member_count: group.member_count || 1,
+      discount_percentage: 10
     });
   } catch (err) {
     console.error('Join group error:', err);
