@@ -67,42 +67,8 @@ function renderLoginForm() {
       <button type="submit" class="btn btn-primary" id="btn-login" style="width:100%;margin-top:12px;padding:11px;font-size:0.95rem;font-weight:600">
         Sign In
       </button>
-
-      <div style="margin-top:20px;border-top:1px dashed var(--color-border);padding-top:14px">
-        <div style="font-size:0.78rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;text-align:center">
-          ⚡ 1-Click Demo Logins
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <button type="button" class="btn btn-outline btn-sm" style="font-size:0.78rem;padding:6px 4px" onclick="fillDemoAndLogin('student@tiffintrack.demo', 'demo123')">
-            🎓 Student
-          </button>
-          <button type="button" class="btn btn-outline btn-sm" style="font-size:0.78rem;padding:6px 4px" onclick="fillDemoAndLogin('vendor@tiffintrack.demo', 'demo123')">
-            🍲 Vendor
-          </button>
-          <button type="button" class="btn btn-outline btn-sm" style="font-size:0.78rem;padding:6px 4px" onclick="fillDemoAndLogin('admin@tiffintrack.demo', 'demo123')">
-            🛡️ Admin
-          </button>
-        </div>
-      </div>
     </form>
   `;
-}
-
-function fillDemoAndLogin(email, password) {
-  const emailInput = document.getElementById('login-email');
-  const passInput = document.getElementById('login-password');
-  if (emailInput && passInput) {
-    emailInput.value = email;
-    passInput.value = password;
-    const form = emailInput.closest('form');
-    if (form) {
-      if (typeof form.requestSubmit === 'function') {
-        form.requestSubmit();
-      } else {
-        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-      }
-    }
-  }
 }
 
 function renderSignupForm() {

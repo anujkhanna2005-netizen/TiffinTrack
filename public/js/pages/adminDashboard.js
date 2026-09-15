@@ -26,10 +26,6 @@ async function renderAdminDashboard() {
           <div class="stat-value">${stats.total_vendors}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Delivery Agents</div>
-          <div class="stat-value">${stats.total_agents}</div>
-        </div>
-        <div class="stat-card">
           <div class="stat-label">Active Subscriptions</div>
           <div class="stat-value">${stats.active_subscriptions}</div>
         </div>
