@@ -321,11 +321,16 @@ router.patch('/subscription/:id/reject', async (req, res) => {
   }
 });
 
-// GET /api/vendor/:id/meal-plans
-router.get('/:id/meal-plans', async (req, res) => {
+// GET /api/vendor/meal-plans and /api/vendor/:id/meal-plans
+router.get(['/meal-plans', '/:id/meal-plans'], async (req, res) => {
   try {
-    const { id } = req.params;
-    const plans = await db.query('SELECT plan_id, vendor_id, name AS plan_name, name, plan_type, price, meals_included, veg_or_nonveg, description FROM meal_plans WHERE vendor_id = ? AND status = "active"', [id]);
+    let vendorId = req.params.id;
+    if (!vendorId || vendorId === 'meal-plans') {
+      const vendor = await getActiveVendor(req);
+      if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
+      vendorId = vendor.vendor_id;
+    }
+    const plans = await db.query('SELECT plan_id, vendor_id, name AS plan_name, name, plan_type, price, meals_included, veg_or_nonveg, description FROM meal_plans WHERE vendor_id = ? AND status = "active"', [vendorId]);
     return res.json(plans.map(p => ({
       ...p,
       veg: p.veg_or_nonveg === 'veg' || p.veg_or_nonveg === 'both',
@@ -334,6 +339,70 @@ router.get('/:id/meal-plans', async (req, res) => {
   } catch (err) {
     console.error('Meal plans error:', err);
     res.status(500).json({ error: 'Failed to fetch meal plans' });
+  }
+});
+
+// POST /api/vendor/meal-plans and /api/vendor/:id/meal-plans (Create Meal Plan)
+router.post(['/meal-plans', '/:id/meal-plans'], async (req, res) => {
+  try {
+    let vendorId = req.params.id;
+    if (!vendorId || vendorId === 'meal-plans') {
+      const vendor = await getActiveVendor(req);
+      if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
+      vendorId = vendor.vendor_id;
+    }
+    const { name, plan_type, price, meals_included, veg_or_nonveg, description } = req.body;
+    if (!name || !price) {
+      return res.status(422).json({ error: 'Plan name and price are required' });
+    }
+
+    const planId = 'P' + vendorId + String(Date.now()).slice(-3);
+
+    await db.query(
+      'INSERT INTO meal_plans (plan_id, vendor_id, name, plan_type, price, meals_included, veg_or_nonveg, description, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, "active")',
+      [
+        planId,
+        vendorId,
+        name,
+        plan_type || 'monthly',
+        parseFloat(price) || 2400.00,
+        parseInt(meals_included, 10) || 30,
+        veg_or_nonveg || 'veg',
+        description || ''
+      ]
+    );
+
+    await logAuditAction(req, 'VENDOR_CREATE_MEAL_PLAN', 'meal_plans', planId, 'Vendor created meal plan ' + name);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Meal plan created successfully',
+      plan: { plan_id: planId, name, price: parseFloat(price) }
+    });
+  } catch (err) {
+    console.error('Create meal plan error:', err);
+    res.status(500).json({ error: 'Failed to create meal plan: ' + err.message });
+  }
+});
+
+// DELETE /api/vendor/meal-plans/:planId
+router.delete(['/meal-plans/:planId', '/:id/meal-plans/:planId'], async (req, res) => {
+  try {
+    let { id: vendorId, planId } = req.params;
+    if (!planId) {
+      planId = vendorId;
+      const vendor = await getActiveVendor(req);
+      if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+      vendorId = vendor.vendor_id;
+    }
+
+    await db.query('UPDATE meal_plans SET status = "inactive" WHERE plan_id = ? AND vendor_id = ?', [planId, vendorId]);
+    await logAuditAction(req, 'VENDOR_DELETE_MEAL_PLAN', 'meal_plans', planId, 'Vendor deactivated meal plan ' + planId);
+
+    return res.json({ success: true, message: 'Meal plan deactivated successfully' });
+  } catch (err) {
+    console.error('Delete meal plan error:', err);
+    res.status(500).json({ error: 'Failed to delete meal plan: ' + err.message });
   }
 });
 

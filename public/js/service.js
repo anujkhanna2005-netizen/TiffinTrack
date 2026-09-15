@@ -190,6 +190,21 @@ async function getVendorMealPlans(vendor_id) {
   return apiFetch(path);
 }
 
+async function createVendorMealPlan(planData, vendor_id) {
+  const path = vendor_id ? '/vendor/' + vendor_id + '/meal-plans' : '/vendor/meal-plans';
+  return apiFetch(path, {
+    method: 'POST',
+    body: JSON.stringify(planData)
+  });
+}
+
+async function deleteVendorMealPlan(plan_id, vendor_id) {
+  const path = vendor_id ? '/vendor/' + vendor_id + '/meal-plans/' + plan_id : '/vendor/meal-plans/' + plan_id;
+  return apiFetch(path, {
+    method: 'DELETE'
+  });
+}
+
 async function addMenuItem(vendor_id, name, category, quantity) {
   const path = vendor_id ? '/vendor/' + vendor_id + '/menu' : '/vendor/menu';
   return apiFetch(path, {

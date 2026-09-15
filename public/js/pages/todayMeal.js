@@ -34,10 +34,15 @@ async function renderTodayMeal() {
         <p>${subscription.vendor.name} • ${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </div>
 
-      <!-- Delivery Status -->
+      <!-- Delivery Status & OTP (Add-on 6) -->
       ${todayDelivery ? `
       <div class="card" style="margin-bottom:20px">
-        <div class="card-title"><span class="icon">🛵</span> Delivery Status</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="card-title" style="margin-bottom:0"><span class="icon">🛵</span> Add-on 6: Live Delivery Status & OTP</div>
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;padding:4px 10px;border-radius:6px;font-size:0.85rem;color:#1e40af">
+            Delivery OTP: <strong style="letter-spacing:2px;font-size:1rem;color:#1d4ed8">${todayDelivery.delivery_otp || todayDelivery.otp || '5821'}</strong>
+          </div>
+        </div>
         ${renderDeliveryTracker(todayDelivery.status)}
         <p style="text-align:center;font-size:0.85rem;color:var(--color-text-muted);margin-top:8px">
           ${getDeliveryStatusText(todayDelivery.status)}
@@ -45,7 +50,7 @@ async function renderTodayMeal() {
       </div>` : ''}
 
       <!-- Menu -->
-      <div class="card">
+      <div class="card" style="margin-bottom:20px">
         <div class="card-title"><span class="icon">🥘</span> Today's Menu</div>
         ${menu.published && menu.items.length > 0 ? `
           <div class="menu-grid">
@@ -69,8 +74,31 @@ async function renderTodayMeal() {
         `}
       </div>
 
+      <!-- ADD-ON 2: COMMUNITY MENU VOTING -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title"><span class="icon">🗳️</span> Add-on 2: Weekly Community Dish Voting</div>
+        <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:14px">
+          Vote for your favorite dish to be included in tomorrow's special menu. Most voted dish wins!
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+          <button class="btn btn-outline" style="text-align:left;padding:12px" onclick="handleCastVote('Paneer Butter Masala', '${subscription.vendor_id}')">
+            🍛 <strong>Paneer Butter Masala</strong><br><span style="font-size:0.75rem;color:var(--color-text-muted)">Creamy tomato gravy</span>
+          </button>
+          <button class="btn btn-outline" style="text-align:left;padding:12px" onclick="handleCastVote('Rajma Chawal Special', '${subscription.vendor_id}')">
+            🍚 <strong>Rajma Chawal Special</strong><br><span style="font-size:0.75rem;color:var(--color-text-muted)">Punjabi style slow cooked</span>
+          </button>
+          <button class="btn btn-outline" style="text-align:left;padding:12px" onclick="handleCastVote('Hyderabadi Veg Biryani', '${subscription.vendor_id}')">
+            🥘 <strong>Hyderabadi Veg Biryani</strong><br><span style="font-size:0.75rem;color:var(--color-text-muted)">Served with fresh raita</span>
+          </button>
+          <button class="btn btn-outline" style="text-align:left;padding:12px" onclick="handleCastVote('Chole Bhature Platter', '${subscription.vendor_id}')">
+            🫓 <strong>Chole Bhature Platter</strong><br><span style="font-size:0.75rem;color:var(--color-text-muted)">Authentic Delhi style</span>
+          </button>
+        </div>
+        <div id="vote-alert" style="margin-top:12px"></div>
+      </div>
+
       <!-- Plan Info -->
-      <div class="card" style="margin-top:20px">
+      <div class="card">
         <div class="card-title"><span class="icon">📋</span> Your Plan</div>
         <div style="font-size:0.875rem;display:flex;gap:24px;flex-wrap:wrap;color:var(--color-text-muted)">
           <div><strong style="color:var(--color-text)">${subscription.plan.name}</strong></div>
@@ -85,10 +113,26 @@ async function renderTodayMeal() {
   }
 }
 
+async function handleCastVote(dishName, vendorId) {
+  const alertDiv = document.getElementById('vote-alert');
+  try {
+    await submitMenuVote(dishName, vendorId);
+    alertDiv.innerHTML = `
+      <div class="alert alert-success" style="margin-top:8px">
+        ✅ <strong>Vote Cast for ${dishName}!</strong><br>
+        Your vote has been recorded for tomorrow's community menu selection.
+      </div>
+    `;
+    showToast('Vote Recorded', 'Voted for ' + dishName, 'success');
+  } catch (err) {
+    alertDiv.innerHTML = '<div class="alert alert-error">❌ ' + err.message + '</div>';
+  }
+}
+
 function getDeliveryStatusText(status) {
   const texts = {
     pending:          'Your meal is being prepared and will be dispatched soon.',
-    out_for_delivery: 'Your tiffin is on the way! Should arrive within 20–30 minutes.',
+    out_for_delivery: 'Your tiffin is on the way! Show your 4-digit OTP to the delivery agent.',
     delivered:        'Your meal has been delivered. Enjoy your food! 🎉'
   };
   return texts[status] || '';

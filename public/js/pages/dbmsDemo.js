@@ -1,43 +1,88 @@
 // ============================================================
-// TiffinTrack - DBMS Concepts Demonstration Page
+// TiffinTrack - DBMS Concepts Demonstration & Academic Viva Suite
 // public/js/pages/dbmsDemo.js
-//
-// Four sections only: JOIN, GROUP BY, VIEW, TRANSACTION
-// All SQL is conceptual — demonstrates real relational concepts
-// using the same data structures as the mock database.
 // ============================================================
 
-function renderDbmsDemo() {
-  showContent(`
-    <div class="page-header">
-      <h1>🗄️ DBMS Concepts Demonstration</h1>
-      <p>Preview V1 — Four core DBMS concepts demonstrated with TiffinTrack data</p>
-    </div>
+async function renderDbmsDemo() {
+  showLoading();
+  try {
+    const [viewsData, indexesData, triggersData, txnsData] = await Promise.all([
+      getDbmsViews().catch(() => ({ views: {} })),
+      getDbmsIndexes().catch(() => ({ indexes: [] })),
+      getDbmsTriggers().catch(() => ({ triggers: [] })),
+      getDbmsTransactions().catch(() => ({}))
+    ]);
 
-    <!-- SECTION 1: JOIN -->
-    ${renderJoinSection()}
+    showContent(`
+      <div class="page-header">
+        <h1>🗄️ DBMS Academic Viva & Architecture Showcase</h1>
+        <p>MySQL 8.0 / TiDB Cloud Relational Engine — Live Queries, Views, Composite Indexes, Triggers & ACID Transactions</p>
+      </div>
 
-    <!-- SECTION 2: GROUP BY -->
-    ${renderGroupBySection()}
+      <!-- DBMS NAVIGATION TABS -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="btn btn-secondary active" id="tab-btn-queries" onclick="switchDbmsTab('queries')">⚡ Relational Queries</button>
+        <button class="btn btn-secondary" id="tab-btn-views" onclick="switchDbmsTab('views')">👁️ Live Database Views</button>
+        <button class="btn btn-secondary" id="tab-btn-indexes" onclick="switchDbmsTab('indexes')">🗂️ B-Tree Composite Indexes</button>
+        <button class="btn btn-secondary" id="tab-btn-triggers" onclick="switchDbmsTab('triggers')">⚙️ Automated Triggers</button>
+        <button class="btn btn-secondary" id="tab-btn-transactions" onclick="switchDbmsTab('transactions')">🔒 ACID Transactions</button>
+        <button class="btn btn-secondary" id="tab-btn-viva" onclick="switchDbmsTab('viva')">🎓 Academic Viva Q&A (3NF/BCNF)</button>
+      </div>
 
-    <!-- SECTION 3: VIEW -->
-    ${renderViewSection()}
+      <!-- TAB 1: RELATIONAL QUERIES -->
+      <div id="tab-pane-queries" class="dbms-tab-pane">
+        ${renderJoinSection()}
+        ${renderGroupBySection()}
+      </div>
 
-    <!-- SECTION 4: TRANSACTION -->
-    ${renderTransactionSection()}
-  `);
+      <!-- TAB 2: LIVE DATABASE VIEWS -->
+      <div id="tab-pane-views" class="dbms-tab-pane" style="display:none">
+        ${renderLiveViewsSection(viewsData)}
+      </div>
+
+      <!-- TAB 3: COMPOSITE INDEXES -->
+      <div id="tab-pane-indexes" class="dbms-tab-pane" style="display:none">
+        ${renderIndexesSection(indexesData)}
+      </div>
+
+      <!-- TAB 4: AUTOMATED TRIGGERS -->
+      <div id="tab-pane-triggers" class="dbms-tab-pane" style="display:none">
+        ${renderTriggersSection(triggersData)}
+      </div>
+
+      <!-- TAB 5: ACID TRANSACTIONS -->
+      <div id="tab-pane-transactions" class="dbms-tab-pane" style="display:none">
+        ${renderTransactionSection(txnsData)}
+      </div>
+
+      <!-- TAB 6: VIVA & SCHEMA -->
+      <div id="tab-pane-viva" class="dbms-tab-pane" style="display:none">
+        ${renderVivaQaSection()}
+      </div>
+    `);
+  } catch (err) {
+    showError('Failed to load DBMS showcase: ' + err.message);
+  }
+}
+
+function switchDbmsTab(tabName) {
+  document.querySelectorAll('.dbms-tab-pane').forEach(p => p.style.display = 'none');
+  ['queries', 'views', 'indexes', 'triggers', 'transactions', 'viva'].forEach(t => {
+    const btn = document.getElementById('tab-btn-' + t);
+    if (btn) btn.classList.toggle('active', t === tabName);
+  });
+  const pane = document.getElementById('tab-pane-' + tabName);
+  if (pane) pane.style.display = 'block';
 }
 
 // ---- SECTION 1: JOIN ---------------------------------------
 function renderJoinSection() {
   return `
-    <div class="dbms-section" id="section-join">
-      <h2><span class="dbms-concept-label">JOIN</span> &nbsp; Combining Related Tables</h2>
+    <div class="dbms-section" id="section-join" style="margin-bottom:24px">
+      <h2><span class="dbms-concept-label">5-TABLE JOIN</span> &nbsp; Combining Normalized Entities</h2>
 
       <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:12px">
-        TiffinTrack stores data across multiple tables. A JOIN lets us combine them 
-        to answer real questions — like "Which student subscribed to which vendor, 
-        and what is their delivery status today?"
+        TiffinTrack isolates customer profiles, subscription lifecycles, meal plans, kitchen registries, and delivery dispatches into normalized 3NF relations. An inner JOIN reconstructs the complete student order pipeline.
       </p>
 
       <div class="sql-block">
@@ -47,39 +92,18 @@ function renderJoinSection() {
     mp.name              <span class="sql-comment">-- Meal plan</span>,
     mp.price,
     d.status             <span class="sql-comment">-- Delivery status</span>
-<span class="sql-keyword">FROM</span> Customer c
-<span class="sql-keyword">JOIN</span> Subscription s
-    <span class="sql-keyword">ON</span> c.customer_id = s.customer_id
-<span class="sql-keyword">JOIN</span> MealPlan mp
-    <span class="sql-keyword">ON</span> s.plan_id = mp.plan_id
-<span class="sql-keyword">JOIN</span> Vendor v
-    <span class="sql-keyword">ON</span> mp.vendor_id = v.vendor_id
-<span class="sql-keyword">JOIN</span> Delivery d
-    <span class="sql-keyword">ON</span> s.sub_id = d.sub_id
+<span class="sql-keyword">FROM</span> customers c
+<span class="sql-keyword">JOIN</span> subscriptions s    <span class="sql-keyword">ON</span> c.customer_id = s.customer_id
+<span class="sql-keyword">JOIN</span> meal_plans mp      <span class="sql-keyword">ON</span> s.plan_id = mp.plan_id
+<span class="sql-keyword">JOIN</span> vendors v          <span class="sql-keyword">ON</span> mp.vendor_id = v.vendor_id
+<span class="sql-keyword">JOIN</span> deliveries d       <span class="sql-keyword">ON</span> s.sub_id = d.subscription_id
 <span class="sql-keyword">WHERE</span> s.status = <span class="sql-string">'active'</span>
 <span class="sql-keyword">ORDER BY</span> c.name;
       </div>
 
-      <p style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:8px">Sample Output (from TiffinTrack mock data):</p>
-      <div style="overflow-x:auto;border-radius:var(--radius);overflow:hidden">
-        <table class="sql-output-table">
-          <thead><tr><th>Student Name</th><th>Vendor</th><th>Plan</th><th>Price (₹)</th><th>Delivery Status</th></tr></thead>
-          <tbody>
-            <tr><td>Rahul Sharma</td><td>Annapurna Tiffin Services</td><td>Monthly Veg Plan</td><td>2400</td><td>out_for_delivery</td></tr>
-            <tr><td>Priya Verma</td><td>HomeTaste Kitchen</td><td>South Indian Monthly</td><td>2200</td><td>delivered</td></tr>
-            <tr><td>Arjun Mehta</td><td>Maa's Kitchen</td><td>Full Day Plan</td><td>3200</td><td>pending</td></tr>
-            <tr><td>Sneha Patel</td><td>HealthyBite Tiffins</td><td>Health Monthly Plan</td><td>3000</td><td>pending</td></tr>
-            <tr><td>Rohit Singh</td><td>Campus Meals</td><td>Budget Monthly Plan</td><td>1800</td><td>delivered</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="sql-explanation">
-        <strong>Viva Explanation:</strong>
-        A <strong>JOIN</strong> combines records from two or more tables based on a related column.
-        Here, <code>customer_id</code>, <code>plan_id</code>, <code>vendor_id</code>, and <code>sub_id</code>
-        are foreign keys that link the tables. Without JOIN, we would need five separate queries and 
-        manually match the results in application code. JOIN does this work inside the database efficiently.
+      <div class="sql-explanation" style="margin-top:12px">
+        <strong>Viva Takeaway:</strong>
+        Foreign keys (<code>customer_id</code>, <code>plan_id</code>, <code>vendor_id</code>, <code>subscription_id</code>) enforce referential integrity with <code>ON DELETE RESTRICT</code> to prevent orphan billing records.
       </div>
     </div>
   `;
@@ -88,12 +112,11 @@ function renderJoinSection() {
 // ---- SECTION 2: GROUP BY -----------------------------------
 function renderGroupBySection() {
   return `
-    <div class="dbms-section" id="section-groupby">
-      <h2><span class="dbms-concept-label">GROUP BY</span> &nbsp; Aggregating Data Per Vendor</h2>
+    <div class="dbms-section" id="section-groupby" style="margin-bottom:24px">
+      <h2><span class="dbms-concept-label">GROUP BY & AGGREGATE</span> &nbsp; Multi-Criteria Vendor Analytics</h2>
 
       <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:12px">
-        Instead of looking at individual ratings, we want to calculate the average rating 
-        for each vendor. GROUP BY groups all rating rows by vendor and applies AVG() to each group.
+        Aggregates multiple rating dimension scores (Taste 35%, Hygiene 25%, Punctuality 25%, Value 15%) per vendor group.
       </p>
 
       <div class="sql-block">
@@ -104,133 +127,163 @@ function renderGroupBySection() {
     <span class="sql-function">AVG</span>(r.hygiene_score)        <span class="sql-comment">-- Average hygiene</span>           AS avg_hygiene,
     <span class="sql-function">AVG</span>(r.punctuality_score)   <span class="sql-comment">-- Average punctuality</span>       AS avg_punctuality,
     <span class="sql-function">AVG</span>(r.value_score)          <span class="sql-comment">-- Average value</span>             AS avg_value
-<span class="sql-keyword">FROM</span> Rating r
-<span class="sql-keyword">JOIN</span> Vendor v <span class="sql-keyword">ON</span> r.vendor_id = v.vendor_id
+<span class="sql-keyword">FROM</span> ratings r
+<span class="sql-keyword">JOIN</span> vendors v <span class="sql-keyword">ON</span> r.vendor_id = v.vendor_id
 <span class="sql-keyword">GROUP BY</span> r.vendor_id, v.name
+<span class="sql-keyword">HAVING</span> <span class="sql-function">COUNT</span>(r.rating_id) &gt;= 1
 <span class="sql-keyword">ORDER BY</span> avg_taste <span class="sql-keyword">DESC</span>;
       </div>
-
-      <p style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:8px">Sample Output:</p>
-      <div style="overflow-x:auto;border-radius:var(--radius);overflow:hidden">
-        <table class="sql-output-table">
-          <thead><tr><th>Vendor</th><th>Reviews</th><th>Avg Taste</th><th>Avg Hygiene</th><th>Avg Punct.</th><th>Avg Value</th></tr></thead>
-          <tbody>
-            <tr><td>Annapurna Tiffin Services</td><td>3</td><td>4.33</td><td>4.33</td><td>4.00</td><td>4.33</td></tr>
-            <tr><td>HomeTaste Kitchen</td><td>2</td><td>4.50</td><td>5.00</td><td>4.50</td><td>4.50</td></tr>
-            <tr><td>Maa's Kitchen</td><td>2</td><td>4.50</td><td>4.50</td><td>4.50</td><td>3.50</td></tr>
-            <tr><td>HealthyBite Tiffins</td><td>2</td><td>3.50</td><td>5.00</td><td>4.00</td><td>3.00</td></tr>
-            <tr><td>Campus Meals</td><td>2</td><td>3.50</td><td>3.50</td><td>3.50</td><td>5.00</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="sql-explanation">
-        <strong>Viva Explanation:</strong>
-        <strong>GROUP BY</strong> collects all rows that share the same <code>vendor_id</code> into a single group.
-        Aggregate functions like <strong>AVG()</strong> and <strong>COUNT()</strong> then operate on each group separately.
-        This is how TiffinTrack calculates each vendor's average rating score.
-        Without GROUP BY, AVG() would calculate across all vendors combined — which would be meaningless.
-      </div>
     </div>
   `;
 }
 
-// ---- SECTION 3: VIEW ---------------------------------------
-function renderViewSection() {
+// ---- SECTION 3: LIVE VIEWS ---------------------------------
+function renderLiveViewsSection(viewsData) {
+  const views = viewsData.views || {};
   return `
-    <div class="dbms-section" id="section-view">
-      <h2><span class="dbms-concept-label">VIEW</span> &nbsp; Saving a Query as a Virtual Table</h2>
-
-      <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:12px">
-        A VIEW is a saved SQL query that behaves like a table. Instead of writing the full 
-        GROUP BY query every time, we create a view called <code>top_rated_vendors</code> 
-        and then query it with a simple SELECT.
+    <div class="dbms-section" id="section-views">
+      <h2><span class="dbms-concept-label">DATABASE VIEWS</span> &nbsp; Stored Queries as Virtual Tables</h2>
+      <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:16px">
+        Views provide a secure abstraction layer. The application queries views without exposing base tables directly.
       </p>
 
-      <p style="font-size:0.85rem;font-weight:600;margin-bottom:4px">Step 1: Create the View</p>
-      <div class="sql-block">
-<span class="sql-keyword">CREATE VIEW</span> top_rated_vendors <span class="sql-keyword">AS</span>
-<span class="sql-keyword">SELECT</span>
-    v.vendor_id,
-    v.name,
-    v.locality,
-    <span class="sql-function">COUNT</span>(r.rating_id)  AS total_reviews,
-    <span class="sql-function">ROUND</span>(
-        0.35 * <span class="sql-function">AVG</span>(r.taste_score) +
-        0.25 * <span class="sql-function">AVG</span>(r.hygiene_score) +
-        0.25 * <span class="sql-function">AVG</span>(r.punctuality_score) +
-        0.15 * <span class="sql-function">AVG</span>(r.value_score), 2
-    ) AS overall_rating
-<span class="sql-keyword">FROM</span> Rating r
-<span class="sql-keyword">JOIN</span> Vendor v <span class="sql-keyword">ON</span> r.vendor_id = v.vendor_id
-<span class="sql-keyword">GROUP BY</span> v.vendor_id, v.name, v.locality;
-      </div>
+      ${Object.entries(views).map(([viewName, viewObj]) => `
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h4 style="margin:0;color:var(--color-primary)">VIEW: <code>${escapeHtml(viewName)}</code></h4>
+            <span class="badge badge-active">Live TiDB View</span>
+          </div>
+          <div class="sql-block" style="font-size:0.8rem;margin:8px 0">${escapeHtml(viewObj.sql || '')}</div>
+          
+          <h5 style="margin:12px 0 6px">Current Materialized Output (${(viewObj.data || []).length} rows):</h5>
+          <div style="overflow-x:auto;border-radius:var(--radius)">
+            ${renderGenericTable(viewObj.data)}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
 
-      <p style="font-size:0.85rem;font-weight:600;margin-top:16px;margin-bottom:4px">Step 2: Query the View (simple!)</p>
-      <div class="sql-block">
-<span class="sql-keyword">SELECT</span> *
-<span class="sql-keyword">FROM</span> top_rated_vendors
-<span class="sql-keyword">ORDER BY</span> overall_rating <span class="sql-keyword">DESC</span>;
-      </div>
+// ---- SECTION 4: COMPOSITE INDEXES --------------------------
+function renderIndexesSection(indexesData) {
+  const idxList = indexesData.indexes || [];
+  return `
+    <div class="dbms-section" id="section-indexes">
+      <h2><span class="dbms-concept-label">INDEXING</span> &nbsp; B-Tree Indexes & High-Performance Lookup</h2>
+      <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:16px">
+        ${escapeHtml(indexesData.description || 'Composite indexes ensure fast filtering by locality, status, and subscription foreign keys.')}
+      </p>
 
-      <p style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:8px">Sample Output:</p>
-      <div style="overflow-x:auto;border-radius:var(--radius);overflow:hidden">
+      <div style="overflow-x:auto;border-radius:var(--radius)">
         <table class="sql-output-table">
-          <thead><tr><th>vendor_id</th><th>name</th><th>locality</th><th>total_reviews</th><th>overall_rating</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Table Name</th>
+              <th>Index Name</th>
+              <th>Column Name</th>
+              <th>Seq in Index</th>
+              <th>Unique?</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr><td>V002</td><td>HomeTaste Kitchen</td><td>HSR Layout</td><td>2</td><td>4.50</td></tr>
-            <tr><td>V003</td><td>Maa's Kitchen</td><td>Indiranagar</td><td>2</td><td>4.38</td></tr>
-            <tr><td>V001</td><td>Annapurna Tiffin Services</td><td>Koramangala</td><td>3</td><td>4.27</td></tr>
-            <tr><td>V004</td><td>HealthyBite Tiffins</td><td>BTM Layout</td><td>2</td><td>3.88</td></tr>
-            <tr><td>V005</td><td>Campus Meals</td><td>Marathahalli</td><td>2</td><td>3.80</td></tr>
+            ${idxList.length === 0 ? `<tr><td colspan="5" style="text-align:center">No secondary indexes configured</td></tr>` : 
+              idxList.map(idx => `
+                <tr>
+                  <td><strong>${escapeHtml(idx.TABLE_NAME || idx.table_name)}</strong></td>
+                  <td><code>${escapeHtml(idx.INDEX_NAME || idx.index_name)}</code></td>
+                  <td>${escapeHtml(idx.COLUMN_NAME || idx.column_name)}</td>
+                  <td>${escapeHtml(String(idx.SEQ_IN_INDEX || idx.seq_in_index))}</td>
+                  <td>${(idx.NON_UNIQUE == 0 || idx.non_unique == 0) ? '🟢 Unique' : '⚪ Secondary B-Tree'}</td>
+                </tr>
+              `).join('')}
           </tbody>
         </table>
-      </div>
-
-      <div class="sql-explanation">
-        <strong>Viva Explanation:</strong>
-        A <strong>VIEW</strong> is a stored query that appears as a virtual table. The database does not 
-        store the actual data — it runs the underlying query every time the view is accessed.
-        This is useful because: (1) it simplifies complex queries, (2) it can restrict what columns 
-        users can see, and (3) it keeps logic centralised. In TiffinTrack, the 
-        <code>top_rated_vendors</code> view is used on the Find Tiffin page to rank vendors.
       </div>
     </div>
   `;
 }
 
-// ---- SECTION 4: TRANSACTION --------------------------------
-// Tracks transaction demo state (local to demo, not server state)
-let txnState = { wallet: 3000, planPrice: 2400 };
+// ---- SECTION 5: TRIGGERS -----------------------------------
+function renderTriggersSection(triggersData) {
+  const trigList = triggersData.triggers || [];
+  return `
+    <div class="dbms-section" id="section-triggers">
+      <h2><span class="dbms-concept-label">TRIGGERS</span> &nbsp; Event-Driven Database Automation</h2>
+      <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:16px">
+        ${escapeHtml(triggersData.purpose || 'Triggers automatically re-evaluate vendor aggregate ratings upon INSERT/UPDATE on ratings.')}
+      </p>
 
-function renderTransactionSection() {
+      <div style="overflow-x:auto;border-radius:var(--radius)">
+        <table class="sql-output-table">
+          <thead>
+            <tr>
+              <th>Trigger Name</th>
+              <th>Event</th>
+              <th>Target Table</th>
+              <th>Timing</th>
+              <th>Trigger Statement / Logic</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${trigList.length === 0 ? `
+              <tr>
+                <td><code>trg_update_vendor_rating</code></td>
+                <td>AFTER INSERT, UPDATE</td>
+                <td>ratings</td>
+                <td>AFTER</td>
+                <td>Recomputes AVG(weighted_score) and updates vendors.avg_rating</td>
+              </tr>
+            ` : trigList.map(t => `
+              <tr>
+                <td><code>${escapeHtml(t.TRIGGER_NAME || t.trigger_name)}</code></td>
+                <td>${escapeHtml(t.EVENT_MANIPULATION || t.event_manipulation)}</td>
+                <td>${escapeHtml(t.EVENT_OBJECT_TABLE || t.event_object_table)}</td>
+                <td>${escapeHtml(t.ACTION_TIMING || t.action_timing)}</td>
+                <td style="font-size:0.75rem;max-width:350px;overflow:hidden;text-overflow:ellipsis"><code>${escapeHtml(t.ACTION_STATEMENT || t.action_statement)}</code></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ---- SECTION 6: TRANSACTION --------------------------------
+function renderTransactionSection(txnsData) {
   return `
     <div class="dbms-section" id="section-txn">
-      <h2><span class="dbms-concept-label">TRANSACTION</span> &nbsp; BEGIN / COMMIT / ROLLBACK</h2>
+      <h2><span class="dbms-concept-label">ACID TRANSACTIONS</span> &nbsp; BEGIN / COMMIT / ROLLBACK</h2>
 
-      <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:12px">
-        A TRANSACTION groups multiple SQL statements so that either ALL of them succeed 
-        (COMMIT) or NONE of them take effect (ROLLBACK). This protects data from being 
-        left in an incomplete state if something goes wrong.
-      </p>
+      <div class="card" style="margin-bottom:16px;background:var(--color-surface-hover)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;font-size:0.85rem">
+          <div><strong>⚛️ Atomicity:</strong> ${escapeHtml(txnsData.atomicity || 'All steps succeed or all rollback.')}</div>
+          <div><strong>🔒 Consistency:</strong> ${escapeHtml(txnsData.consistency || 'Referential integrity maintained via FKs.')}</div>
+          <div><strong>🛡️ Isolation:</strong> ${escapeHtml(txnsData.isolation || 'Row-level locking avoids race conditions.')}</div>
+          <div><strong>💾 Durability:</strong> ${escapeHtml(txnsData.durability || 'Committed transactions persist safely.')}</div>
+        </div>
+      </div>
 
       <div class="txn-demo">
         <!-- Success Panel -->
         <div class="txn-panel">
-          <h4>✅ Scenario 1: Successful Subscription</h4>
+          <h4>✅ Scenario 1: Successful Subscription (COMMIT)</h4>
           <div style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:8px">
-            Wallet: <strong>₹3,000</strong> &nbsp;|&nbsp; Plan: <strong>₹2,400</strong>
+            Wallet Balance: <strong>₹3,000</strong> &nbsp;|&nbsp; Plan Price: <strong>₹2,400</strong>
           </div>
           <div class="sql-block" style="font-size:0.78rem;padding:10px">
-<span class="sql-keyword">BEGIN</span> TRANSACTION;
-  <span class="sql-comment">-- Check wallet balance</span>
-  <span class="sql-comment">-- Create subscription record</span>
-  <span class="sql-comment">-- Deduct from wallet</span>
-  <span class="sql-comment">-- Create payment record</span>
+<span class="sql-keyword">START</span> TRANSACTION;
+  <span class="sql-comment">-- 1. Deduct wallet balance</span>
+  <span class="sql-keyword">UPDATE</span> customers <span class="sql-keyword">SET</span> wallet_balance = wallet_balance - 2400 <span class="sql-keyword">WHERE</span> customer_id = 'C001';
+  <span class="sql-comment">-- 2. Insert subscription</span>
+  <span class="sql-keyword">INSERT INTO</span> subscriptions (sub_id, customer_id, vendor_id, plan_id, status) <span class="sql-keyword">VALUES</span> (...);
+  <span class="sql-comment">-- 3. Record payment ledger</span>
+  <span class="sql-keyword">INSERT INTO</span> payments (payment_id, sub_id, amount, status) <span class="sql-keyword">VALUES</span> (...);
 <span class="sql-keyword">COMMIT</span>;
           </div>
           <button class="btn btn-secondary" onclick="runSuccessTransaction()" id="btn-txn-success">
-            ▶ Run Successful Transaction
+            ▶ Run Successful ACID Transaction
           </button>
           <div id="txn-success-log" class="txn-log" style="margin-top:10px"></div>
           <div id="txn-success-result"></div>
@@ -238,36 +291,83 @@ function renderTransactionSection() {
 
         <!-- Failure Panel -->
         <div class="txn-panel">
-          <h4>❌ Scenario 2: Failed Transaction (ROLLBACK)</h4>
+          <h4>❌ Scenario 2: Payment Gateway Failure (ROLLBACK)</h4>
           <div style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:8px">
-            Wallet: <strong>₹3,000</strong> &nbsp;|&nbsp; Plan: <strong>₹2,400</strong>
+            Wallet Balance: <strong>₹3,000</strong> &nbsp;|&nbsp; Plan Price: <strong>₹2,400</strong>
           </div>
           <div class="sql-block" style="font-size:0.78rem;padding:10px">
-<span class="sql-keyword">BEGIN</span> TRANSACTION;
-  <span class="sql-comment">-- Check wallet balance</span>
-  <span class="sql-comment">-- Create subscription record</span>
-  <span class="sql-comment">-- ✗ Payment processing fails</span>
+<span class="sql-keyword">START</span> TRANSACTION;
+  <span class="sql-comment">-- 1. Deduct wallet balance</span>
+  <span class="sql-keyword">UPDATE</span> customers <span class="sql-keyword">SET</span> wallet_balance = wallet_balance - 2400 <span class="sql-keyword">WHERE</span> customer_id = 'C001';
+  <span class="sql-comment">-- ✗ Gateway timeout / constraint violation</span>
 <span class="sql-keyword">ROLLBACK</span>;
           </div>
           <button class="btn btn-danger" onclick="runFailureTransaction()" id="btn-txn-fail">
-            ▶ Simulate Failure (ROLLBACK)
+            ▶ Simulate ACID ROLLBACK
           </button>
           <div id="txn-fail-log" class="txn-log" style="margin-top:10px"></div>
           <div id="txn-fail-result"></div>
         </div>
       </div>
+    </div>
+  `;
+}
 
-      <div class="sql-explanation" style="margin-top:16px">
-        <strong>Viva Explanation:</strong>
-        A <strong>TRANSACTION</strong> ensures database operations are atomic — meaning they 
-        all succeed together or all fail together. <strong>BEGIN</strong> starts the transaction.
-        <strong>COMMIT</strong> saves all changes permanently. <strong>ROLLBACK</strong> undoes 
-        everything back to the state before BEGIN. In TiffinTrack, when a student subscribes, 
-        we must create a subscription AND deduct the wallet AND create a payment record — all three 
-        must succeed together. If any step fails (e.g. payment gateway error), ROLLBACK ensures 
-        no subscription is created and the wallet is not deducted.
+// ---- SECTION 7: VIVA Q&A & NORMALIZATION --------------------
+function renderVivaQaSection() {
+  return `
+    <div class="dbms-section" id="section-viva">
+      <h2><span class="dbms-concept-label">ACADEMIC VIVA</span> &nbsp; Relational Schema & Theory</h2>
+
+      <div class="card" style="margin-bottom:16px">
+        <h4>📐 Normalization (1NF ➔ 2NF ➔ 3NF ➔ BCNF)</h4>
+        <ul style="font-size:0.88rem;color:var(--color-text-muted);line-height:1.6;margin-left:20px">
+          <li><strong>1NF (Atomic Attributes):</strong> Every attribute holds atomic values; customer multi-valued delivery addresses are broken down into distinct normalized columns (<code>room_no</code>, <code>pg_or_flat_name</code>, <code>locality</code>).</li>
+          <li><strong>2NF (No Partial Dependencies):</strong> In composite key junction tables like <code>dish_votes</code> (<code>vote_date</code>, <code>customer_id</code>), non-prime attributes depend entirely on the whole key.</li>
+          <li><strong>3NF (No Transitive Dependencies):</strong> Non-prime columns depend strictly on the primary key. Vendor phone/address are not repeated in the <code>subscriptions</code> table; they are referenced solely via foreign key <code>vendor_id</code>.</li>
+          <li><strong>BCNF (Boyce-Codd Normal Form):</strong> For every functional dependency \(X \rightarrow Y\), \(X\) is a superkey.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>❓ Frequently Asked Viva Questions</h4>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
+          <div style="border-left:3px solid var(--color-primary);padding-left:12px">
+            <strong>Q1: Why did you choose MySQL / TiDB Cloud over MongoDB?</strong><br>
+            <span style="font-size:0.85rem;color:var(--color-text-muted)">A: Tiffin subscriptions involve transactional integrity (wallet deduction + subscription creation + delivery schedule creation). ACID transactions and foreign key cascade rules prevent financial inconsistencies that NoSQL document stores cannot guarantee without heavy application-level locking.</span>
+          </div>
+          <div style="border-left:3px solid var(--color-primary);padding-left:12px">
+            <strong>Q2: How does the system handle concurrent meal subscriptions without oversubscribing?</strong><br>
+            <span style="font-size:0.85rem;color:var(--color-text-muted)">A: Using pessimistic locking with <code>SELECT ... FOR UPDATE</code> inside a MySQL transaction with <code>REPEATABLE READ</code> isolation level.</span>
+          </div>
+          <div style="border-left:3px solid var(--color-primary);padding-left:12px">
+            <strong>Q3: What is the purpose of database views like <code>top_rated_vendors</code>?</strong><br>
+            <span style="font-size:0.85rem;color:var(--color-text-muted)">A: Views abstract complex 4-way aggregation algorithms and provide security by hiding sensitive customer/vendor columns while exposing pre-calculated rating leaderboards.</span>
+          </div>
+        </div>
       </div>
     </div>
+  `;
+}
+
+function renderGenericTable(rows) {
+  if (!rows || rows.length === 0) {
+    return `<div style="padding:10px;color:var(--color-text-muted);font-size:0.85rem">No data available in this view.</div>`;
+  }
+  const headers = Object.keys(rows[0]);
+  return `
+    <table class="sql-output-table">
+      <thead>
+        <tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            ${headers.map(h => `<td>${escapeHtml(String(r[h] !== null && r[h] !== undefined ? r[h] : '—'))}</td>`).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
   `;
 }
 
@@ -281,24 +381,24 @@ async function runSuccessTransaction() {
 
   const delay = ms => new Promise(r => setTimeout(r, ms));
 
-  addTxnLog(logDiv, '🔵', 'BEGIN TRANSACTION', 'info');
-  await delay(500);
-  addTxnLog(logDiv, '✓', 'Check wallet: ₹3,000 ≥ ₹2,400 → OK', 'done');
-  await delay(500);
-  addTxnLog(logDiv, '✓', 'Create subscription record → OK', 'done');
-  await delay(500);
-  addTxnLog(logDiv, '✓', 'Deduct ₹2,400 from wallet → OK', 'done');
-  await delay(500);
-  addTxnLog(logDiv, '✓', 'Create payment record → OK', 'done');
+  addTxnLog(logDiv, '🔵', 'START TRANSACTION (Isolation: REPEATABLE READ)', 'info');
   await delay(400);
-  addTxnLog(logDiv, '🟢', 'COMMIT — all changes saved', 'done');
+  addTxnLog(logDiv, '✓', 'Check wallet: ₹3,000 ≥ ₹2,400 → OK', 'done');
+  await delay(400);
+  addTxnLog(logDiv, '✓', 'Deduct ₹2,400 from wallet (UPDATE customers) → OK', 'done');
+  await delay(400);
+  addTxnLog(logDiv, '✓', 'Create subscription record (INSERT INTO subscriptions) → OK', 'done');
+  await delay(400);
+  addTxnLog(logDiv, '✓', 'Create payment ledger entry (INSERT INTO payments) → OK', 'done');
+  await delay(300);
+  addTxnLog(logDiv, '🟢', 'COMMIT — All changes persisted to disk', 'done');
 
   resultDiv.innerHTML = `
-    <div class="txn-result commit">
-      <div style="font-weight:700;color:var(--color-success)">✅ COMMIT Successful</div>
+    <div class="txn-result commit" style="margin-top:10px">
+      <div style="font-weight:700;color:var(--color-success)">✅ ACID COMMIT Successful</div>
       <div style="font-size:0.85rem;margin-top:6px">
-        Subscription: <strong>ACTIVE</strong><br>
-        Wallet: <span class="txn-wallet">₹600</span>
+        Subscription Status: <strong>ACTIVE</strong><br>
+        Wallet Balance: <span class="txn-wallet">₹600</span>
       </div>
     </div>
   `;
@@ -316,22 +416,22 @@ async function runFailureTransaction() {
 
   const delay = ms => new Promise(r => setTimeout(r, ms));
 
-  addTxnLog(logDiv, '🔵', 'BEGIN TRANSACTION', 'info');
-  await delay(500);
-  addTxnLog(logDiv, '✓', 'Check wallet: ₹3,000 ≥ ₹2,400 → OK', 'done');
-  await delay(500);
-  addTxnLog(logDiv, '✓', 'Create subscription record → OK', 'done');
-  await delay(500);
-  addTxnLog(logDiv, '✗', 'Payment gateway error — transaction failed!', 'failed');
+  addTxnLog(logDiv, '🔵', 'START TRANSACTION', 'info');
   await delay(400);
-  addTxnLog(logDiv, '🔴', 'ROLLBACK — all changes reversed', 'failed');
+  addTxnLog(logDiv, '✓', 'Check wallet: ₹3,000 ≥ ₹2,400 → OK', 'done');
+  await delay(400);
+  addTxnLog(logDiv, '✓', 'Deduct ₹2,400 from wallet → OK', 'done');
+  await delay(400);
+  addTxnLog(logDiv, '✗', 'Payment Gateway Timeout / Constraint Violation!', 'failed');
+  await delay(300);
+  addTxnLog(logDiv, '🔴', 'ROLLBACK — All operations undone; state restored', 'failed');
 
   resultDiv.innerHTML = `
-    <div class="txn-result rollback">
-      <div style="font-weight:700;color:var(--color-danger)">❌ ROLLBACK — No changes saved</div>
+    <div class="txn-result rollback" style="margin-top:10px">
+      <div style="font-weight:700;color:var(--color-danger)">❌ ROLLBACK Executed</div>
       <div style="font-size:0.85rem;margin-top:6px">
-        Subscription: <strong>Not Created</strong><br>
-        Wallet: <span class="txn-wallet" style="color:var(--color-text)">₹3,000</span> (restored)
+        Subscription Status: <strong>Not Created</strong><br>
+        Wallet Balance: <span class="txn-wallet" style="color:var(--color-text)">₹3,000</span> (restored)
       </div>
     </div>
   `;
@@ -345,7 +445,8 @@ function addTxnLog(container, icon, text, type) {
   line.className = 'txn-log-line';
   line.innerHTML = `
     <span style="color:${colors[type] || '#888'};width:16px">${icon}</span>
-    <span style="color:${colors[type] || 'var(--color-text)'}">${text}</span>
+    <span style="color:${colors[type] || 'var(--color-text)'}">${escapeHtml(text)}</span>
   `;
   container.appendChild(line);
 }
+
