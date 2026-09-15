@@ -17,12 +17,15 @@ async function renderStudentDashboard() {
     const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
     // Today's lunch delivery for this student
-    const todayDelivery = deliveries.find(d => d.meal_type === 'Lunch') || null;
+    const todayDelivery = (deliveries && Array.isArray(deliveries)) ? (deliveries.find(d => d.meal_type === 'Lunch') || null) : null;
+
+    const studentFirstName = (customer && customer.name ? customer.name.split(' ')[0] : null) || (currentUser && currentUser.name ? currentUser.name.split(' ')[0] : 'Student');
+    const residenceInfo = (customer && (customer.residence || customer.pg_or_flat_name)) ? `${customer.residence || customer.pg_or_flat_name}${customer.room || customer.room_no ? ', Room ' + (customer.room || customer.room_no) : ''}` : 'Hostel / Flat';
 
     showContent(`
       <div class="page-header">
-        <h1>${greeting}, ${customer.name.split(' ')[0]} 👋</h1>
-        <p>${customer.residence}, Room ${customer.room}</p>
+        <h1>${greeting}, ${studentFirstName} 👋</h1>
+        <p>${residenceInfo}</p>
       </div>
 
       <!-- Stats Row -->

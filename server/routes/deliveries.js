@@ -9,8 +9,7 @@ async function getActiveCustomer(req) {
     const rows = await db.query('SELECT * FROM customers WHERE user_id = ?', [req.user.user_id]);
     if (rows.length > 0) return rows[0];
   }
-  const defaultCust = await db.query('SELECT * FROM customers WHERE customer_id = "C001"');
-  return defaultCust[0] || null;
+  return null;
 }
 
 async function getActiveVendor(req) {
@@ -19,8 +18,7 @@ async function getActiveVendor(req) {
     const rows = await db.query('SELECT * FROM vendors WHERE user_id = ?', [req.user.user_id]);
     if (rows.length > 0) return rows[0];
   }
-  const defaultVend = await db.query('SELECT * FROM vendors WHERE vendor_id = "V001"');
-  return defaultVend[0] || null;
+  return null;
 }
 
 async function getActiveAgent(req) {

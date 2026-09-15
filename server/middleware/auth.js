@@ -134,10 +134,63 @@ function requireRole(...allowedRoles) {
   };
 }
 
+// Attach user session if token exists (non-blocking for public/hybrid routes)
+async function attachUserSession(req, res, next) {
+  let token = req.cookies ? req.cookies[COOKIE_NAME] : null;
+  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.substring(7);
+  }
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const tokenHash = hashToken(token);
+    const rows = await db.query(
+      'SELECT s.session_id, s.user_id, s.expires_at, u.email, u.role, u.status AS user_status ' +
+      'FROM sessions s JOIN users u ON s.user_id = u.user_id WHERE s.token_hash = ?',
+      [tokenHash]
+    );
+
+    if (!rows || rows.length === 0 || new Date(rows[0].expires_at) < new Date() || rows[0].user_status !== 'active') {
+      req.user = null;
+      return next();
+    }
+
+    const session = rows[0];
+    let profile = null;
+    if (session.role === 'customer' || session.role === 'student') {
+      const cust = await db.query('SELECT * FROM customers WHERE user_id = ?', [session.user_id]);
+      profile = cust[0] || null;
+    } else if (session.role === 'vendor') {
+      const vend = await db.query('SELECT * FROM vendors WHERE user_id = ?', [session.user_id]);
+      profile = vend[0] || null;
+    } else if (session.role === 'delivery_agent' || session.role === 'agent') {
+      const agnt = await db.query('SELECT * FROM delivery_agents WHERE user_id = ?', [session.user_id]);
+      profile = agnt[0] || null;
+    }
+
+    req.user = {
+      user_id: session.user_id,
+      email: session.email,
+      role: session.role,
+      status: session.user_status,
+      sessionId: session.session_id,
+      profile: profile
+    };
+  } catch (e) {
+    req.user = null;
+  }
+  next();
+}
+
 module.exports = {
   COOKIE_NAME,
   hashToken,
   logAuditAction,
   requireAuth,
+  attachUserSession,
   requireRole
 };

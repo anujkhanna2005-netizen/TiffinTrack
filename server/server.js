@@ -7,6 +7,7 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const { attachUserSession } = require('./middleware/auth');
 const apiRoutes = require('./routes/api');
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(attachUserSession);
 
 // Serve static frontend files from /public
 app.use(express.static(path.join(__dirname, '..', 'public')));

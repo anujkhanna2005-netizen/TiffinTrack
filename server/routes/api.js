@@ -18,14 +18,14 @@ router.get('/customer', async (req, res) => {
   try {
     let customer = null;
     if (req.user && (req.user.role === 'customer' || req.user.role === 'student')) {
-      const rows = await db.query('SELECT * FROM customers WHERE user_id = ?', [req.user.user_id]);
-      customer = rows[0] || null;
+      if (req.user.profile && req.user.profile.customer_id) {
+        customer = req.user.profile;
+      } else {
+        const rows = await db.query('SELECT * FROM customers WHERE user_id = ?', [req.user.user_id]);
+        customer = rows[0] || null;
+      }
     }
-    if (!customer) {
-      const defaultCust = await db.query('SELECT * FROM customers WHERE customer_id = "C001"');
-      customer = defaultCust[0] || null;
-    }
-    if (!customer) return res.status(404).json({ error: 'Customer not found' });
+    if (!customer) return res.status(401).json({ error: 'Please log in as a student to view your profile.' });
 
     const subSql = `
       SELECT s.*, 
