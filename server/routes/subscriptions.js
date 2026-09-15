@@ -207,17 +207,25 @@ router.post('/skip', async (req, res) => {
 
     await db.query('UPDATE deliveries SET status = "skipped" WHERE subscription_id = ? AND date = ?', [sub.sub_id, skip_date]);
 
-    await logAuditAction(req, 'SKIP_MEAL', 'skip_requests', skipId, 'Meal skipped on ' + skip_date + ' (₹' + creditAmount + ' credited)');
+    // Credit ₹80.00 to the student wallet in the database
+    await db.query('UPDATE customers SET wallet_balance = wallet_balance + ? WHERE customer_id = ?', [creditAmount, customer.customer_id]);
+
+    const updatedCust = await db.query('SELECT wallet_balance FROM customers WHERE customer_id = ?', [customer.customer_id]);
+    const newBal = updatedCust.length > 0 ? parseFloat(updatedCust[0].wallet_balance) : ((parseFloat(customer.wallet_balance) || 1000) + creditAmount);
+
+    await logAuditAction(req, 'SKIP_MEAL', 'skip_requests', skipId, 'Meal skipped on ' + skip_date + ' (₹' + creditAmount + ' credited to wallet)');
 
     return res.status(201).json({
       success: true,
-      message: 'Meal skip request approved! ₹' + creditAmount + ' credited to your next billing cycle.',
+      message: 'Meal skip request approved! ₹' + creditAmount.toFixed(2) + ' credited to your wallet.',
       skip_id: skipId,
-      credit_amount: creditAmount
+      credit_amount: creditAmount,
+      new_wallet_balance: newBal,
+      wallet_balance: newBal
     });
   } catch (err) {
     console.error('Skip meal error:', err);
-    return res.status(500).json({ error: 'Failed to process skip meal request' });
+    return res.status(500).json({ error: 'Failed to process skip meal request: ' + err.message });
   }
 });
 

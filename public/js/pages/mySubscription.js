@@ -268,13 +268,20 @@ async function handleSkipMealSubmit() {
 
   try {
     const res = await skipMeal(skipDate, mealType, reason);
+    const newBal = res.new_wallet_balance !== undefined ? res.new_wallet_balance : res.wallet_balance;
+
+    const walletEl = document.getElementById('wallet-balance-val');
+    if (walletEl && newBal !== undefined) {
+      walletEl.textContent = formatINR(newBal);
+    }
+
     alertDiv.innerHTML = `
       <div class="alert alert-success" style="margin-top:10px">
         ✅ <strong>Meal Skipped Successfully!</strong><br>
-        ₹80.00 has been credited to your wallet. New Balance: <strong>${formatINR(res.new_wallet_balance || res.wallet_balance || 1080)}</strong>.
+        ₹80.00 credited to your wallet balance. Updated Wallet: <strong>${formatINR(newBal)}</strong>.
       </div>
     `;
-    showToast('Skip Confirmed', '₹80 credited to your wallet.', 'success');
+    showToast('Skip Confirmed', '₹80.00 credited to your wallet balance.', 'success');
     btn.textContent = '✓ Skipped';
     setTimeout(() => renderMySubscription(), 1500);
   } catch (err) {
@@ -318,10 +325,10 @@ async function handleJoinGroup() {
   }
   try {
     const res = await joinGroupSubscription(code);
-    alertDiv.innerHTML = `<div class="alert alert-success" style="font-size:0.8rem">✅ Joined ${res.group_name || code}! 10% discount applied to your renewal.</div>`;
+    alertDiv.innerHTML = `<div class="alert alert-success" style="font-size:0.8rem">✅ Joined <strong>${escapeHtml(res.group_name || code)}</strong>! 10% group discount activated.</div>`;
     showToast('Group Joined', '10% group discount activated.', 'success');
   } catch (err) {
-    alertDiv.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem">❌ ${err.message}</div>`;
+    alertDiv.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem">❌ ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -331,15 +338,21 @@ async function handleCreateFlatGroup(residence) {
   const alertDiv = document.getElementById('group-alert');
   try {
     const res = await createGroupSubscription(groupName, residence);
+    const code = res.group_code || res.group_id || (res.group && res.group.group_code) || 'GRP001';
+    
+    const inputEl = document.getElementById('group-code-input');
+    if (inputEl) inputEl.value = code;
+
     alertDiv.innerHTML = `
-      <div class="alert alert-success" style="font-size:0.8rem">
-        ✅ Flat Group Created!<br>
-        Share Code: <strong>${res.group_code}</strong> with your roommates to get 10% off.
+      <div class="alert alert-success" style="font-size:0.82rem;line-height:1.4">
+        ✅ <strong>Flat Group Created!</strong><br>
+        Group Name: <strong>${escapeHtml(res.group_name || groupName)}</strong><br>
+        Share Code: <strong style="letter-spacing:1px;font-size:0.95rem;color:var(--color-primary)">${escapeHtml(code)}</strong> with your roommates to activate 10% off.
       </div>
     `;
-    showToast('Group Created', 'Share code: ' + res.group_code, 'success');
+    showToast('Group Created', 'Share code: ' + code, 'success');
   } catch (err) {
-    alertDiv.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem">❌ ${err.message}</div>`;
+    alertDiv.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem">❌ ${escapeHtml(err.message)}</div>`;
   }
 }
 

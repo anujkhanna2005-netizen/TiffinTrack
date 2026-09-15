@@ -179,7 +179,7 @@ router.post('/menu/vote', async (req, res) => {
 router.post('/groups/create', async (req, res) => {
   try {
     const { group_name, flat_address, residence_name, locality, vendor_id } = req.body;
-    const resName = residence_name || group_name || 'Bhopal Hostel Block A';
+    const resName = group_name || residence_name || 'Bhopal Hostel Block A';
     const loc = locality || 'Campus Area';
 
     const countRes = await db.query('SELECT COUNT(*) as cnt FROM group_subscriptions');
@@ -191,41 +191,49 @@ router.post('/groups/create', async (req, res) => {
       [groupId, resName, loc, vendor_id || 'V001', today]
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Group created! Group discount 10% active for ' + resName,
-      group: { group_id: groupId, group_code: groupId, discount: '10%' }
+      group_id: groupId,
+      group_code: groupId,
+      group_name: resName,
+      discount: '10%',
+      discount_percentage: 10,
+      group: { group_id: groupId, group_code: groupId, group_name: resName, discount: '10%' }
     });
   } catch (err) {
     console.error('Group create error:', err);
-    res.status(500).json({ error: 'Failed to create group' });
+    return res.status(500).json({ error: 'Failed to create group: ' + err.message });
   }
 });
 
 router.post('/groups/join', async (req, res) => {
   try {
     const { group_code, group_id } = req.body;
-    const targetId = group_id || group_code;
+    const targetId = (group_code || group_id || '').trim().toUpperCase();
     if (!targetId) return res.status(422).json({ error: 'Group code required' });
 
-    const rows = await db.query('SELECT * FROM group_subscriptions WHERE group_id = ? OR residence_name = ?', [targetId, targetId]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Invalid group' });
+    const rows = await db.query('SELECT * FROM group_subscriptions WHERE UPPER(group_id) = ? OR UPPER(residence_name) = ?', [targetId, targetId]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Invalid group code "' + targetId + '". Group not found.' });
 
     const group = rows[0];
-    const newCount = group.member_count + 1;
+    const newCount = (group.member_count || 1) + 1;
     const discount = newCount >= 5 ? 15.00 : (newCount >= 3 ? 10.00 : 5.00);
 
     await db.query('UPDATE group_subscriptions SET member_count = ?, discount_percent = ? WHERE group_id = ?', [newCount, discount, group.group_id]);
 
-    res.json({
+    return res.json({
       success: true,
-      message: 'Joined group! Discount upgraded to ' + discount + '%',
+      message: 'Joined ' + group.residence_name + '! 10% group discount activated.',
+      group_id: group.group_id,
+      group_code: group.group_id,
+      group_name: group.residence_name,
       member_count: newCount,
       discount_percentage: discount
     });
   } catch (err) {
     console.error('Join group error:', err);
-    res.status(500).json({ error: 'Failed to join group' });
+    return res.status(500).json({ error: 'Failed to join group: ' + err.message });
   }
 });
 
