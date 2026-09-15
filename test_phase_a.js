@@ -1,4 +1,4 @@
-﻿const http = require('http');
+const http = require('http');
 
 async function testSuite() {
   console.log('=== RUNNING PHASE A COMPREHENSIVE VERIFICATION SUITE ===');

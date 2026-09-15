@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // TiffinTrack - Database Connection Layer (server/db.js)
 // Serverless-friendly connection pool using mysql2/promise
 // ============================================================

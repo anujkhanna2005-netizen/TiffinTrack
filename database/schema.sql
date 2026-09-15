@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- TiffinTrack Relational Database Schema (DDL)
 -- Database: tiffintrack
 -- Covers all 17 entities for 2nd Year CSE-CPS DBMS Project

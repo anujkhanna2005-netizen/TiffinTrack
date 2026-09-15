@@ -1,4 +1,4 @@
-﻿const http = require('http');
+const http = require('http');
 const app = require('./server/server');
 const db = require('./server/db');
 
