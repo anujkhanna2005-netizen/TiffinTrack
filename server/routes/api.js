@@ -175,7 +175,7 @@ router.post('/menu/vote', async (req, res) => {
   }
 });
 
-// Group Subscription routes
+// Group Subscription routes (Add-on 3: Flat Group Discount - Minimum 3 Members Required)
 router.get('/groups', async (req, res) => {
   try {
     const groups = await db.query('SELECT * FROM group_subscriptions ORDER BY member_count DESC LIMIT 10');
@@ -195,20 +195,24 @@ router.post('/groups/create', async (req, res) => {
     const groupId = 'GRP' + String(countRes[0].cnt + 1).padStart(3, '0');
     const today = new Date().toISOString().slice(0, 10);
 
+    // Initial group creation starts with 1 member: discount NOT unlocked until 3 members join
     await db.query(
-      'INSERT INTO group_subscriptions (group_id, residence_name, locality, vendor_id, member_count, discount_applied, discount_percent, formed_date) VALUES (?, ?, ?, ?, 1, 1, 10.00, ?) ON DUPLICATE KEY UPDATE member_count = member_count + 1',
+      'INSERT INTO group_subscriptions (group_id, residence_name, locality, vendor_id, member_count, discount_applied, discount_percent, formed_date) VALUES (?, ?, ?, ?, 1, 0, 0.00, ?) ON DUPLICATE KEY UPDATE member_count = member_count + 1',
       [groupId, resName, loc, vendor_id || 'V001', today]
     );
 
     return res.status(201).json({
       success: true,
-      message: 'Group created! 10% group discount active for ' + resName,
+      message: 'Group created! Invite 2 more roommates (Min 3 members) to unlock the 10% discount.',
       group_id: groupId,
       group_code: groupId,
       group_name: resName,
-      discount: '10%',
-      discount_percentage: 10,
-      group: { group_id: groupId, group_code: groupId, group_name: resName, discount: '10%' }
+      member_count: 1,
+      min_members_needed: 3,
+      members_remaining: 2,
+      discount_unlocked: false,
+      discount_percentage: 0,
+      group: { group_id: groupId, group_code: groupId, group_name: resName, member_count: 1, discount_unlocked: false }
     });
   } catch (err) {
     console.error('Group create error:', err);
@@ -226,29 +230,52 @@ router.post('/groups/join', async (req, res) => {
     
     let group = rows[0];
     const today = new Date().toISOString().slice(0, 10);
+    let newCount = 1;
 
     if (!group) {
-      // Auto-create group on-the-fly if it does not exist yet
+      // Auto-create group on-the-fly starting with 1 member (Needs 3 for discount)
       const groupId = targetId.startsWith('GRP') ? targetId : targetId.slice(0, 16);
       await db.query(
-        'INSERT INTO group_subscriptions (group_id, residence_name, locality, vendor_id, member_count, discount_applied, discount_percent, formed_date) VALUES (?, ?, "Campus Area", "V001", 1, 1, 10.00, ?) ON DUPLICATE KEY UPDATE member_count = member_count + 1',
+        'INSERT INTO group_subscriptions (group_id, residence_name, locality, vendor_id, member_count, discount_applied, discount_percent, formed_date) VALUES (?, ?, "Campus Area", "V001", 1, 0, 0.00, ?) ON DUPLICATE KEY UPDATE member_count = member_count + 1',
         [groupId, targetId, today]
       );
       group = { group_id: groupId, residence_name: targetId, member_count: 1 };
+      newCount = 1;
     } else {
-      const newCount = (group.member_count || 1) + 1;
-      await db.query('UPDATE group_subscriptions SET member_count = ?, discount_percent = 10.00, discount_applied = 1 WHERE group_id = ?', [newCount, group.group_id]);
+      newCount = (group.member_count || 1) + 1;
+      // Discount rule: >= 5 members: 15%, >= 3 members: 10%, < 3 members: 0%
+      const discountPercent = newCount >= 5 ? 15.00 : (newCount >= 3 ? 10.00 : 0.00);
+      const isDiscountApplied = newCount >= 3 ? 1 : 0;
+
+      await db.query(
+        'UPDATE group_subscriptions SET member_count = ?, discount_percent = ?, discount_applied = ? WHERE group_id = ?',
+        [newCount, discountPercent, isDiscountApplied, group.group_id]
+      );
       group.member_count = newCount;
+    }
+
+    const discountUnlocked = newCount >= 3;
+    const discountPct = newCount >= 5 ? 15 : (newCount >= 3 ? 10 : 0);
+    const needed = Math.max(0, 3 - newCount);
+
+    let message = '';
+    if (discountUnlocked) {
+      message = `🎉 Group Threshold Reached (${newCount} members)! ${discountPct}% Flat Group Discount is now ACTIVE for all roommates!`;
+    } else {
+      message = `Joined "${group.residence_name}"! Current members: ${newCount}/3. Need ${needed} more roommate(s) to unlock the 10% discount.`;
     }
 
     return res.json({
       success: true,
-      message: 'Joined group "' + group.residence_name + '"! 10% flat group discount activated.',
+      message,
       group_id: group.group_id,
       group_code: group.group_id,
       group_name: group.residence_name,
-      member_count: group.member_count || 1,
-      discount_percentage: 10
+      member_count: newCount,
+      min_members_needed: 3,
+      members_remaining: needed,
+      discount_unlocked: discountUnlocked,
+      discount_percentage: discountPct
     });
   } catch (err) {
     console.error('Join group error:', err);

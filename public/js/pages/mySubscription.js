@@ -171,8 +171,8 @@ function renderSubscriptionDetails(sub, customer) {
         <!-- ADD-ON 3: FLAT / GROUP SUBSCRIPTION -->
         <div class="card" style="margin-bottom:16px">
           <div class="card-title"><span class="icon">👥</span> Add-on 3: Flat Group (10% Off)</div>
-          <p style="font-size:0.82rem;color:var(--color-text-muted);margin-bottom:10px">
-            Coordinate with roommates in your flat to get <strong>10% group discount</strong> on renewals!
+          <p style="font-size:0.82rem;color:var(--color-text-muted);margin-bottom:10px;line-height:1.4">
+            Coordinate with roommates in your flat. Form a group of <strong>at least 3 members</strong> to unlock an automatic <strong>10% flat discount</strong>!
           </p>
           <div class="form-group">
             <label for="group-code-input" style="font-size:0.8rem;font-weight:600">Join Existing Group Code</label>
@@ -180,7 +180,7 @@ function renderSubscriptionDetails(sub, customer) {
               <input type="text" id="group-code-input" class="form-control" placeholder="e.g. FLAT4B" style="text-transform:uppercase" onkeydown="if(event.key==='Enter'){handleJoinGroup();}" />
               <button class="btn btn-primary btn-sm" id="btn-join-group" onclick="handleJoinGroup()">Join</button>
             </div>
-            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center">
               <span style="font-size:0.75rem;color:var(--color-text-muted)">Quick:</span>
               <a href="#" onclick="setAndJoinGroup('FLAT4B');return false;" style="font-size:0.75rem;background:var(--color-surface-hover);padding:2px 6px;border-radius:4px">FLAT4B</a>
               <a href="#" onclick="setAndJoinGroup('HOSTEL-A');return false;" style="font-size:0.75rem;background:var(--color-surface-hover);padding:2px 6px;border-radius:4px">HOSTEL-A</a>
@@ -340,16 +340,41 @@ async function handleJoinGroup() {
 
   try {
     const res = await joinGroupSubscription(code);
+    const count = res.member_count || 1;
+    const isUnlocked = res.discount_unlocked;
+    const needed = res.members_remaining || Math.max(0, 3 - count);
+    const pct = res.discount_percentage || (count >= 5 ? 15 : (count >= 3 ? 10 : 0));
+
     if (alertDiv) {
       alertDiv.innerHTML = `
-        <div class="alert alert-success" style="font-size:0.82rem;margin-top:8px;line-height:1.4">
-          ✅ <strong>Joined Group "${escapeHtml(res.group_name || code)}"!</strong><br>
-          Group Code: <strong>${escapeHtml(res.group_code || code)}</strong><br>
-          🎉 <strong>10% Flat Discount Active</strong> for you and your roommates.
+        <div class="alert ${isUnlocked ? 'alert-success' : 'alert-info'}" style="font-size:0.82rem;margin-top:8px;line-height:1.4">
+          <div style="font-weight:700;margin-bottom:4px">
+            ${isUnlocked ? '🎉 10% Flat Group Discount UNLOCKED!' : '👥 Group Joined — Needs 3+ Members'}
+          </div>
+          <div>Group: <strong>${escapeHtml(res.group_name || code)}</strong> (Code: <code>${escapeHtml(res.group_code || code)}</code>)</div>
+          <div style="margin:6px 0">
+            <strong>Members: ${count}/3 minimum</strong> 
+            ${isUnlocked ? '✅ Target Reached!' : `(⚠️ Need ${needed} more roommate${needed > 1 ? 's' : ''} to activate discount)`}
+          </div>
+          <div style="background:#e2e8f0;border-radius:4px;height:8px;width:100%;overflow:hidden;margin:6px 0">
+            <div style="background:${isUnlocked ? 'var(--color-success)' : 'var(--color-primary)'};height:100%;width:${Math.min(100, Math.round((count / 3) * 100))}%"></div>
+          </div>
+          ${!isUnlocked ? `
+            <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+              <button class="btn btn-sm btn-outline" style="font-size:0.75rem;padding:3px 8px" onclick="setAndJoinGroup('${escapeHtml(res.group_code || code)}')">
+                ➕ Simulate Roommate Join (+1)
+              </button>
+              <span style="font-size:0.75rem;color:var(--color-text-muted)">Share code with flatmates</span>
+            </div>
+          ` : `
+            <div style="color:var(--color-success);font-weight:600;font-size:0.8rem;margin-top:4px">
+              ✓ Active on your monthly meal plan renewals
+            </div>
+          `}
         </div>
       `;
     }
-    showToast('Group Joined', '10% group discount activated for ' + (res.group_name || code), 'success');
+    showToast(isUnlocked ? 'Discount Unlocked!' : 'Group Joined', res.message, isUnlocked ? 'success' : 'info');
   } catch (err) {
     if (alertDiv) alertDiv.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem;margin-top:8px">❌ ${escapeHtml(err.message)}</div>`;
   } finally {
@@ -380,13 +405,21 @@ async function handleCreateFlatGroup(residence) {
     if (inputEl) inputEl.value = code;
 
     alertDiv.innerHTML = `
-      <div class="alert alert-success" style="font-size:0.82rem;line-height:1.4;margin-top:8px">
-        ✅ <strong>Flat Group Created!</strong><br>
-        Group Name: <strong>${escapeHtml(res.group_name || groupName)}</strong><br>
-        Share Code: <strong style="letter-spacing:1px;font-size:0.95rem;color:var(--color-primary)">${escapeHtml(code)}</strong> with your roommates to activate 10% off.
+      <div class="alert alert-info" style="font-size:0.82rem;line-height:1.4;margin-top:8px">
+        <div style="font-weight:700;margin-bottom:4px">👥 Flat Group Created!</div>
+        <div>Group Name: <strong>${escapeHtml(res.group_name || groupName)}</strong></div>
+        <div>Share Code: <strong style="letter-spacing:1px;font-size:0.95rem;color:var(--color-primary)">${escapeHtml(code)}</strong></div>
+        <div style="margin-top:6px;font-size:0.8rem;color:var(--color-text-muted)">
+          <strong>Members: 1/3</strong> — Share this code with at least <strong>2 more roommates</strong> in your flat to unlock the 10% discount!
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn btn-sm btn-outline" style="font-size:0.75rem;padding:3px 8px" onclick="setAndJoinGroup('${escapeHtml(code)}')">
+            ➕ Simulate Roommate Join (+1)
+          </button>
+        </div>
       </div>
     `;
-    showToast('Group Created', 'Share code: ' + code, 'success');
+    showToast('Group Created', 'Share code: ' + code + ' with 2 roommates', 'info');
   } catch (err) {
     alertDiv.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem;margin-top:8px">❌ ${escapeHtml(err.message)}</div>`;
   }
