@@ -149,11 +149,11 @@ function renderTodayMealCard(delivery) {
 
 function renderDeliveryTracker(status) {
   const steps = [
-    { id: 'pending',          label: 'Preparing',        icon: '🍳' },
-    { id: 'out_for_delivery', label: 'Out for Delivery',  icon: '🛵' },
-    { id: 'delivered',        label: 'Delivered',         icon: '✅' }
+    { ids: ['prepared', 'pending'],            label: 'Prepared',    icon: '🍳' },
+    { ids: ['dispatched', 'out_for_delivery'], label: 'Dispatched',  icon: '🛵' },
+    { ids: ['delivered'],                      label: 'Delivered',   icon: '✅' }
   ];
-  const idx = steps.findIndex(s => s.id === status);
+  const idx = steps.findIndex(s => s.ids.includes(status));
   return `
     <div class="delivery-status-track">
       ${steps.map((s, i) => `

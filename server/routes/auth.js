@@ -11,12 +11,11 @@ const db = require('../db');
 const { COOKIE_NAME, hashToken, requireAuth, logAuditAction } = require('../middleware/auth');
 
 // Map demo roles to their corresponding seed email
+// Map demo roles to their corresponding seed email
 const DEMO_ACCOUNTS = {
   student: 'student@tiffintrack.demo',
   customer: 'student@tiffintrack.demo',
   vendor: 'vendor@tiffintrack.demo',
-  agent: 'agent@tiffintrack.demo',
-  delivery_agent: 'agent@tiffintrack.demo',
   admin: 'admin@tiffintrack.demo'
 };
 
@@ -46,21 +45,20 @@ async function createSessionAndSetCookie(user, req, res) {
 // POST /api/auth/signup
 router.post('/signup', async (req, res) => {
   try {
-    let { role, email, password, name, phone, locality, pg_or_flat_name, room_no, kitchen_address, cuisine_type, vehicle_type } = req.body;
+    let { role, email, password, name, phone, locality, pg_or_flat_name, room_no, kitchen_address, cuisine_type } = req.body;
 
     if (!email || !password || !role || !name) {
       return res.status(422).json({ error: 'Please provide all required fields: email, password, role, and name.' });
     }
 
     if (role === 'student') role = 'customer';
-    if (role === 'agent') role = 'delivery_agent';
 
     if (role === 'admin') {
       return res.status(403).json({ error: 'Public registration of Admin accounts is strictly prohibited.' });
     }
 
-    if (!['customer', 'vendor', 'delivery_agent'].includes(role)) {
-      return res.status(422).json({ error: 'Invalid role specified.' });
+    if (!['customer', 'vendor'].includes(role)) {
+      return res.status(422).json({ error: 'Invalid role specified. Only student and vendor registrations are allowed.' });
     }
 
     const existing = await db.query('SELECT user_id FROM users WHERE email = ?', [email.toLowerCase().trim()]);
@@ -105,14 +103,6 @@ router.post('/signup', async (req, res) => {
           '(?, ?, ?, "weekly", 650.00, 7, "veg", "7-day weekly trial meal box", "active")',
           [p1Id, nextId, name + ' Monthly Lunch', p2Id, nextId, name + ' Weekly Trial']
         );
-      } else if (role === 'delivery_agent') {
-        const [countRes] = await conn.query('SELECT COUNT(*) as c FROM delivery_agents');
-        const nextId = 'A' + String(countRes[0].c + 1).padStart(3, '0');
-        await conn.query(
-          'INSERT INTO delivery_agents (agent_id, user_id, name, phone, assigned_locality, vehicle_type, status) VALUES (?, ?, ?, ?, ?, ?, "inactive")',
-          [nextId, newUserId, name, phone || '9876543210', locality || 'Campus Area', vehicle_type || 'bike']
-        );
-        profileId = nextId;
       }
 
       return { user_id: newUserId, email: email.toLowerCase().trim(), role, profileId, name };

@@ -11,7 +11,6 @@ router.get('/', async (req, res) => {
     const totalUsers = await db.query('SELECT COUNT(*) as cnt FROM users');
     const totalStudents = await db.query('SELECT COUNT(*) as cnt FROM customers');
     const totalVendors = await db.query('SELECT COUNT(*) as cnt FROM vendors');
-    const totalAgents = await db.query('SELECT COUNT(*) as cnt FROM delivery_agents');
     const activeSubs = await db.query('SELECT COUNT(*) as cnt FROM subscriptions WHERE status = "active"');
     const todayDeliveries = await db.query('SELECT COUNT(*) as cnt FROM deliveries WHERE date = ?', [today]);
     const pendingComplaints = await db.query('SELECT COUNT(*) as cnt FROM complaints WHERE status = "open" OR status = "in_review"');
@@ -73,24 +72,22 @@ router.get('/', async (req, res) => {
 
     const pendingApprovals = await db.query(`
       SELECT u.user_id, u.email, u.role, u.status, u.created_at,
-             COALESCE(c.name, v.name, a.name, 'New User') AS name,
-             COALESCE(c.phone, v.contact, a.phone, '—') AS phone,
-             COALESCE(c.locality, v.locality, a.assigned_locality, 'Campus Area') AS locality,
-             c.customer_id, v.vendor_id, a.agent_id
+             COALESCE(c.name, v.name, 'New User') AS name,
+             COALESCE(c.phone, v.contact, '—') AS phone,
+             COALESCE(c.locality, v.locality, 'Campus Area') AS locality,
+             c.customer_id, v.vendor_id
       FROM users u
       LEFT JOIN customers c ON u.user_id = c.user_id
       LEFT JOIN vendors v ON u.user_id = v.user_id
-      LEFT JOIN delivery_agents a ON u.user_id = a.user_id
-      WHERE u.status = 'inactive'
+      WHERE u.status = 'inactive' AND u.role IN ('customer', 'vendor')
       ORDER BY u.created_at DESC
     `);
 
     return res.json({
       stats: {
-        total_users: totalUsers[0].cnt || 24,
+        total_users: totalUsers[0].cnt || 0,
         total_students: totalStudents[0].cnt || 0,
         total_vendors: totalVendors[0].cnt || 0,
-        total_agents: totalAgents[0].cnt || 0,
         pending_approvals: pendingApprovals.length,
         active_subscriptions: activeSubs[0].cnt || 0,
         today_deliveries: todayDeliveries[0].cnt || 0,
@@ -119,12 +116,12 @@ router.get('/users', async (req, res) => {
   try {
     const users = await db.query(`
       SELECT u.user_id, u.email, u.role, u.status, u.created_at,
-             COALESCE(c.name, v.name, a.name, 'Admin') AS full_name,
-             c.customer_id, v.vendor_id, a.agent_id
+             COALESCE(c.name, v.name, 'Administrator') AS full_name,
+             c.customer_id, v.vendor_id
       FROM users u
       LEFT JOIN customers c ON u.user_id = c.user_id
       LEFT JOIN vendors v ON u.user_id = v.user_id
-      LEFT JOIN delivery_agents a ON u.user_id = a.user_id
+      WHERE u.role IN ('customer', 'vendor', 'admin')
       ORDER BY u.user_id ASC
     `);
     return res.json(users);

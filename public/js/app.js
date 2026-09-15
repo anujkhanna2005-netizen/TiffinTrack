@@ -6,7 +6,7 @@
 let currentRole = null;
 let currentUser = null;
 
-// Navigation definitions per role
+// Navigation definitions per role (3 Core Roles: Student, Vendor, Admin)
 const navConfig = {
   student: [
     { label: 'Dashboard',       page: 'studentDashboard' },
@@ -25,11 +25,6 @@ const navConfig = {
     { label: 'Ratings',         page: 'vendorRatings' },
     { label: 'Complaints',      page: 'vendorComplaints' }
   ],
-  agent: [
-    { label: 'Dashboard',          page: 'agentDashboard' },
-    { label: "Today's Deliveries", page: 'agentDeliveries' },
-    { label: 'Delivery History',   page: 'agentHistory' }
-  ],
   admin: [
     { label: 'Dashboard',   page: 'adminDashboard' },
     { label: 'Vendors',     page: 'adminVendors' },
@@ -45,8 +40,6 @@ const roleLabels = {
   student: 'Student',
   customer: 'Student',
   vendor:  'Vendor',
-  agent:   'Delivery Agent',
-  delivery_agent: 'Delivery Agent',
   admin:   'Administrator'
 };
 
@@ -67,9 +60,6 @@ const pages = {
   vendorDeliveries:  renderVendorDeliveries,
   vendorRatings:     renderVendorRatings,
   vendorComplaints:  renderVendorComplaints,
-  agentDashboard:    renderAgentDashboard,
-  agentDeliveries:   renderAgentDeliveries,
-  agentHistory:      renderAgentHistory,
   adminDashboard:    renderAdminDashboard,
   adminVendors:      renderAdminVendors,
   adminCustomers:    renderAdminCustomers,
@@ -158,7 +148,7 @@ function showError(msg) {
 // ---- AUTH & SESSION MANAGEMENT ------------------------------
 
 function setupAuthenticatedView(role, user) {
-  const normRole = role === 'customer' ? 'student' : (role === 'delivery_agent' ? 'agent' : role);
+  const normRole = role === 'customer' ? 'student' : role;
   currentRole = normRole;
   currentUser = user;
 
@@ -193,7 +183,7 @@ async function handleLogout() {
 
 // Backward compatibility helper
 function selectRole(role) {
-  const normRole = role === 'customer' ? 'student' : (role === 'delivery_agent' ? 'agent' : role);
+  const normRole = role === 'customer' ? 'student' : role;
   setupAuthenticatedView(normRole, { role: normRole });
 }
 
@@ -213,10 +203,13 @@ function renderStars(rating) {
 
 function deliveryStatusBadge(status) {
   const labels = {
-    pending:          'Preparing',
-    out_for_delivery: 'Out for Delivery',
-    delivered:        'Delivered',
-    skipped:          'Skipped'
+    prepared:         '🍳 Prepared',
+    pending:          '🍳 Prepared',
+    dispatched:       '🛵 Dispatched',
+    out_for_delivery: '🛵 Dispatched',
+    delivered:        '✅ Delivered',
+    skipped:          '⏸️ Skipped',
+    cancelled:        '❌ Cancelled'
   };
   return `<span class="badge badge-${status}">${labels[status] || status}</span>`;
 }

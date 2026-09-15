@@ -80,7 +80,6 @@ function renderSignupForm() {
         <select id="signup-role" class="form-control" onchange="toggleSignupFields(this.value)">
           <option value="student">Student (Customer)</option>
           <option value="vendor">Tiffin Vendor / Kitchen</option>
-          <option value="agent">Delivery Agent</option>
         </select>
       </div>
 
@@ -141,24 +140,6 @@ function renderSignupForm() {
         </div>
       </div>
 
-      <!-- Agent Fields -->
-      <div id="fields-agent" style="display:none">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="form-group">
-            <label for="signup-vehicle" style="font-weight:600">Vehicle Type</label>
-            <select id="signup-vehicle" class="form-control">
-              <option value="bike">Bike / Motorcycle</option>
-              <option value="scooter">Scooter</option>
-              <option value="cycle">Bicycle</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="signup-alocality" style="font-weight:600">Assigned Area</label>
-            <input type="text" id="signup-alocality" class="form-control" placeholder="e.g. Campus & Indrapuri" />
-          </div>
-        </div>
-      </div>
-
       <button type="submit" class="btn btn-primary" id="btn-signup" style="width:100%;margin-top:12px;padding:11px;font-size:0.95rem;font-weight:600">
         Create Account & Sign In
       </button>
@@ -169,7 +150,6 @@ function renderSignupForm() {
 function toggleSignupFields(role) {
   document.getElementById('fields-student').style.display = (role === 'student' || role === 'customer') ? 'block' : 'none';
   document.getElementById('fields-vendor').style.display = (role === 'vendor') ? 'block' : 'none';
-  document.getElementById('fields-agent').style.display = (role === 'agent' || role === 'delivery_agent') ? 'block' : 'none';
 }
 
 async function handlePortalLogin(e) {

@@ -34,17 +34,12 @@ async function renderTodayMeal() {
         <p>${subscription.vendor.name} • ${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </div>
 
-      <!-- Delivery Status & OTP (Add-on 6) -->
+      <!-- Delivery Status (Vendor Handled) -->
       ${todayDelivery ? `
       <div class="card" style="margin-bottom:20px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div class="card-title" style="margin-bottom:0"><span class="icon">🛵</span> Add-on 6: Live Delivery Status & OTP</div>
-          <div style="background:#eff6ff;border:1px solid #bfdbfe;padding:4px 10px;border-radius:6px;font-size:0.85rem;color:#1e40af">
-            Delivery OTP: <strong style="letter-spacing:2px;font-size:1rem;color:#1d4ed8">${todayDelivery.delivery_otp || todayDelivery.otp || '5821'}</strong>
-          </div>
-        </div>
+        <div class="card-title" style="margin-bottom:12px"><span class="icon">🍱</span> Meal Preparation & Delivery Status</div>
         ${renderDeliveryTracker(todayDelivery.status)}
-        <p style="text-align:center;font-size:0.85rem;color:var(--color-text-muted);margin-top:8px">
+        <p style="text-align:center;font-size:0.85rem;color:var(--color-text-muted);margin-top:12px">
           ${getDeliveryStatusText(todayDelivery.status)}
         </p>
       </div>` : ''}
@@ -131,9 +126,12 @@ async function handleCastVote(dishName, vendorId) {
 
 function getDeliveryStatusText(status) {
   const texts = {
-    pending:          'Your meal is being prepared and will be dispatched soon.',
-    out_for_delivery: 'Your tiffin is on the way! Show your 4-digit OTP to the delivery agent.',
-    delivered:        'Your meal has been delivered. Enjoy your food! 🎉'
+    prepared:         'Your meal is freshly prepared in the vendor kitchen and ready for dispatch.',
+    pending:          'Your meal is being prepared in the vendor kitchen.',
+    dispatched:       'Your tiffin has been dispatched from the kitchen and is on the way to your residence.',
+    out_for_delivery: 'Your tiffin is on the way to your residence.',
+    delivered:        'Your meal has been delivered. Enjoy your food! 🎉',
+    skipped:          'Meal paused/skipped for today (₹80 credited to your wallet).'
   };
-  return texts[status] || '';
+  return texts[status] || 'Meal delivery in progress.';
 }

@@ -113,36 +113,6 @@ router.get('/customer', async (req, res) => {
   }
 });
 
-// GET /api/agent
-router.get('/agent', async (req, res) => {
-  try {
-    let agent = null;
-    if (req.user && (req.user.role === 'delivery_agent' || req.user.role === 'agent')) {
-      const rows = await db.query('SELECT * FROM delivery_agents WHERE user_id = ?', [req.user.user_id]);
-      agent = rows[0] || null;
-    }
-    if (!agent) {
-      const defaultAgnt = await db.query('SELECT * FROM delivery_agents WHERE agent_id = "A001"');
-      agent = defaultAgnt[0] || null;
-    }
-
-    const today = new Date().toISOString().slice(0, 10);
-    const dels = await db.query('SELECT COUNT(*) as total, SUM(CASE WHEN status = "delivered" THEN 1 ELSE 0 END) as completed FROM deliveries WHERE agent_id = ? AND date = ?', [agent ? agent.agent_id : 'A001', today]);
-
-    return res.json({
-      agent,
-      stats: {
-        today_deliveries: dels[0].total || 0,
-        completed_deliveries: dels[0].completed || 0,
-        pending_deliveries: (dels[0].total || 0) - (dels[0].completed || 0)
-      }
-    });
-  } catch (err) {
-    console.error('Agent data error:', err);
-    res.status(500).json({ error: 'Failed to fetch agent data' });
-  }
-});
-
 // Menu Voting routes
 router.get('/menu/vote-options', async (req, res) => {
   res.json([
