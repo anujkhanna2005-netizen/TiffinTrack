@@ -150,6 +150,7 @@ function showError(msg) {
 // ---- AUTH & SESSION MANAGEMENT ------------------------------
 
 function setupAuthenticatedView(role, user) {
+  if (typeof clearApiCache === 'function') clearApiCache();
   const normRole = role === 'customer' ? 'student' : role;
   currentRole = normRole;
   currentUser = user;
@@ -172,6 +173,7 @@ function buildNav(role) {
 }
 
 async function handleLogout() {
+  if (typeof clearApiCache === 'function') clearApiCache();
   currentRole = null;
   currentUser = null;
   try {

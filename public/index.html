@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -45,32 +44,32 @@
   <!-- Back to Top Button -->
   <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top" title="Back to top">↑</button>
 
-  <!-- Scripts — order matters -->
-  <script src="/js/service.js"></script>
-  <script src="/js/pages/roleSwitcher.js"></script>
-  <script src="/js/pages/studentDashboard.js"></script>
-  <script src="/js/pages/findTiffin.js"></script>
-  <script src="/js/pages/vendorDetails.js"></script>
-  <script src="/js/pages/mySubscription.js"></script>
-  <script src="/js/pages/todayMeal.js"></script>
-  <script src="/js/pages/studentRatings.js"></script>
-  <script src="/js/pages/studentComplaints.js"></script>
-  <script src="/js/pages/vendorDashboard.js"></script>
-  <script src="/js/pages/vendorMealPlans.js"></script>
-  <script src="/js/pages/vendorMenu.js"></script>
-  <script src="/js/pages/vendorSubscribers.js"></script>
-  <script src="/js/pages/vendorDeliveries.js"></script>
-  <script src="/js/pages/vendorRatings.js"></script>
-  <script src="/js/pages/vendorComplaints.js"></script>
-  <script src="/js/pages/adminDashboard.js"></script>
-  <script src="/js/pages/adminSubscriptions.js"></script>
-  <script src="/js/pages/adminVendors.js"></script>
-  <script src="/js/pages/adminCustomers.js"></script>
-  <script src="/js/pages/adminComplaints.js"></script>
-  <script src="/js/pages/adminRatings.js"></script>
-  <script src="/js/pages/dbmsDemo.js"></script>
+  <!-- Scripts with defer for non-blocking HTML parse — order preserved -->
+  <script defer src="/js/service.js"></script>
+  <script defer src="/js/pages/roleSwitcher.js"></script>
+  <script defer src="/js/pages/studentDashboard.js"></script>
+  <script defer src="/js/pages/findTiffin.js"></script>
+  <script defer src="/js/pages/vendorDetails.js"></script>
+  <script defer src="/js/pages/mySubscription.js"></script>
+  <script defer src="/js/pages/todayMeal.js"></script>
+  <script defer src="/js/pages/studentRatings.js"></script>
+  <script defer src="/js/pages/studentComplaints.js"></script>
+  <script defer src="/js/pages/vendorDashboard.js"></script>
+  <script defer src="/js/pages/vendorMealPlans.js"></script>
+  <script defer src="/js/pages/vendorMenu.js"></script>
+  <script defer src="/js/pages/vendorSubscribers.js"></script>
+  <script defer src="/js/pages/vendorDeliveries.js"></script>
+  <script defer src="/js/pages/vendorRatings.js"></script>
+  <script defer src="/js/pages/vendorComplaints.js"></script>
+  <script defer src="/js/pages/adminDashboard.js"></script>
+  <script defer src="/js/pages/adminSubscriptions.js"></script>
+  <script defer src="/js/pages/adminVendors.js"></script>
+  <script defer src="/js/pages/adminCustomers.js"></script>
+  <script defer src="/js/pages/adminComplaints.js"></script>
+  <script defer src="/js/pages/adminRatings.js"></script>
+  <script defer src="/js/pages/dbmsDemo.js"></script>
   <!-- app.js must load last -->
-  <script src="/js/app.js"></script>
+  <script defer src="/js/app.js"></script>
 
 </body>
 </html>

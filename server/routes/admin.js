@@ -8,113 +8,128 @@ router.get('/', async (req, res) => {
   try {
     const today = new Date().toISOString().slice(0, 10);
 
-    const totalUsers = await db.query('SELECT COUNT(*) as cnt FROM users');
-    const totalStudents = await db.query('SELECT COUNT(*) as cnt FROM customers');
-    const totalVendors = await db.query('SELECT COUNT(*) as cnt FROM vendors');
-    const activeSubs = await db.query('SELECT COUNT(*) as cnt FROM subscriptions WHERE status = "active"');
-    const pendingSubs = await db.query('SELECT COUNT(*) as cnt FROM subscriptions WHERE status = "pending"');
-    const todayDeliveries = await db.query('SELECT COUNT(*) as cnt FROM deliveries WHERE date = ?', [today]);
-    const pendingComplaints = await db.query('SELECT COUNT(*) as cnt FROM complaints WHERE status = "open" OR status = "in_review"');
-    const avgRating = await db.query('SELECT AVG(avg_rating) as avg_r FROM vendors');
+    // Parallelize all independent database operations into a single concurrent roundtrip
+    const [
+      statsRows,
+      vendors,
+      customers,
+      complaints,
+      pendingApprovals,
+      pendingSubscriptions
+    ] = await Promise.all([
+      db.query(`
+        SELECT 
+          (SELECT COUNT(*) FROM users) AS total_users,
+          (SELECT COUNT(*) FROM customers) AS total_students,
+          (SELECT COUNT(*) FROM vendors) AS total_vendors,
+          (SELECT COUNT(*) FROM subscriptions WHERE status = 'active') AS active_subs,
+          (SELECT COUNT(*) FROM subscriptions WHERE status = 'pending') AS pending_subs,
+          (SELECT COUNT(*) FROM deliveries WHERE date = ?) AS today_deliveries,
+          (SELECT COUNT(*) FROM complaints WHERE status = 'open' OR status = 'in_review') AS pending_complaints,
+          (SELECT AVG(avg_rating) FROM vendors) AS platform_avg_rating
+      `, [today]),
 
-    // Vendor Performance
-    const vendors = await db.query(`
-      SELECT 
-        v.vendor_id, 
-        v.name, 
-        v.locality, 
-        v.status,
-        v.avg_rating AS overall_rating,
-        COUNT(DISTINCT s.sub_id) AS active_subscribers,
-        COUNT(DISTINCT CASE WHEN d.date = ? THEN d.delivery_id ELSE NULL END) AS today_deliveries,
-        COUNT(DISTINCT CASE WHEN c.status = 'open' THEN c.complaint_id ELSE NULL END) AS pending_complaints
-      FROM vendors v
-      LEFT JOIN subscriptions s ON v.vendor_id = s.vendor_id AND s.status = 'active'
-      LEFT JOIN deliveries d ON s.sub_id = d.subscription_id
-      LEFT JOIN complaints c ON v.vendor_id = c.vendor_id
-      GROUP BY v.vendor_id
-      ORDER BY v.avg_rating DESC
-    `, [today]);
+      // Vendor Performance
+      db.query(`
+        SELECT 
+          v.vendor_id, 
+          v.name, 
+          v.locality, 
+          v.status,
+          v.avg_rating AS overall_rating,
+          COUNT(DISTINCT s.sub_id) AS active_subscribers,
+          COUNT(DISTINCT CASE WHEN d.date = ? THEN d.delivery_id ELSE NULL END) AS today_deliveries,
+          COUNT(DISTINCT CASE WHEN c.status = 'open' THEN c.complaint_id ELSE NULL END) AS pending_complaints
+        FROM vendors v
+        LEFT JOIN subscriptions s ON v.vendor_id = s.vendor_id AND s.status = 'active'
+        LEFT JOIN deliveries d ON s.sub_id = d.subscription_id
+        LEFT JOIN complaints c ON v.vendor_id = c.vendor_id
+        GROUP BY v.vendor_id
+        ORDER BY v.avg_rating DESC
+      `, [today]),
 
-    // Customer Activity
-    const customers = await db.query(`
-      SELECT 
-        c.customer_id, 
-        c.user_id,
-        c.name, 
-        c.pg_or_flat_name AS residence, 
-        COALESCE(v.name, '—') AS vendor_name, 
-        COALESCE(p.name, '—') AS plan_name, 
-        COALESCE(s.status, 'none') AS sub_status,
-        s.sub_id,
-        u.status AS user_status
-      FROM customers c
-      JOIN users u ON c.user_id = u.user_id
-      LEFT JOIN subscriptions s ON c.customer_id = s.customer_id AND (s.status = 'active' OR s.status = 'pending')
-      LEFT JOIN vendors v ON s.vendor_id = v.vendor_id
-      LEFT JOIN meal_plans p ON s.plan_id = p.plan_id
-      ORDER BY 
-        CASE WHEN s.status = 'pending' THEN 0 WHEN s.status = 'active' THEN 1 ELSE 2 END,
-        c.customer_id ASC
-    `);
+      // Customer Activity
+      db.query(`
+        SELECT 
+          c.customer_id, 
+          c.user_id,
+          c.name, 
+          c.pg_or_flat_name AS residence, 
+          COALESCE(v.name, '—') AS vendor_name, 
+          COALESCE(p.name, '—') AS plan_name, 
+          COALESCE(s.status, 'none') AS sub_status,
+          s.sub_id,
+          u.status AS user_status
+        FROM customers c
+        JOIN users u ON c.user_id = u.user_id
+        LEFT JOIN subscriptions s ON c.customer_id = s.customer_id AND (s.status = 'active' OR s.status = 'pending')
+        LEFT JOIN vendors v ON s.vendor_id = v.vendor_id
+        LEFT JOIN meal_plans p ON s.plan_id = p.plan_id
+        ORDER BY 
+          CASE WHEN s.status = 'pending' THEN 0 WHEN s.status = 'active' THEN 1 ELSE 2 END,
+          c.customer_id ASC
+      `),
 
-    // Complaint Overview
-    const complaints = await db.query(`
-      SELECT 
-        c.complaint_id, 
-        c.description,
-        cust.name AS customer_name, 
-        v.name AS vendor_name, 
-        c.issue_type, 
-        c.created_at, 
-        CASE WHEN c.status = 'open' THEN 'pending' ELSE c.status END AS status
-      FROM complaints c
-      JOIN customers cust ON c.customer_id = cust.customer_id
-      JOIN vendors v ON c.vendor_id = v.vendor_id
-      ORDER BY c.created_at DESC
-    `);
+      // Complaint Overview
+      db.query(`
+        SELECT 
+          c.complaint_id, 
+          c.description,
+          cust.name AS customer_name, 
+          v.name AS vendor_name, 
+          c.issue_type, 
+          c.created_at, 
+          CASE WHEN c.status = 'open' THEN 'pending' ELSE c.status END AS status
+        FROM complaints c
+        JOIN customers cust ON c.customer_id = cust.customer_id
+        JOIN vendors v ON c.vendor_id = v.vendor_id
+        ORDER BY c.created_at DESC
+      `),
 
-    // Pending User Registrations
-    const pendingApprovals = await db.query(`
-      SELECT u.user_id, u.email, u.role, u.status, u.created_at,
-             COALESCE(c.name, v.name, 'New User') AS name,
-             COALESCE(c.phone, v.contact, '—') AS phone,
-             COALESCE(c.locality, v.locality, 'Campus Area') AS locality,
-             c.customer_id, v.vendor_id
-      FROM users u
-      LEFT JOIN customers c ON u.user_id = c.user_id
-      LEFT JOIN vendors v ON u.user_id = v.user_id
-      WHERE u.status = 'inactive' AND u.role IN ('customer', 'vendor')
-      ORDER BY u.created_at DESC
-    `);
+      // Pending User Registrations
+      db.query(`
+        SELECT u.user_id, u.email, u.role, u.status, u.created_at,
+               COALESCE(c.name, v.name, 'New User') AS name,
+               COALESCE(c.phone, v.contact, '—') AS phone,
+               COALESCE(c.locality, v.locality, 'Campus Area') AS locality,
+               c.customer_id, v.vendor_id
+        FROM users u
+        LEFT JOIN customers c ON u.user_id = c.user_id
+        LEFT JOIN vendors v ON u.user_id = v.user_id
+        WHERE u.status = 'inactive' AND u.role IN ('customer', 'vendor')
+        ORDER BY u.created_at DESC
+      `),
 
-    // Pending Subscription Requests Across All Vendors
-    const pendingSubscriptions = await db.query(`
-      SELECT s.sub_id, s.start_date, s.created_at, s.status, s.locked_price,
-             c.customer_id, c.name AS customer_name, c.phone AS customer_phone, c.pg_or_flat_name, c.room_no, c.locality,
-             v.vendor_id, v.name AS vendor_name,
-             p.plan_id, p.name AS plan_name, p.price,
-             pay.payment_id, pay.amount_due, pay.status AS payment_status
-      FROM subscriptions s
-      JOIN customers c ON s.customer_id = c.customer_id
-      JOIN vendors v ON s.vendor_id = v.vendor_id
-      JOIN meal_plans p ON s.plan_id = p.plan_id
-      LEFT JOIN payments pay ON s.sub_id = pay.subscription_id
-      WHERE s.status = 'pending'
-      ORDER BY s.created_at DESC
-    `);
+      // Pending Subscription Requests Across All Vendors
+      db.query(`
+        SELECT s.sub_id, s.start_date, s.created_at, s.status, s.locked_price,
+               c.customer_id, c.name AS customer_name, c.phone AS customer_phone, c.pg_or_flat_name, c.room_no, c.locality,
+               v.vendor_id, v.name AS vendor_name,
+               p.plan_id, p.name AS plan_name, p.price,
+               pay.payment_id, pay.amount_due, pay.status AS payment_status
+        FROM subscriptions s
+        JOIN customers c ON s.customer_id = c.customer_id
+        JOIN vendors v ON s.vendor_id = v.vendor_id
+        JOIN meal_plans p ON s.plan_id = p.plan_id
+        LEFT JOIN payments pay ON s.sub_id = pay.subscription_id
+        WHERE s.status = 'pending'
+        ORDER BY s.created_at DESC
+      `)
+    ]);
+
+    const stats = statsRows[0] || {};
 
     return res.json({
       stats: {
-        total_users: totalUsers[0].cnt || 0,
-        total_students: totalStudents[0].cnt || 0,
-        total_vendors: totalVendors[0].cnt || 0,
+        total_users: stats.total_users || 0,
+        total_students: stats.total_students || 0,
+        total_vendors: stats.total_vendors || 0,
         pending_approvals: pendingApprovals.length,
-        pending_subscriptions: pendingSubs[0].cnt || 0,
-        active_subscriptions: activeSubs[0].cnt || 0,
-        today_deliveries: todayDeliveries[0].cnt || 0,
-        pending_complaints: pendingComplaints[0].cnt || 0,
-        platform_avg_rating: parseFloat(avgRating[0].avg_r) || 4.5
+        pending_subscriptions: stats.pending_subs || 0,
+        active_subscriptions: stats.active_subs || 0,
+        today_deliveries: stats.today_deliveries || 0,
+        pending_complaints: stats.pending_complaints || 0,
+        platform_avg_rating: parseFloat(stats.platform_avg_rating) || 4.5
       },
       pending_approvals: pendingApprovals,
       pending_subscriptions: pendingSubscriptions.map(s => ({

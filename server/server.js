@@ -7,23 +7,38 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const compression = require('compression');
 const { attachUserSession } = require('./middleware/auth');
 const apiRoutes = require('./routes/api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
+// HTTP Response Compression (Gzip / Deflate for static assets and API JSON)
+app.use(compression());
+
+// CORS Configuration
 app.use(cors({
   origin: true,
   credentials: true
 }));
-app.use(express.json());
-app.use(cookieParser());
-app.use(attachUserSession);
 
-// Serve static frontend files from /public
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// Parse JSON request bodies
+app.use(express.json());
+
+// Parse cookies for auth sessions
+app.use(cookieParser());
+
+// High-speed static asset serving with ETag and cache control
+// Placed BEFORE auth middleware so static asset requests do NOT trigger database session lookups
+const isProduction = process.env.NODE_ENV === 'production';
+app.use(express.static(path.join(__dirname, '..', 'public'), {
+  maxAge: isProduction ? '1d' : '1h',
+  etag: true
+}));
+
+// Attach user session strictly to /api endpoints
+app.use('/api', attachUserSession);
 
 // All API routes under /api
 app.use('/api', apiRoutes);

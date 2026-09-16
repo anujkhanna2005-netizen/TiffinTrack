@@ -21,28 +21,70 @@ router.get('/', async (req, res) => {
 
     const today = new Date().toISOString().slice(0, 10);
 
-    const subCount = await db.query('SELECT COUNT(DISTINCT sub_id) as cnt FROM subscriptions WHERE vendor_id = ? AND status = "active"', [vendor.vendor_id]);
-    const pendingSubCount = await db.query('SELECT COUNT(DISTINCT sub_id) as cnt FROM subscriptions WHERE vendor_id = ? AND status = "pending"', [vendor.vendor_id]);
-    const delCount = await db.query(`
-      SELECT COUNT(*) as total, SUM(CASE WHEN d.status = "delivered" THEN 1 ELSE 0 END) as delivered 
-      FROM deliveries d 
-      JOIN subscriptions s ON d.subscription_id = s.sub_id 
-      WHERE s.vendor_id = ? AND d.date = ?
-    `, [vendor.vendor_id, today]);
-    const compCount = await db.query('SELECT COUNT(*) as cnt FROM complaints WHERE vendor_id = ? AND (status = "open" OR status = "in_review")', [vendor.vendor_id]);
-    const reviewCount = await db.query('SELECT COUNT(*) as cnt FROM ratings WHERE vendor_id = ?', [vendor.vendor_id]);
-    const menuRows = await db.query('SELECT * FROM daily_menus WHERE vendor_id = ? AND date = ?', [vendor.vendor_id, today]);
-    const plans = await db.query('SELECT plan_id, vendor_id, name AS plan_name, name, plan_type, price, meals_included, veg_or_nonveg, description FROM meal_plans WHERE vendor_id = ? AND status = "active"', [vendor.vendor_id]);
-
-    const rbRows = await db.query(`
-      SELECT 
-        AVG(taste_score) as taste,
-        AVG(hygiene_score) as hygiene,
-        AVG(punctuality_score) as punctuality,
-        AVG(value_score) as value
-      FROM ratings
-      WHERE vendor_id = ?
-    `, [vendor.vendor_id]);
+    const [
+      subCount,
+      pendingSubCount,
+      delCount,
+      compCount,
+      reviewCount,
+      menuRows,
+      plans,
+      rbRows,
+      recent_ratings,
+      complaints,
+      subRows
+    ] = await Promise.all([
+      db.query('SELECT COUNT(DISTINCT sub_id) as cnt FROM subscriptions WHERE vendor_id = ? AND status = "active"', [vendor.vendor_id]),
+      db.query('SELECT COUNT(DISTINCT sub_id) as cnt FROM subscriptions WHERE vendor_id = ? AND status = "pending"', [vendor.vendor_id]),
+      db.query(`
+        SELECT COUNT(*) as total, SUM(CASE WHEN d.status = "delivered" THEN 1 ELSE 0 END) as delivered 
+        FROM deliveries d 
+        JOIN subscriptions s ON d.subscription_id = s.sub_id 
+        WHERE s.vendor_id = ? AND d.date = ?
+      `, [vendor.vendor_id, today]),
+      db.query('SELECT COUNT(*) as cnt FROM complaints WHERE vendor_id = ? AND (status = "open" OR status = "in_review")', [vendor.vendor_id]),
+      db.query('SELECT COUNT(*) as cnt FROM ratings WHERE vendor_id = ?', [vendor.vendor_id]),
+      db.query('SELECT * FROM daily_menus WHERE vendor_id = ? AND date = ?', [vendor.vendor_id, today]),
+      db.query('SELECT plan_id, vendor_id, name AS plan_name, name, plan_type, price, meals_included, veg_or_nonveg, description FROM meal_plans WHERE vendor_id = ? AND status = "active"', [vendor.vendor_id]),
+      db.query(`
+        SELECT 
+          AVG(taste_score) as taste,
+          AVG(hygiene_score) as hygiene,
+          AVG(punctuality_score) as punctuality,
+          AVG(value_score) as value
+        FROM ratings
+        WHERE vendor_id = ?
+      `, [vendor.vendor_id]),
+      db.query(`
+        SELECT r.rating_id, r.taste_score, r.hygiene_score, r.punctuality_score, r.value_score,
+               r.weighted_score AS overall_score, r.review_text AS review, r.created_at,
+               c.name AS customer_name, c.locality AS customer_locality
+        FROM ratings r
+        JOIN customers c ON r.customer_id = c.customer_id
+        WHERE r.vendor_id = ?
+        ORDER BY r.created_at DESC LIMIT 5
+      `, [vendor.vendor_id]),
+      db.query(`
+        SELECT c.*, cust.name AS customer_name,
+               CASE WHEN c.status = 'open' THEN 'pending' ELSE c.status END AS status
+        FROM complaints c
+        JOIN customers cust ON c.customer_id = cust.customer_id
+        WHERE c.vendor_id = ?
+        ORDER BY c.created_at DESC
+      `, [vendor.vendor_id]),
+      db.query(`
+        SELECT s.sub_id, s.start_date, s.end_date, s.status, s.locked_price, s.locked_meals_included, s.approved_by, s.approved_at,
+               c.customer_id, c.name AS customer_name, c.phone AS customer_phone, c.pg_or_flat_name, c.room_no, c.locality,
+               p.plan_id, p.name AS plan_name, p.price,
+               pay.payment_id, pay.amount_due, pay.status AS payment_status, pay.collected_at
+        FROM subscriptions s
+        JOIN customers c ON s.customer_id = c.customer_id
+        JOIN meal_plans p ON s.plan_id = p.plan_id
+        LEFT JOIN payments pay ON s.sub_id = pay.subscription_id
+        WHERE s.vendor_id = ?
+        ORDER BY FIELD(s.status, 'pending', 'active', 'cancelled', 'rejected'), s.created_at DESC
+      `, [vendor.vendor_id])
+    ]);
 
     const rb = rbRows[0] || {};
     const rating_breakdown = {
@@ -51,38 +93,6 @@ router.get('/', async (req, res) => {
       punctuality: parseFloat(rb.punctuality) || 4.6,
       value: parseFloat(rb.value) || 4.5
     };
-
-    const recent_ratings = await db.query(`
-      SELECT r.rating_id, r.taste_score, r.hygiene_score, r.punctuality_score, r.value_score,
-             r.weighted_score AS overall_score, r.review_text AS review, r.created_at,
-             c.name AS customer_name, c.locality AS customer_locality
-      FROM ratings r
-      JOIN customers c ON r.customer_id = c.customer_id
-      WHERE r.vendor_id = ?
-      ORDER BY r.created_at DESC LIMIT 5
-    `, [vendor.vendor_id]);
-
-    const complaints = await db.query(`
-      SELECT c.*, cust.name AS customer_name,
-             CASE WHEN c.status = 'open' THEN 'pending' ELSE c.status END AS status
-      FROM complaints c
-      JOIN customers cust ON c.customer_id = cust.customer_id
-      WHERE c.vendor_id = ?
-      ORDER BY c.created_at DESC
-    `, [vendor.vendor_id]);
-
-    const subRows = await db.query(`
-      SELECT s.sub_id, s.start_date, s.end_date, s.status, s.locked_price, s.locked_meals_included, s.approved_by, s.approved_at,
-             c.customer_id, c.name AS customer_name, c.phone AS customer_phone, c.pg_or_flat_name, c.room_no, c.locality,
-             p.plan_id, p.name AS plan_name, p.price,
-             pay.payment_id, pay.amount_due, pay.status AS payment_status, pay.collected_at
-      FROM subscriptions s
-      JOIN customers c ON s.customer_id = c.customer_id
-      JOIN meal_plans p ON s.plan_id = p.plan_id
-      LEFT JOIN payments pay ON s.sub_id = pay.subscription_id
-      WHERE s.vendor_id = ?
-      ORDER BY FIELD(s.status, 'pending', 'active', 'cancelled', 'rejected'), s.created_at DESC
-    `, [vendor.vendor_id]);
 
     const subscribers = subRows.map(s => {
       const lockedPrice = s.locked_price !== null ? parseFloat(s.locked_price) : (parseFloat(s.price) || 2800);
