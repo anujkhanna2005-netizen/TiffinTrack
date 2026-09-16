@@ -15,8 +15,48 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function formatINR(amount) {
+  return '₹' + Number(amount || 0).toLocaleString('en-IN');
+}
+
+function subscriptionStatusBadge(status) {
+  const map = {
+    active:    '<span class="badge badge-active">Active</span>',
+    pending:   '<span class="badge" style="background:#fed7aa;color:#c2410c;font-weight:700">Pending Approval</span>',
+    cancelled: '<span class="badge badge-cancelled">Cancelled</span>',
+    expired:   '<span class="badge badge-expired">Expired</span>',
+    paused:    '<span class="badge badge-pending">Paused</span>',
+    rejected:  '<span class="badge" style="background:#fee2e2;color:#991b1b">Rejected</span>'
+  };
+  return map[status] || `<span class="badge">${escapeHtml(status || '—')}</span>`;
+}
+
+function deliveryStatusBadge(status) {
+  const labels = {
+    prepared:         '🍳 Prepared',
+    pending:          '🍳 Prepared',
+    dispatched:       '🛵 Dispatched',
+    out_for_delivery: '🛵 Dispatched',
+    delivered:        '✅ Delivered',
+    skipped:          '⏸️ Skipped',
+    cancelled:        '❌ Cancelled'
+  };
+  return `<span class="badge badge-${status}">${labels[status] || status}</span>`;
+}
+
 if (typeof window !== 'undefined') {
   window.escapeHtml = escapeHtml;
+  window.formatDate = formatDate;
+  window.formatINR = formatINR;
+  window.subscriptionStatusBadge = subscriptionStatusBadge;
+  window.deliveryStatusBadge = deliveryStatusBadge;
 }
 
 // Helper: fetch with error handling and cookie credentials
