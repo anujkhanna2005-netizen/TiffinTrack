@@ -27,9 +27,9 @@
   --color-surface-high:          #e2e7ff;   /* Surface High */
   --color-border:                #e2e8f0;   /* Border Subtle */
   --color-border-subtle:         #dae2fd;   /* Surface Container Highest */
-  --color-text:                  #131b2e;   /* On-Surface */
-  --color-text-muted:            #475569;   /* On-Surface-Variant / Slate */
-  --color-text-light:            #6f7a6e;   /* Outline */
+  --color-text:                  #0f172a;   /* Deep Slate 900 (High-Contrast) */
+  --color-text-muted:            #334155;   /* Crisp Slate 700 (High-Contrast) */
+  --color-text-light:            #475569;   /* Slate 600 */
 
   --radius-sm:                   0.25rem;   /* 4px */
   --radius:                      0.5rem;    /* 8px */
@@ -1265,5 +1265,59 @@ textarea.form-control { resize: vertical; min-height: 90px; }
   will-change: opacity, transform;
   transform: translateZ(0);
 }
+
+/* ---- HIGH-CONTRAST TYPOGRAPHY & FONT LEGIBILITY ENHANCEMENTS ---- */
+/* Strengthen muted text classes against light/white backgrounds */
+.text-slate-400, .text-gray-400 {
+  color: #475569 !important;
+  font-weight: 600;
+}
+
+.text-slate-500, .text-gray-500 {
+  color: #334155 !important;
+}
+
+.text-slate-600, .text-gray-600 {
+  color: #1e293b !important;
+}
+
+/* Enhance form labels, table headers, and stat labels readability */
+label, .stat-label, th {
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+
+input::placeholder, select::placeholder, textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Ensure badges have crisp borders and readable text */
+.badge {
+  font-weight: 700 !important;
+}
+
+.badge-pending {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+}
+
+.badge-success, .badge-active {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.badge-info {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+  border: 1px solid #bae6fd !important;
+}
+
+/* Hero & image text legibility without altering backgrounds */
+.hero-title, .hero-subtitle, .banner-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
 
 
