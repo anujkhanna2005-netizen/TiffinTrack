@@ -31,11 +31,13 @@ router.get('/', async (req, res) => {
              s.bread_preference AS sub_bread, s.spice_level AS sub_spice, s.special_instructions AS sub_instructions,
              c.name AS customer_name, c.pg_or_flat_name, c.room_no, c.locality AS customer_locality, c.phone AS customer_phone,
              c.bread_preference AS cust_bread, c.spice_level AS cust_spice, c.special_instructions AS cust_instructions, c.dietary_pref,
-             v.name AS vendor_name, v.locality AS vendor_locality, v.contact AS vendor_contact
+             v.name AS vendor_name, v.locality AS vendor_locality, v.contact AS vendor_contact,
+             sk.reason AS skip_reason, sk.refund_amount AS skip_refund_amount
       FROM deliveries d
       JOIN subscriptions s ON d.subscription_id = s.sub_id
       JOIN customers c ON s.customer_id = c.customer_id
       JOIN vendors v ON s.vendor_id = v.vendor_id
+      LEFT JOIN skip_requests sk ON (d.subscription_id = sk.subscription_id AND d.date = sk.date)
     `;
     let params = [];
 
@@ -78,6 +80,9 @@ router.get('/', async (req, res) => {
       const breadPref = d.sub_bread || d.cust_bread || 'standard';
       const spicePref = d.sub_spice || d.cust_spice || 'medium';
       const instructions = (d.sub_instructions || d.cust_instructions || '').slice(0, 200).trim();
+      const isSkipped = d.status === 'skipped';
+      const skipReason = d.skip_reason || (isSkipped ? d.notes : null);
+      const refundAmt = d.skip_refund_amount ? parseFloat(d.skip_refund_amount) : (isSkipped ? 80.0 : null);
 
       return {
         delivery_id: d.delivery_id,
@@ -86,6 +91,9 @@ router.get('/', async (req, res) => {
         delivery_date: d.date,
         meal_type: d.meal_type === 'lunch' ? 'Lunch' : (d.meal_type === 'dinner' ? 'Dinner' : d.meal_type),
         status: d.status,
+        is_skipped: isSkipped,
+        skip_reason: skipReason,
+        refund_amount: refundAmt,
         notes: d.notes,
         delivered_time: d.delivered_time,
         menu_items: dynamicMenu,

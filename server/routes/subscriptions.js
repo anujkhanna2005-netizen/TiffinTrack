@@ -34,10 +34,28 @@ router.get('/', async (req, res) => {
     if (subs.length === 0) return res.json(null);
 
     const s = subs[0];
-    const daysRemaining = Math.max(0, Math.ceil((new Date(s.end_date) - new Date()) / (1000 * 60 * 60 * 24)));
     const lockedPrice = s.locked_price !== null ? parseFloat(s.locked_price) : (parseFloat(s.price) || 2800);
     const lockedMeals = s.locked_meals_included !== null ? parseInt(s.locked_meals_included, 10) : (s.meals_included || 30);
     const amountDue = s.amount_due !== null && s.amount_due !== undefined ? parseFloat(s.amount_due) : lockedPrice;
+
+    // Delivery Accounting
+    const [delivStats] = await db.query(
+      'SELECT COUNT(*) as delivered_count FROM deliveries WHERE subscription_id = ? AND status = "delivered"',
+      [s.sub_id]
+    );
+    const [skipRows] = await db.query(
+      'SELECT skip_id, subscription_id, customer_id, date, reason, refund_amount, refund_credited, applied_to_next_bill, created_at FROM skip_requests WHERE subscription_id = ? ORDER BY date DESC, created_at DESC',
+      [s.sub_id]
+    );
+    const [recentDelivs] = await db.query(
+      'SELECT delivery_id, date, meal_type, status, notes, delivered_time FROM deliveries WHERE subscription_id = ? ORDER BY date DESC LIMIT 30',
+      [s.sub_id]
+    );
+
+    const deliveredCount = (delivStats && delivStats[0]) ? parseInt(delivStats[0].delivered_count, 10) : 0;
+    const skippedCount = (skipRows || []).length;
+    const daysRemaining = Math.max(0, lockedMeals - deliveredCount - skippedCount);
+    const totalRefundCredited = (skipRows || []).reduce((acc, r) => acc + (parseFloat(r.refund_amount) || 0), 0);
 
     res.json({
       sub_id: s.sub_id,
@@ -55,8 +73,23 @@ router.get('/', async (req, res) => {
       amount_due: amountDue,
       payment_status: s.payment_status || 'pending_cash',
       payment_id: s.payment_id,
-      days_remaining: daysRemaining || 24,
-      total_days: 30,
+      days_remaining: daysRemaining,
+      total_days: lockedMeals,
+      delivered_count: deliveredCount,
+      skipped_count: skippedCount,
+      total_refund_credited: totalRefundCredited,
+      skips: skipRows || [],
+      skip_history: skipRows || [],
+      delivery_history: recentDelivs || [],
+      delivery_stats: {
+        total_days: lockedMeals,
+        delivered_count: deliveredCount,
+        skipped_count: skippedCount,
+        days_remaining: daysRemaining,
+        total_refund_credited: totalRefundCredited,
+        skips: skipRows || [],
+        recent_deliveries: recentDelivs || []
+      },
       bread_preference: s.bread_preference || customer.bread_preference || 'standard',
       spice_level: s.spice_level || customer.spice_level || 'medium',
       special_instructions: s.special_instructions || customer.special_instructions || '',
@@ -271,10 +304,10 @@ router.post('/skip', async (req, res) => {
     const { skip_date, meal_type, reason } = req.body;
     if (!skip_date) return res.status(422).json({ error: 'Skip date is required' });
 
-    // 24hr advance notice verification
+    // Skip date verification (must not be in the past)
     const todayStr = new Date().toISOString().slice(0, 10);
-    if (skip_date <= todayStr) {
-      return res.status(422).json({ error: 'Meal skips require at least 24 hours advance notice.' });
+    if (skip_date < todayStr) {
+      return res.status(422).json({ error: 'Meal skips cannot be requested for past dates.' });
     }
 
     const skipResult = await db.transaction(async (conn) => {
@@ -312,15 +345,40 @@ router.post('/skip', async (req, res) => {
       const lockedMeals = sub.locked_meals_included !== null ? parseInt(sub.locked_meals_included, 10) : (parseInt(sub.plan_meals, 10) || 30);
       const perMealCost = parseFloat((lockedPrice / lockedMeals).toFixed(2));
 
-      const [countRes] = await conn.query('SELECT COUNT(*) as cnt FROM skip_requests');
-      const skipId = 'SKP' + String(countRes[0].cnt + 1).padStart(3, '0');
+      const [maxRes] = await conn.query('SELECT skip_id FROM skip_requests ORDER BY LENGTH(skip_id) DESC, skip_id DESC LIMIT 1');
+      let nextNum = 1;
+      if (maxRes && maxRes.length > 0 && maxRes[0].skip_id) {
+        const match = maxRes[0].skip_id.match(/\d+/);
+        if (match) nextNum = parseInt(match[0], 10) + 1;
+      }
+      const skipId = 'SKP' + String(nextNum).padStart(3, '0');
 
       await conn.query(
         'INSERT INTO skip_requests (skip_id, subscription_id, customer_id, date, reason, refund_amount, refund_credited, applied_to_next_bill) VALUES (?, ?, ?, ?, ?, ?, 1, 1)',
         [skipId, sub.sub_id, customer.customer_id, skip_date, reason || 'Personal reason', perMealCost]
       );
 
-      await conn.query('UPDATE deliveries SET status = "skipped" WHERE subscription_id = ? AND date = ?', [sub.sub_id, skip_date]);
+      // Synchronize with deliveries: Update if delivery row exists, or insert new skipped delivery row
+      const [delRows] = await conn.query(
+        'SELECT delivery_id FROM deliveries WHERE subscription_id = ? AND date = ?',
+        [sub.sub_id, skip_date]
+      );
+      const skipNote = `Meal skipped by diner: ${reason || 'Personal reason'} (₹${perMealCost.toFixed(2)} credited)`;
+      if (delRows.length > 0) {
+        await conn.query('UPDATE deliveries SET status = "skipped", notes = ? WHERE subscription_id = ? AND date = ?', [skipNote, sub.sub_id, skip_date]);
+      } else {
+        const [maxDelRes] = await conn.query('SELECT delivery_id FROM deliveries ORDER BY LENGTH(delivery_id) DESC, delivery_id DESC LIMIT 1');
+        let nextDelNum = 1;
+        if (maxDelRes && maxDelRes.length > 0 && maxDelRes[0].delivery_id) {
+          const match = maxDelRes[0].delivery_id.match(/\d+/);
+          if (match) nextDelNum = parseInt(match[0], 10) + 1;
+        }
+        const nextDelId = 'D' + String(nextDelNum).padStart(3, '0');
+        await conn.query(
+          'INSERT INTO deliveries (delivery_id, subscription_id, agent_id, date, meal_type, status, notes) VALUES (?, ?, NULL, ?, ?, "skipped", ?)',
+          [nextDelId, sub.sub_id, skip_date, (meal_type || 'lunch').toLowerCase(), skipNote]
+        );
+      }
 
       // Atomically update payments.amount_due = GREATEST(0, amount_due - perMealCost)
       let currentAmountDue = sub.amount_due !== null && sub.amount_due !== undefined ? parseFloat(sub.amount_due) : lockedPrice;

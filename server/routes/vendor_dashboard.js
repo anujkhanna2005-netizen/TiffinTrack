@@ -37,7 +37,9 @@ router.get('/', async (req, res) => {
       db.query('SELECT COUNT(DISTINCT sub_id) as cnt FROM subscriptions WHERE vendor_id = ? AND status = "active"', [vendor.vendor_id]),
       db.query('SELECT COUNT(DISTINCT sub_id) as cnt FROM subscriptions WHERE vendor_id = ? AND status = "pending"', [vendor.vendor_id]),
       db.query(`
-        SELECT COUNT(*) as total, SUM(CASE WHEN d.status = "delivered" THEN 1 ELSE 0 END) as delivered 
+        SELECT COUNT(*) as total, 
+               SUM(CASE WHEN d.status = "delivered" THEN 1 ELSE 0 END) as delivered,
+               SUM(CASE WHEN d.status = "skipped" THEN 1 ELSE 0 END) as skipped 
         FROM deliveries d 
         JOIN subscriptions s ON d.subscription_id = s.sub_id 
         WHERE s.vendor_id = ? AND d.date = ?
@@ -77,7 +79,7 @@ router.get('/', async (req, res) => {
                s.bread_preference, s.spice_level, s.special_instructions,
                c.customer_id, c.name AS customer_name, c.phone AS customer_phone, c.pg_or_flat_name, c.room_no, c.locality,
                c.bread_preference AS cust_bread, c.spice_level AS cust_spice, c.special_instructions AS cust_instructions, c.dietary_pref,
-               p.plan_id, p.name AS plan_name, p.price,
+               p.plan_id, p.name AS plan_name, p.price, p.meals_included AS plan_meals,
                pay.payment_id, pay.amount_due, pay.status AS payment_status, pay.collected_at
         FROM subscriptions s
         JOIN customers c ON s.customer_id = c.customer_id
@@ -96,12 +98,63 @@ router.get('/', async (req, res) => {
       value: parseFloat(rb.value) || 4.5
     };
 
+    const subIds = subRows.map(r => r.sub_id);
+    let deliveryCountsMap = {};
+    let skipsMap = {};
+
+    if (subIds.length > 0) {
+      try {
+        const delStatsRows = await db.query(
+          `SELECT subscription_id, 
+                  SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered_cnt,
+                  SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END) as skipped_cnt
+           FROM deliveries 
+           WHERE subscription_id IN (?)
+           GROUP BY subscription_id`,
+          [subIds]
+        );
+        for (const row of delStatsRows) {
+          deliveryCountsMap[row.subscription_id] = {
+            delivered: parseInt(row.delivered_cnt, 10) || 0,
+            skipped: parseInt(row.skipped_cnt, 10) || 0
+          };
+        }
+
+        const skipRows = await db.query(
+          `SELECT skip_id, subscription_id, customer_id, date, reason, refund_amount, refund_credited, created_at
+           FROM skip_requests
+           WHERE subscription_id IN (?)
+           ORDER BY date DESC`,
+          [subIds]
+        );
+        for (const sr of skipRows) {
+          if (!skipsMap[sr.subscription_id]) skipsMap[sr.subscription_id] = [];
+          skipsMap[sr.subscription_id].push({
+            skip_id: sr.skip_id,
+            date: sr.date,
+            reason: sr.reason,
+            refund_amount: parseFloat(sr.refund_amount) || 80.0,
+            created_at: sr.created_at
+          });
+        }
+      } catch (errDel) {
+        console.warn('[Vendor Dashboard Delivery Stats Warning]', errDel.message);
+      }
+    }
+
     const subscribers = subRows.map(s => {
       const lockedPrice = s.locked_price !== null ? parseFloat(s.locked_price) : (parseFloat(s.price) || 2800);
+      const lockedMeals = s.locked_meals_included !== null ? parseInt(s.locked_meals_included, 10) : (parseInt(s.plan_meals, 10) || 30);
       const amountDue = s.amount_due !== null && s.amount_due !== undefined ? parseFloat(s.amount_due) : lockedPrice;
       const breadPref = s.bread_preference || s.cust_bread || 'standard';
       const spicePref = s.spice_level || s.cust_spice || 'medium';
       const specialNotes = (s.special_instructions || s.cust_instructions || '').slice(0, 200).trim();
+
+      const delCounts = deliveryCountsMap[s.sub_id] || { delivered: 0, skipped: 0 };
+      const subSkips = skipsMap[s.sub_id] || [];
+      const skippedCount = Math.max(delCounts.skipped, subSkips.length);
+      const deliveredCount = delCounts.delivered;
+      const daysRemaining = Math.max(0, lockedMeals - deliveredCount - skippedCount);
 
       return {
         sub_id: s.sub_id,
@@ -113,6 +166,17 @@ router.get('/', async (req, res) => {
         bread_preference: breadPref,
         spice_level: spicePref,
         special_instructions: specialNotes,
+        total_days: lockedMeals,
+        delivered_count: deliveredCount,
+        skipped_count: skippedCount,
+        days_remaining: daysRemaining,
+        delivery_stats: {
+          total_days: lockedMeals,
+          delivered_count: deliveredCount,
+          skipped_count: skippedCount,
+          days_remaining: daysRemaining,
+          skips: subSkips
+        },
         customer: {
           customer_id: s.customer_id,
           name: s.customer_name,
@@ -147,6 +211,7 @@ router.get('/', async (req, res) => {
         pending_requests: pendingSubCount[0].cnt || 0,
         today_deliveries: delCount[0].total || 0,
         delivered_count: delCount[0].delivered || 0,
+        skipped_count: delCount[0].skipped || 0,
         open_complaints: compCount[0].cnt || 0,
         overall_rating: parseFloat(vendor.avg_rating) || 4.5,
         rating_count: reviewCount[0].cnt || 0,

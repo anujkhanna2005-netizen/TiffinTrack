@@ -3,6 +3,8 @@
 // public/js/pages/vendorDeliveries.js
 // ============================================================
 
+let currentDeliveryFilter = 'all';
+
 async function renderVendorDeliveries() {
   showLoading();
   try {
@@ -15,7 +17,19 @@ async function renderVendorDeliveries() {
     const totalCount = deliveries.length;
     const deliveredCount = deliveries.filter(d => d.status === 'delivered').length;
     const dispatchedCount = deliveries.filter(d => d.status === 'dispatched' || d.status === 'out_for_delivery').length;
-    const preparedCount = deliveries.filter(d => d.status === 'prepared' || d.status === 'pending').length;
+    const preparedCount = deliveries.filter(d => (d.status === 'prepared' || d.status === 'pending') && d.status !== 'skipped').length;
+    const skippedCount = deliveries.filter(d => d.status === 'skipped' || d.is_skipped).length;
+
+    let filteredDeliveries = deliveries;
+    if (currentDeliveryFilter === 'to_cook') {
+      filteredDeliveries = deliveries.filter(d => (d.status === 'prepared' || d.status === 'pending') && d.status !== 'skipped');
+    } else if (currentDeliveryFilter === 'dispatched') {
+      filteredDeliveries = deliveries.filter(d => d.status === 'dispatched' || d.status === 'out_for_delivery');
+    } else if (currentDeliveryFilter === 'delivered') {
+      filteredDeliveries = deliveries.filter(d => d.status === 'delivered');
+    } else if (currentDeliveryFilter === 'skipped') {
+      filteredDeliveries = deliveries.filter(d => d.status === 'skipped' || d.is_skipped);
+    }
 
     showContent(`
       <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:24px">
@@ -32,23 +46,36 @@ async function renderVendorDeliveries() {
         </button>
       </div>
 
-      <div class="stat-grid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:24px">
-        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
-          <div class="stat-label" style="font-weight:600;font-size:0.85rem">Total Scheduled Today</div>
+      <div class="stat-grid" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:16px;margin-bottom:24px">
+        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);cursor:pointer" onclick="setDeliveryFilter('all')">
+          <div class="stat-label" style="font-weight:600;font-size:0.85rem">Total Scheduled</div>
           <div class="stat-value" style="font-size:2rem;font-weight:800;color:var(--color-text);margin-top:4px">${totalCount}</div>
         </div>
-        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
-          <div class="stat-label" style="font-weight:600;font-size:0.85rem">Kitchen Prepared</div>
+        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);cursor:pointer" onclick="setDeliveryFilter('to_cook')">
+          <div class="stat-label" style="font-weight:600;font-size:0.85rem">🍳 Kitchen to Cook</div>
           <div class="stat-value" style="font-size:2rem;font-weight:800;color:var(--color-warning);margin-top:4px">${preparedCount}</div>
         </div>
-        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
-          <div class="stat-label" style="font-weight:600;font-size:0.85rem">Dispatched / Out</div>
+        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);cursor:pointer" onclick="setDeliveryFilter('dispatched')">
+          <div class="stat-label" style="font-weight:600;font-size:0.85rem">🛵 Dispatched / Out</div>
           <div class="stat-value" style="font-size:2rem;font-weight:800;color:var(--color-info);margin-top:4px">${dispatchedCount}</div>
         </div>
-        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
-          <div class="stat-label" style="font-weight:600;font-size:0.85rem">Completed Delivered</div>
+        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);cursor:pointer" onclick="setDeliveryFilter('delivered')">
+          <div class="stat-label" style="font-weight:600;font-size:0.85rem">✅ Completed Delivered</div>
           <div class="stat-value" style="font-size:2rem;font-weight:800;color:var(--color-success);margin-top:4px">${deliveredCount}</div>
         </div>
+        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid #fde68a;background:#fffdfa;cursor:pointer" onclick="setDeliveryFilter('skipped')">
+          <div class="stat-label" style="font-weight:600;font-size:0.85rem;color:#b45309">⏸️ Skipped by Diner</div>
+          <div class="stat-value" style="font-size:2rem;font-weight:800;color:#d97706;margin-top:4px">${skippedCount}</div>
+        </div>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-sm ${currentDeliveryFilter === 'all' ? 'btn-primary' : 'btn-outline'}" onclick="setDeliveryFilter('all')">All (${totalCount})</button>
+        <button class="btn btn-sm ${currentDeliveryFilter === 'to_cook' ? 'btn-primary' : 'btn-outline'}" onclick="setDeliveryFilter('to_cook')">🍳 To Cook (${preparedCount})</button>
+        <button class="btn btn-sm ${currentDeliveryFilter === 'dispatched' ? 'btn-primary' : 'btn-outline'}" onclick="setDeliveryFilter('dispatched')">🛵 In Transit (${dispatchedCount})</button>
+        <button class="btn btn-sm ${currentDeliveryFilter === 'delivered' ? 'btn-primary' : 'btn-outline'}" onclick="setDeliveryFilter('delivered')">✅ Delivered (${deliveredCount})</button>
+        <button class="btn btn-sm ${currentDeliveryFilter === 'skipped' ? 'btn-primary' : 'btn-outline'}" style="${currentDeliveryFilter === 'skipped' ? 'background:#d97706;border-color:#d97706;color:#fff' : 'color:#b45309'}" onclick="setDeliveryFilter('skipped')">⏸️ Skipped (${skippedCount})</button>
       </div>
 
       <div id="vdel-alert"></div>
@@ -58,11 +85,11 @@ async function renderVendorDeliveries() {
           <span class="icon">🍱</span> Active Student Deliveries Pipeline
         </div>
         
-        ${deliveries.length === 0 ? `
+        ${filteredDeliveries.length === 0 ? `
           <div class="empty-state" style="padding:48px 16px">
             <div class="empty-icon" style="font-size:3rem;margin-bottom:8px">📭</div>
-            <h3 style="font-size:1.1rem;font-weight:700">No Scheduled Deliveries</h3>
-            <p style="font-size:0.85rem;color:var(--color-text-muted)">No student deliveries scheduled for today yet.</p>
+            <h3 style="font-size:1.1rem;font-weight:700">No Deliveries Found</h3>
+            <p style="font-size:0.85rem;color:var(--color-text-muted)">No student deliveries matching this filter view.</p>
           </div>
         ` : `
           <div class="table-wrapper">
@@ -79,7 +106,8 @@ async function renderVendorDeliveries() {
                 </tr>
               </thead>
               <tbody>
-                ${deliveries.map(d => {
+                ${filteredDeliveries.map(d => {
+                  const isSkipped = d.status === 'skipped' || d.is_skipped;
                   let addonBadge = '';
                   if (d.bread_preference === 'extra_roti') {
                     addonBadge += '<span class="badge" style="background:#fff3e0;color:#e65100;font-weight:700;margin-right:4px">🍞 +1 Extra Roti</span>';
@@ -101,8 +129,17 @@ async function renderVendorDeliveries() {
                     addonBadge += `<div style="font-size:0.75rem;color:var(--color-text);margin-top:4px;background:#faf7f3;padding:4px 8px;border-radius:4px;border-left:2px solid var(--color-primary)">📝 "${escapeHtml(d.special_instructions)}"</div>`;
                   }
 
+                  if (isSkipped) {
+                    addonBadge += `
+                      <div style="font-size:0.75rem;color:#92400e;background:#fef3c7;padding:5px 8px;border-radius:4px;border-left:3px solid #f59e0b;font-weight:600;margin-top:6px">
+                        ⏸️ <strong>Meal Skipped by Diner:</strong> "${escapeHtml(d.skip_reason || d.notes || 'Personal reason')}"
+                        <div style="color:#047857;font-weight:700;font-size:0.72rem;margin-top:2px">✓ ₹${(d.refund_amount || 80).toFixed(2)} Credited & Deducted from COD Bill</div>
+                      </div>
+                    `;
+                  }
+
                   return `
-                  <tr id="row-vdel-${escapeHtml(d.delivery_id)}">
+                  <tr id="row-vdel-${escapeHtml(d.delivery_id)}" style="${isSkipped ? 'background:#fffdf7;' : ''}">
                     <td style="font-size:0.78rem;font-family:monospace;color:var(--color-text-muted)"><code>${escapeHtml(d.delivery_id)}</code></td>
                     <td>
                       <strong>${escapeHtml(d.customer_name || (d.customer ? d.customer.name : 'Student'))}</strong>
@@ -114,10 +151,20 @@ async function renderVendorDeliveries() {
                     </td>
                     <td>${addonBadge}</td>
                     <td><span class="badge badge-pill" style="font-weight:600">${escapeHtml(d.meal_type || 'Lunch')}</span></td>
-                    <td id="badge-vdel-${escapeHtml(d.delivery_id)}">${deliveryStatusBadge(d.status)}</td>
+                    <td id="badge-vdel-${escapeHtml(d.delivery_id)}">
+                      ${isSkipped ? `
+                        <span class="badge" style="background:#fef3c7;color:#92400e;font-weight:700;border:1px solid #fde68a;padding:4px 8px">
+                          ⏸️ Skipped by Diner
+                        </span>
+                      ` : deliveryStatusBadge(d.status)}
+                    </td>
                     <td style="text-align:right">
                       <div id="action-vdel-${escapeHtml(d.delivery_id)}" style="display:inline-flex;gap:6px">
-                        ${d.status === 'prepared' || d.status === 'pending' ? `
+                        ${isSkipped ? `
+                          <span style="color:#92400e;font-weight:700;font-size:0.78rem;background:#fef3c7;padding:4px 8px;border-radius:6px;border:1px solid #fde68a">
+                            🚫 Do Not Cook
+                          </span>
+                        ` : (d.status === 'prepared' || d.status === 'pending') ? `
                           <button class="btn btn-sm btn-primary" style="font-size:0.78rem;padding:5px 12px;font-weight:700" onclick="handleVendorUpdateStatus('${escapeHtml(d.delivery_id)}', 'dispatched')">
                             🛵 Dispatch
                           </button>
@@ -141,6 +188,11 @@ async function renderVendorDeliveries() {
   } catch (err) {
     showError('Failed to load vendor deliveries: ' + err.message);
   }
+}
+
+function setDeliveryFilter(filter) {
+  currentDeliveryFilter = filter;
+  renderVendorDeliveries();
 }
 
 async function handleVendorUpdateStatus(deliveryId, newStatus) {

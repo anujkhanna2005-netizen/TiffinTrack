@@ -101,7 +101,7 @@ async function renderVendorSubscribers() {
       <!-- Active Subscribers Table -->
       <div class="card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
         <div class="card-title" style="font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--color-border)">
-          <span class="icon">👥</span> Active Subscriber Roster (${activeList.length})
+          <span class="icon">👥</span> Active Subscriber Roster & Delivery Accounting (${activeList.length})
         </div>
         ${activeList.length > 0 ? `
           <div class="table-wrapper">
@@ -113,9 +113,10 @@ async function renderVendorSubscribers() {
                   <th>Residence & Room</th>
                   <th>Meal Add-ons & Prefs</th>
                   <th>Plan</th>
-                  <th>Amount Due</th>
-                  <th>Payment Status</th>
-                  <th>Actions</th>
+                  <th>Delivery Accounting</th>
+                  <th>COD Due</th>
+                  <th>Payment</th>
+                  <th style="text-align:right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -145,29 +146,58 @@ async function renderVendorSubscribers() {
                     prefBadge += `<div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:2px;font-style:italic">"${escapeHtml(notes)}"</div>`;
                   }
 
+                  const stats = s.delivery_stats || {
+                    total_days: s.total_days || 30,
+                    delivered_count: s.delivered_count || 0,
+                    skipped_count: s.skipped_count || 0,
+                    days_remaining: s.days_remaining || 30,
+                    skips: []
+                  };
+
+                  const delPct = Math.min(100, Math.round((stats.delivered_count / (stats.total_days || 30)) * 100));
+                  const skipPct = Math.min(100 - delPct, Math.round((stats.skipped_count / (stats.total_days || 30)) * 100));
+
                   return `
                   <tr>
                     <td style="font-size:0.78rem;font-family:monospace;color:var(--color-text-muted)"><code>${s.sub_id}</code></td>
                     <td>
                       <strong>${escapeHtml(s.customer ? s.customer.name : '—')}</strong>
-                      <div style="font-size:0.75rem;color:var(--color-text-muted)">${escapeHtml(s.customer ? s.customer.phone : '')}</div>
+                      <div style="font-size:0.75rem;color:var(--color-text-muted)">📞 ${escapeHtml(s.customer ? s.customer.phone : '')}</div>
                     </td>
                     <td>${escapeHtml(s.customer ? `${s.customer.residence}, Rm ${s.customer.room}` : '—')}</td>
                     <td>${prefBadge}</td>
                     <td><span class="badge badge-info">${escapeHtml(s.plan ? s.plan.name : '—')}</span></td>
+                    <td style="min-width:180px">
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-weight:700">
+                        <span style="color:var(--color-primary)">${stats.delivered_count}/${stats.total_days} Delivered</span>
+                        <span style="color:${stats.days_remaining > 0 ? '#15803d' : '#6b7280'}">${stats.days_remaining} Left</span>
+                      </div>
+                      <div style="width:100%;height:6px;background:#f1f5f9;border-radius:4px;overflow:hidden;margin:4px 0;display:flex">
+                        <div style="width:${delPct}%;background:var(--color-primary);" title="${stats.delivered_count} Delivered"></div>
+                        <div style="width:${skipPct}%;background:#f59e0b;" title="${stats.skipped_count} Skipped"></div>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.72rem;color:var(--color-text-muted)">
+                        <span>${stats.skipped_count > 0 ? `⏸️ <strong style="color:#b45309">${stats.skipped_count}</strong> skips` : 'No skips'}</span>
+                        <button class="btn btn-sm btn-outline" style="padding:1px 6px;font-size:0.7rem;line-height:1.2" onclick='openSubscriberLedgerModal(${JSON.stringify(s).replace(/'/g, "&#39;")})'>
+                          📜 Ledger
+                        </button>
+                      </div>
+                    </td>
                     <td><strong>${s.payment ? formatINR(s.payment.amount_due) : (s.plan ? formatINR(s.plan.price) : '—')}</strong></td>
                     <td>
                       <span class="badge ${s.payment && s.payment.status === 'collected' ? 'badge-success' : 'badge-pending'}" style="font-weight:700">
                         ${s.payment && s.payment.status === 'collected' ? '✓ Collected' : '⏳ Pending Cash'}
                       </span>
                     </td>
-                    <td>
-                      ${s.payment && s.payment.status !== 'collected' && s.payment.payment_id ? `
-                        <button class="btn btn-sm btn-primary" style="padding:4px 10px;font-size:0.75rem;font-weight:700;background:var(--color-success);border-color:var(--color-success)"
-                          onclick="handleMarkPaymentCollected('${s.payment.payment_id}', '${s.customer ? escapeHtml(s.customer.name) : 'Student'}')">
-                          💵 Mark Collected
-                        </button>
-                      ` : `<span style="font-size:0.75rem;color:var(--color-text-muted)">✓ Settled</span>`}
+                    <td style="text-align:right">
+                      <div style="display:inline-flex;gap:4px">
+                        ${s.payment && s.payment.status !== 'collected' && s.payment.payment_id ? `
+                          <button class="btn btn-sm btn-primary" style="padding:4px 8px;font-size:0.75rem;font-weight:700;background:var(--color-success);border-color:var(--color-success)"
+                            onclick="handleMarkPaymentCollected('${s.payment.payment_id}', '${s.customer ? escapeHtml(s.customer.name) : 'Student'}')">
+                            💵 Collect
+                          </button>
+                        ` : `<span style="font-size:0.75rem;color:var(--color-text-muted)">✓ Settled</span>`}
+                      </div>
                     </td>
                   </tr>
                 `;}).join('')}
@@ -176,10 +206,115 @@ async function renderVendorSubscribers() {
           </div>
         ` : `<div class="empty-state" style="padding:36px"><div class="empty-icon" style="font-size:2.5rem">👥</div><p style="color:var(--color-text-muted)">No active subscribers yet.</p></div>`}
       </div>
+
+      <!-- Ledger Modal Container -->
+      <div id="ledger-modal-container"></div>
     `);
   } catch (err) {
     showError('Failed to load subscribers: ' + err.message);
   }
+}
+
+function openSubscriberLedgerModal(sub) {
+  const container = document.getElementById('ledger-modal-container');
+  if (!container) return;
+
+  const stats = sub.delivery_stats || {
+    total_days: sub.total_days || 30,
+    delivered_count: sub.delivered_count || 0,
+    skipped_count: sub.skipped_count || 0,
+    days_remaining: sub.days_remaining || 30,
+    skips: []
+  };
+
+  const skips = stats.skips || [];
+  const studentName = sub.customer ? sub.customer.name : 'Student';
+  const planName = sub.plan ? sub.plan.name : 'Tiffin Plan';
+
+  container.innerHTML = `
+    <div class="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px" onclick="closeSubscriberLedgerModal(event)">
+      <div class="modal-card" style="background:#fff;border-radius:var(--radius-xl);max-width:650px;width:100%;max-height:85vh;overflow-y:auto;padding:24px;box-shadow:var(--shadow-lg)" onclick="event.stopPropagation()">
+        
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--color-border);padding-bottom:14px;margin-bottom:16px">
+          <div>
+            <span class="badge" style="background:#e8f5e9;color:#15803d;font-weight:700">Delivery & Skip Ledger</span>
+            <h2 style="font-size:1.3rem;font-weight:800;color:var(--color-text);margin:4px 0 0 0">${escapeHtml(studentName)}</h2>
+            <div style="font-size:0.8rem;color:var(--color-text-muted)">${escapeHtml(planName)} • Sub ID: <code>${sub.sub_id}</code></div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="closeSubscriberLedgerModal()" style="font-size:1.1rem;padding:4px 10px">✕</button>
+        </div>
+
+        <!-- 4-Box Metric Grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;margin-bottom:20px">
+          <div style="background:#f8fafc;padding:12px;border-radius:12px;border:1px solid #e2e8f0;text-align:center">
+            <div style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase">Plan Total</div>
+            <div style="font-size:1.4rem;font-weight:800;color:#0f172a;margin-top:2px">${stats.total_days}</div>
+            <div style="font-size:0.68rem;color:#64748b">Meals Included</div>
+          </div>
+          <div style="background:#f0fdf4;padding:12px;border-radius:12px;border:1px solid #bbf7d0;text-align:center">
+            <div style="font-size:0.72rem;font-weight:700;color:#166534;text-transform:uppercase">Delivered</div>
+            <div style="font-size:1.4rem;font-weight:800;color:#15803d;margin-top:2px">${stats.delivered_count}</div>
+            <div style="font-size:0.68rem;color:#166534">Meals Served</div>
+          </div>
+          <div style="background:#fffbeb;padding:12px;border-radius:12px;border:1px solid #fde68a;text-align:center">
+            <div style="font-size:0.72rem;font-weight:700;color:#92400e;text-transform:uppercase">Skipped</div>
+            <div style="font-size:1.4rem;font-weight:800;color:#d97706;margin-top:2px">${stats.skipped_count}</div>
+            <div style="font-size:0.68rem;color:#92400e">Credits Applied</div>
+          </div>
+          <div style="background:#eff6ff;padding:12px;border-radius:12px;border:1px solid #bfdbfe;text-align:center">
+            <div style="font-size:0.72rem;font-weight:700;color:#1e40af;text-transform:uppercase">Remaining</div>
+            <div style="font-size:1.4rem;font-weight:800;color:#2563eb;margin-top:2px">${stats.days_remaining}</div>
+            <div style="font-size:0.68rem;color:#1e40af">Days to Deliver</div>
+          </div>
+        </div>
+
+        <!-- Meal Skips History Table -->
+        <div style="margin-bottom:20px">
+          <div style="font-weight:800;font-size:0.95rem;color:var(--color-text);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+            <span>⏸️</span> Meal Skips & Deductions Log (${skips.length})
+          </div>
+          ${skips.length === 0 ? `
+            <div style="padding:16px;text-align:center;background:#f8fafc;border-radius:10px;font-size:0.82rem;color:var(--color-text-muted);border:1px dashed #cbd5e1">
+              No meal skip requests recorded for this student.
+            </div>
+          ` : `
+            <div class="table-wrapper" style="border:1px solid #e2e8f0;border-radius:10px">
+              <table style="font-size:0.8rem">
+                <thead>
+                  <tr style="background:#f8fafc">
+                    <th>Skip Date</th>
+                    <th>Reason Given</th>
+                    <th>Refund Credited</th>
+                    <th>Ledger Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${skips.map(sk => `
+                    <tr>
+                      <td><strong>${formatDate(sk.date)}</strong></td>
+                      <td>${escapeHtml(sk.reason || 'Personal Reason')}</td>
+                      <td><strong style="color:#15803d">₹${(sk.refund_amount || 80).toFixed(2)}</strong></td>
+                      <td><span class="badge badge-success" style="font-size:0.7rem">✓ Credited to COD Bill</span></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        </div>
+
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-secondary btn-sm" onclick="closeSubscriberLedgerModal()">Close</button>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
+function closeSubscriberLedgerModal(e) {
+  const container = document.getElementById('ledger-modal-container');
+  if (container) container.innerHTML = '';
 }
 
 async function handleApproveSubscription(subId, studentName) {

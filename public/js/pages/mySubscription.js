@@ -49,8 +49,19 @@ async function renderMySubscription() {
 }
 
 function renderSubscriptionDetails(sub, customer) {
-  const daysLeft = Math.ceil((new Date(sub.end_date) - new Date()) / (1000 * 60 * 60 * 24));
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const stats = sub.delivery_stats || {
+    total_days: sub.total_days || sub.locked_meals_included || (sub.plan ? sub.plan.meals_included : 30) || 30,
+    delivered_count: sub.delivered_count || 0,
+    skipped_count: sub.skipped_count || 0,
+    days_remaining: sub.days_remaining !== undefined ? sub.days_remaining : 24,
+    total_refund_credited: sub.total_refund_credited || 0,
+    skips: sub.skips || sub.skip_history || []
+  };
+
+  const skips = stats.skips || [];
+  const delPct = Math.min(100, Math.round((stats.delivered_count / (stats.total_days || 30)) * 100));
+  const skipPct = Math.min(100 - delPct, Math.round((stats.skipped_count / (stats.total_days || 30)) * 100));
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   return `
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -82,8 +93,8 @@ function renderSubscriptionDetails(sub, customer) {
                 <div class="text-sm font-bold text-slate-800 mt-0.5">${sub.plan.meals_per_day || 1} meal(s)</div>
               </div>
               <div>
-                <div class="text-[11px] text-slate-400 font-bold uppercase">Days Remaining</div>
-                <div class="text-sm font-bold text-emerald-700 mt-0.5">${daysLeft > 0 ? daysLeft + ' days' : 'Expired'}</div>
+                <div class="text-[11px] text-slate-400 font-bold uppercase">Meals Remaining</div>
+                <div class="text-sm font-bold text-emerald-700 mt-0.5">${stats.days_remaining} left</div>
               </div>
               <div>
                 <div class="text-[11px] text-slate-400 font-bold uppercase">Validity Window</div>
@@ -110,6 +121,104 @@ function renderSubscriptionDetails(sub, customer) {
           </div>
         </div>
 
+        <!-- DELIVERY ACCOUNTING & SKIP LEDGER CARD -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-5">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 class="font-heading font-bold text-slate-900 text-base flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-700 text-[22px]">inventory_2</span>
+                Meal Delivery & Skip Accounting Ledger
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">Accurate record of delivered meals, approved skips, and remaining service days.</p>
+            </div>
+            <span class="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
+              Live Delivery Counter
+            </span>
+          </div>
+
+          <!-- 4-Box Metric Counter Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 text-center">
+              <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Plan Total</div>
+              <div class="text-2xl font-black text-slate-900 font-heading mt-1">${stats.total_days}</div>
+              <div class="text-[11px] text-slate-500 font-medium">Meals Included</div>
+            </div>
+            <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-200 text-center">
+              <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Delivered</div>
+              <div class="text-2xl font-black text-emerald-700 font-heading mt-1">${stats.delivered_count}</div>
+              <div class="text-[11px] text-emerald-800 font-medium">Meals Served</div>
+            </div>
+            <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200 text-center">
+              <div class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Skipped</div>
+              <div class="text-2xl font-black text-amber-700 font-heading mt-1">${stats.skipped_count}</div>
+              <div class="text-[11px] text-amber-800 font-medium">₹${(stats.total_refund_credited || stats.skipped_count * 80).toFixed(2)} Credited</div>
+            </div>
+            <div class="bg-blue-50 rounded-2xl p-4 border border-blue-200 text-center">
+              <div class="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Remaining</div>
+              <div class="text-2xl font-black text-blue-700 font-heading mt-1">${stats.days_remaining}</div>
+              <div class="text-[11px] text-blue-800 font-medium">Meals to Deliver</div>
+            </div>
+          </div>
+
+          <!-- Progress Bar Breakdown -->
+          <div>
+            <div class="flex justify-between text-xs font-semibold mb-1.5 text-slate-600">
+              <span>Fulfillment Progress</span>
+              <span>${delPct}% Completed (${stats.delivered_count}/${stats.total_days})</span>
+            </div>
+            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex gap-0.5 p-0.5 border border-slate-200">
+              <div style="width:${delPct}%;" class="bg-emerald-600 rounded-full" title="${stats.delivered_count} Delivered"></div>
+              <div style="width:${skipPct}%;" class="bg-amber-500 rounded-full" title="${stats.skipped_count} Skipped"></div>
+            </div>
+            <div class="flex items-center gap-4 text-[11px] text-slate-500 mt-2 flex-wrap">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span> Delivered (${stats.delivered_count})</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Skipped / Credited (${stats.skipped_count})</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block"></span> Remaining (${stats.days_remaining})</span>
+            </div>
+          </div>
+
+          <!-- Skip & Credit History Log -->
+          <div class="pt-2 border-t border-slate-100">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-amber-600">history</span>
+              Meal Skip & Refund Ledger (${skips.length} Skips Requested)
+            </h4>
+
+            ${skips.length === 0 ? `
+              <div class="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-500">
+                No meals skipped yet. You can use the form below to skip upcoming meals and get automatic refunds credited to your COD bill.
+              </div>
+            ` : `
+              <div class="overflow-x-auto rounded-2xl border border-slate-200">
+                <table class="w-full text-left text-xs">
+                  <thead>
+                    <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                      <th class="p-3">Skip Date</th>
+                      <th class="p-3">Reason Stated</th>
+                      <th class="p-3">Refund Credited</th>
+                      <th class="p-3 text-right">Accounting Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    ${skips.map(sk => `
+                      <tr class="hover:bg-slate-50/50">
+                        <td class="p-3 font-bold text-slate-900">${formatDate(sk.date)}</td>
+                        <td class="p-3 text-slate-600">${escapeHtml(sk.reason || 'Personal plans')}</td>
+                        <td class="p-3 font-bold text-emerald-700">₹${(parseFloat(sk.refund_amount) || 80).toFixed(2)}</td>
+                        <td class="p-3 text-right">
+                          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                            ✓ Deducted from COD Bill
+                          </span>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        </div>
+
         <!-- ADD-ON 1: SKIP / PAUSE MEAL -->
         <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
           <div class="flex items-center justify-between">
@@ -121,13 +230,13 @@ function renderSubscriptionDetails(sub, customer) {
           </div>
 
           <p class="text-xs text-slate-600 leading-relaxed">
-            Going home for the weekend or dining out? Skip tomorrow's meal before cutoff and receive an automatic <strong>billing deduction</strong> computed directly from your plan's rate.
+            Going home for the weekend or dining out? Skip today's or tomorrow's meal and receive an automatic <strong>billing deduction</strong> computed directly from your plan's rate.
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label for="skip-date" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Skip Date</label>
-              <input type="date" id="skip-date" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600" value="${tomorrow}" min="${tomorrow}" />
+              <input type="date" id="skip-date" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600" value="${todayStr}" min="${todayStr}" />
             </div>
             <div>
               <label for="skip-meal" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Meal Window</label>
