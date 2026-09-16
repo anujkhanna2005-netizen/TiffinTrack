@@ -5,6 +5,20 @@
 
 const API_BASE = '/api';
 
+// Helper: Escape HTML strings to prevent XSS and template literal errors
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+if (typeof window !== 'undefined') {
+  window.escapeHtml = escapeHtml;
+}
+
 // Helper: fetch with error handling and cookie credentials
 async function apiFetch(path, options = {}) {
   const response = await fetch(API_BASE + path, {
