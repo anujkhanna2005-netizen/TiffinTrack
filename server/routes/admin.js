@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { logAuditAction } = require('../middleware/auth');
+const { requireAuth, requireRole, logAuditAction } = require('../middleware/auth');
 
 // GET /api/admin
 router.get('/', async (req, res) => {
@@ -12,6 +12,7 @@ router.get('/', async (req, res) => {
     const totalStudents = await db.query('SELECT COUNT(*) as cnt FROM customers');
     const totalVendors = await db.query('SELECT COUNT(*) as cnt FROM vendors');
     const activeSubs = await db.query('SELECT COUNT(*) as cnt FROM subscriptions WHERE status = "active"');
+    const pendingSubs = await db.query('SELECT COUNT(*) as cnt FROM subscriptions WHERE status = "pending"');
     const todayDeliveries = await db.query('SELECT COUNT(*) as cnt FROM deliveries WHERE date = ?', [today]);
     const pendingComplaints = await db.query('SELECT COUNT(*) as cnt FROM complaints WHERE status = "open" OR status = "in_review"');
     const avgRating = await db.query('SELECT AVG(avg_rating) as avg_r FROM vendors');
@@ -70,6 +71,7 @@ router.get('/', async (req, res) => {
       ORDER BY c.created_at DESC
     `);
 
+    // Pending User Registrations
     const pendingApprovals = await db.query(`
       SELECT u.user_id, u.email, u.role, u.status, u.created_at,
              COALESCE(c.name, v.name, 'New User') AS name,
@@ -83,18 +85,40 @@ router.get('/', async (req, res) => {
       ORDER BY u.created_at DESC
     `);
 
+    // Pending Subscription Requests Across All Vendors
+    const pendingSubscriptions = await db.query(`
+      SELECT s.sub_id, s.start_date, s.created_at, s.status, s.locked_price,
+             c.customer_id, c.name AS customer_name, c.phone AS customer_phone, c.pg_or_flat_name, c.room_no, c.locality,
+             v.vendor_id, v.name AS vendor_name,
+             p.plan_id, p.name AS plan_name, p.price,
+             pay.payment_id, pay.amount_due, pay.status AS payment_status
+      FROM subscriptions s
+      JOIN customers c ON s.customer_id = c.customer_id
+      JOIN vendors v ON s.vendor_id = v.vendor_id
+      JOIN meal_plans p ON s.plan_id = p.plan_id
+      LEFT JOIN payments pay ON s.sub_id = pay.subscription_id
+      WHERE s.status = 'pending'
+      ORDER BY s.created_at DESC
+    `);
+
     return res.json({
       stats: {
         total_users: totalUsers[0].cnt || 0,
         total_students: totalStudents[0].cnt || 0,
         total_vendors: totalVendors[0].cnt || 0,
         pending_approvals: pendingApprovals.length,
+        pending_subscriptions: pendingSubs[0].cnt || 0,
         active_subscriptions: activeSubs[0].cnt || 0,
         today_deliveries: todayDeliveries[0].cnt || 0,
         pending_complaints: pendingComplaints[0].cnt || 0,
         platform_avg_rating: parseFloat(avgRating[0].avg_r) || 4.5
       },
       pending_approvals: pendingApprovals,
+      pending_subscriptions: pendingSubscriptions.map(s => ({
+        ...s,
+        price: s.locked_price !== null ? parseFloat(s.locked_price) : parseFloat(s.price),
+        amount_due: s.amount_due !== null ? parseFloat(s.amount_due) : parseFloat(s.price)
+      })),
       vendor_performance: vendors.map(v => ({
         ...v,
         overall_rating: parseFloat(v.overall_rating) || 4.5,
@@ -110,6 +134,7 @@ router.get('/', async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch admin overview: ' + err.message });
   }
 });
+
 
 // GET /api/admin/users
 router.get('/users', async (req, res) => {
@@ -324,6 +349,64 @@ router.patch('/complaints/:id/reject', async (req, res) => {
   }
 });
 
+// PATCH /api/admin/subscription/:id/approve (Admin approves pending subscription across any vendor)
+router.patch('/subscription/:id/approve', requireAuth, requireRole('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Atomic conditional UPDATE for approval race resolution
+    const result = await db.query(
+      'UPDATE subscriptions SET status = "active", approved_by = "admin", approved_at = NOW() WHERE sub_id = ? AND status = "pending"',
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(409).json({ error: 'This request has already been processed.' });
+    }
+
+    // Generate initial delivery schedule entry upon activation
+    const delCount = await db.query('SELECT COUNT(*) as cnt FROM deliveries');
+    const cntVal = (delCount && delCount[0] && delCount[0].cnt !== undefined) ? delCount[0].cnt : 1;
+    const delId = 'D' + String(cntVal + 1).padStart(3, '0');
+    const today = new Date().toISOString().slice(0, 10);
+    await db.query(
+      'INSERT INTO deliveries (delivery_id, subscription_id, agent_id, date, meal_type, status, notes) VALUES (?, ?, "A001", ?, "lunch", "prepared", "Daily fresh meal delivery") ON DUPLICATE KEY UPDATE status = VALUES(status)',
+      [delId, id, today]
+    );
+
+    await logAuditAction(req, 'ADMIN_APPROVE_SUBSCRIPTION', 'subscriptions', id, 'Admin approved subscription ' + id);
+
+    return res.json({ success: true, message: 'Subscription #' + id + ' approved by Admin and activated!' });
+  } catch (err) {
+    console.error('Admin approve subscription error:', err);
+    return res.status(500).json({ error: 'Failed to approve subscription: ' + err.message });
+  }
+});
+
+// PATCH /api/admin/subscription/:id/reject (Admin rejects pending subscription)
+router.patch('/subscription/:id/reject', requireAuth, requireRole('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Atomic conditional UPDATE
+    const result = await db.query(
+      'UPDATE subscriptions SET status = "rejected", approved_by = "admin", approved_at = NOW() WHERE sub_id = ? AND status = "pending"',
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(409).json({ error: 'This request has already been processed.' });
+    }
+
+    await logAuditAction(req, 'ADMIN_REJECT_SUBSCRIPTION', 'subscriptions', id, 'Admin rejected subscription ' + id);
+
+    return res.json({ success: true, message: 'Subscription request #' + id + ' rejected by Admin.' });
+  } catch (err) {
+    console.error('Admin reject subscription error:', err);
+    return res.status(500).json({ error: 'Failed to reject subscription: ' + err.message });
+  }
+});
+
 // GET /api/admin/audit-logs
 router.get('/audit-logs', async (req, res) => {
   try {
@@ -336,3 +419,4 @@ router.get('/audit-logs', async (req, res) => {
 });
 
 module.exports = router;
+

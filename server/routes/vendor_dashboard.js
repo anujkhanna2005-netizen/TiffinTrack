@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { logAuditAction } = require('../middleware/auth');
+const { requireAuth, requireRole, logAuditAction } = require('../middleware/auth');
 
 async function getActiveVendor(req) {
   if (req.user && req.user.role === 'vendor') {
@@ -22,6 +22,7 @@ router.get('/', async (req, res) => {
     const today = new Date().toISOString().slice(0, 10);
 
     const subCount = await db.query('SELECT COUNT(DISTINCT sub_id) as cnt FROM subscriptions WHERE vendor_id = ? AND status = "active"', [vendor.vendor_id]);
+    const pendingSubCount = await db.query('SELECT COUNT(DISTINCT sub_id) as cnt FROM subscriptions WHERE vendor_id = ? AND status = "pending"', [vendor.vendor_id]);
     const delCount = await db.query(`
       SELECT COUNT(*) as total, SUM(CASE WHEN d.status = "delivered" THEN 1 ELSE 0 END) as delivered 
       FROM deliveries d 
@@ -71,34 +72,48 @@ router.get('/', async (req, res) => {
     `, [vendor.vendor_id]);
 
     const subRows = await db.query(`
-      SELECT s.sub_id, s.start_date, s.end_date, s.status,
+      SELECT s.sub_id, s.start_date, s.end_date, s.status, s.locked_price, s.locked_meals_included, s.approved_by, s.approved_at,
              c.customer_id, c.name AS customer_name, c.phone AS customer_phone, c.pg_or_flat_name, c.room_no, c.locality,
-             p.plan_id, p.name AS plan_name, p.price
+             p.plan_id, p.name AS plan_name, p.price,
+             pay.payment_id, pay.amount_due, pay.status AS payment_status, pay.collected_at
       FROM subscriptions s
       JOIN customers c ON s.customer_id = c.customer_id
       JOIN meal_plans p ON s.plan_id = p.plan_id
+      LEFT JOIN payments pay ON s.sub_id = pay.subscription_id
       WHERE s.vendor_id = ?
-      ORDER BY s.created_at DESC
+      ORDER BY FIELD(s.status, 'pending', 'active', 'cancelled', 'rejected'), s.created_at DESC
     `, [vendor.vendor_id]);
 
-    const subscribers = subRows.map(s => ({
-      sub_id: s.sub_id,
-      start_date: s.start_date,
-      end_date: s.end_date,
-      status: s.status,
-      customer: {
-        customer_id: s.customer_id,
-        name: s.customer_name,
-        residence: s.pg_or_flat_name,
-        room: s.room_no,
-        phone: s.customer_phone
-      },
-      plan: {
-        plan_id: s.plan_id,
-        name: s.plan_name,
-        price: parseFloat(s.price) || 2800
-      }
-    }));
+    const subscribers = subRows.map(s => {
+      const lockedPrice = s.locked_price !== null ? parseFloat(s.locked_price) : (parseFloat(s.price) || 2800);
+      const amountDue = s.amount_due !== null && s.amount_due !== undefined ? parseFloat(s.amount_due) : lockedPrice;
+      return {
+        sub_id: s.sub_id,
+        start_date: s.start_date,
+        end_date: s.end_date,
+        status: s.status,
+        approved_by: s.approved_by,
+        approved_at: s.approved_at,
+        customer: {
+          customer_id: s.customer_id,
+          name: s.customer_name,
+          residence: s.pg_or_flat_name,
+          room: s.room_no,
+          phone: s.customer_phone
+        },
+        plan: {
+          plan_id: s.plan_id,
+          name: s.plan_name,
+          price: lockedPrice
+        },
+        payment: {
+          payment_id: s.payment_id,
+          amount_due: amountDue,
+          status: s.payment_status || 'pending_cash',
+          collected_at: s.collected_at
+        }
+      };
+    });
 
     return res.json({
       vendor: {
@@ -107,6 +122,7 @@ router.get('/', async (req, res) => {
       },
       stats: {
         active_subscribers: subCount[0].cnt || 0,
+        pending_requests: pendingSubCount[0].cnt || 0,
         today_deliveries: delCount[0].total || 0,
         delivered_count: delCount[0].delivered || 0,
         open_complaints: compCount[0].cnt || 0,
@@ -297,27 +313,127 @@ router.patch(['/menu/publish', '/:id/menu/publish'], async (req, res) => {
   }
 });
 
-// PATCH /api/vendor/subscription/:id/approve (Vendor approves student subscription)
-router.patch('/subscription/:id/approve', async (req, res) => {
+// PATCH /api/vendor/subscription/:id/approve (Vendor approves student subscription with ownership & race check)
+router.patch('/subscription/:id/approve', requireAuth, requireRole('vendor'), async (req, res) => {
   try {
     const { id } = req.params;
-    await db.query('UPDATE subscriptions SET status = "active" WHERE sub_id = ?', [id]);
+    const vendor = await getActiveVendor(req);
+    if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
+
+    // Verify subscription ownership
+    const subRows = await db.query('SELECT * FROM subscriptions WHERE sub_id = ?', [id]);
+    if (subRows.length === 0) return res.status(404).json({ error: 'Subscription not found' });
+    const sub = subRows[0];
+
+    if (sub.vendor_id !== vendor.vendor_id) {
+      return res.status(403).json({ error: 'Forbidden: You can only approve subscription requests for your own kitchen.' });
+    }
+
+    // Atomic conditional UPDATE for approval race resolution
+    const result = await db.query(
+      'UPDATE subscriptions SET status = "active", approved_by = "vendor", approved_at = NOW() WHERE sub_id = ? AND status = "pending" AND vendor_id = ?',
+      [id, vendor.vendor_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(409).json({ error: 'This request has already been processed.' });
+    }
+
+    // Generate initial delivery schedule entry upon activation
+    const delCount = await db.query('SELECT COUNT(*) as cnt FROM deliveries');
+    const cntVal = (delCount && delCount[0] && delCount[0].cnt !== undefined) ? delCount[0].cnt : 1;
+    const delId = 'D' + String(cntVal + 1).padStart(3, '0');
+    const today = new Date().toISOString().slice(0, 10);
+    await db.query(
+      'INSERT INTO deliveries (delivery_id, subscription_id, agent_id, date, meal_type, status, notes) VALUES (?, ?, "A001", ?, "lunch", "prepared", "Daily fresh meal delivery") ON DUPLICATE KEY UPDATE status = VALUES(status)',
+      [delId, id, today]
+    );
+
     await logAuditAction(req, 'VENDOR_APPROVE_SUBSCRIPTION', 'subscriptions', id, 'Vendor approved subscription ' + id);
-    return res.json({ success: true, message: 'Subscription #' + id + ' approved!' });
+
+    return res.json({ success: true, message: 'Subscription #' + id + ' approved and activated successfully!' });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to approve subscription' });
+    console.error('Vendor approve error:', err);
+    return res.status(500).json({ error: 'Failed to approve subscription: ' + err.message });
   }
 });
 
 // PATCH /api/vendor/subscription/:id/reject (Vendor rejects student subscription)
-router.patch('/subscription/:id/reject', async (req, res) => {
+router.patch('/subscription/:id/reject', requireAuth, requireRole('vendor'), async (req, res) => {
   try {
     const { id } = req.params;
-    await db.query('UPDATE subscriptions SET status = "cancelled" WHERE sub_id = ?', [id]);
+    const vendor = await getActiveVendor(req);
+    if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
+
+    // Verify ownership
+    const subRows = await db.query('SELECT * FROM subscriptions WHERE sub_id = ?', [id]);
+    if (subRows.length === 0) return res.status(404).json({ error: 'Subscription not found' });
+    const sub = subRows[0];
+
+    if (sub.vendor_id !== vendor.vendor_id) {
+      return res.status(403).json({ error: 'Forbidden: You can only reject subscription requests for your own kitchen.' });
+    }
+
+    // Atomic conditional UPDATE
+    const result = await db.query(
+      'UPDATE subscriptions SET status = "rejected", approved_by = "vendor", approved_at = NOW() WHERE sub_id = ? AND status = "pending" AND vendor_id = ?',
+      [id, vendor.vendor_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(409).json({ error: 'This request has already been processed.' });
+    }
+
     await logAuditAction(req, 'VENDOR_REJECT_SUBSCRIPTION', 'subscriptions', id, 'Vendor rejected subscription ' + id);
-    return res.json({ success: true, message: 'Subscription #' + id + ' rejected.' });
+
+    return res.json({ success: true, message: 'Subscription request #' + id + ' rejected.' });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to reject subscription' });
+    console.error('Vendor reject error:', err);
+    return res.status(500).json({ error: 'Failed to reject subscription: ' + err.message });
+  }
+});
+
+// PATCH /api/vendor/payment/:id/collect (Fix 2: Mark Cash / COD Collected)
+router.patch('/payment/:id/collect', requireAuth, requireRole('vendor'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const vendor = await getActiveVendor(req);
+    if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
+
+    // Verify ownership: payment belongs to a subscription belonging to this vendor
+    const payRows = await db.query(
+      `SELECT pay.*, s.vendor_id 
+       FROM payments pay 
+       JOIN subscriptions s ON pay.subscription_id = s.sub_id 
+       WHERE pay.payment_id = ?`,
+      [id]
+    );
+
+    if (payRows.length === 0) {
+      return res.status(404).json({ error: 'Payment record not found' });
+    }
+
+    const pay = payRows[0];
+    if (pay.vendor_id !== vendor.vendor_id) {
+      return res.status(403).json({ error: 'Forbidden: You can only collect payments for your own subscriptions.' });
+    }
+
+    await db.query(
+      'UPDATE payments SET status = "collected", collected_at = NOW(), amount_due = 0.00 WHERE payment_id = ?',
+      [id]
+    );
+
+    await logAuditAction(req, 'VENDOR_MARKED_PAYMENT_COLLECTED', 'payments', id, `Vendor marked payment ${id} collected (Amount: ₹${pay.amount})`);
+
+    return res.json({
+      success: true,
+      message: `Payment ${id} marked as collected!`,
+      payment_id: id,
+      status: 'collected'
+    });
+  } catch (err) {
+    console.error('Mark collected error:', err);
+    return res.status(500).json({ error: 'Failed to record collection: ' + err.message });
   }
 });
 
@@ -330,9 +446,10 @@ router.get(['/meal-plans', '/:id/meal-plans'], async (req, res) => {
       if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
       vendorId = vendor.vendor_id;
     }
-    const plans = await db.query('SELECT plan_id, vendor_id, name AS plan_name, name, plan_type, price, meals_included, veg_or_nonveg, description FROM meal_plans WHERE vendor_id = ? AND status = "active"', [vendorId]);
+    const plans = await db.query('SELECT plan_id, vendor_id, name AS plan_name, name, plan_type, price, meals_included, veg_or_nonveg, description, status FROM meal_plans WHERE vendor_id = ? AND status = "active"', [vendorId]);
     return res.json(plans.map(p => ({
       ...p,
+      price: parseFloat(p.price),
       veg: p.veg_or_nonveg === 'veg' || p.veg_or_nonveg === 'both',
       meals_per_day: p.meals_included || 1
     })));
@@ -385,6 +502,61 @@ router.post(['/meal-plans', '/:id/meal-plans'], async (req, res) => {
   }
 });
 
+// PATCH /api/vendor/meal-plans/:planId and /api/vendor/meal-plan/:planId (Fix 8: Edit Meal Plan Price & Config)
+router.patch(['/meal-plans/:planId', '/meal-plan/:planId', '/:id/meal-plans/:planId'], requireAuth, requireRole('vendor'), async (req, res) => {
+  try {
+    const { planId } = req.params;
+    const vendor = await getActiveVendor(req);
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+
+    const planRows = await db.query('SELECT * FROM meal_plans WHERE plan_id = ?', [planId]);
+    if (planRows.length === 0) return res.status(404).json({ error: 'Meal plan not found' });
+    const oldPlan = planRows[0];
+
+    // Ownership check: vendor can only edit their own plans
+    if (oldPlan.vendor_id !== vendor.vendor_id) {
+      return res.status(403).json({ error: 'Forbidden: You cannot edit another vendor\'s meal plan.' });
+    }
+
+    const { name, price, meals_included, veg_or_nonveg, description, status } = req.body;
+    const updatedPrice = price !== undefined ? parseFloat(price) : parseFloat(oldPlan.price);
+    const updatedMeals = meals_included !== undefined ? parseInt(meals_included, 10) : oldPlan.meals_included;
+    const updatedName = name || oldPlan.name;
+    const updatedVeg = veg_or_nonveg || oldPlan.veg_or_nonveg;
+    const updatedDesc = description !== undefined ? description : oldPlan.description;
+    const updatedStatus = status || oldPlan.status;
+
+    await db.query(
+      'UPDATE meal_plans SET name = ?, price = ?, meals_included = ?, veg_or_nonveg = ?, description = ?, status = ? WHERE plan_id = ?',
+      [updatedName, updatedPrice, updatedMeals, updatedVeg, updatedDesc, updatedStatus, planId]
+    );
+
+    await logAuditAction(
+      req,
+      'VENDOR_UPDATED_MEAL_PLAN',
+      'meal_plans',
+      planId,
+      `Vendor updated meal plan ${planId} price to ₹${updatedPrice}`,
+      { old_price: oldPlan.price, old_meals: oldPlan.meals_included },
+      { new_price: updatedPrice, new_meals: updatedMeals }
+    );
+
+    return res.json({
+      success: true,
+      message: 'Meal plan updated successfully. Existing subscriptions locked price remains unaffected.',
+      plan: {
+        plan_id: planId,
+        name: updatedName,
+        price: updatedPrice,
+        meals_included: updatedMeals
+      }
+    });
+  } catch (err) {
+    console.error('Update meal plan error:', err);
+    return res.status(500).json({ error: 'Failed to update meal plan: ' + err.message });
+  }
+});
+
 // DELETE /api/vendor/meal-plans/:planId
 router.delete(['/meal-plans/:planId', '/:id/meal-plans/:planId'], async (req, res) => {
   try {
@@ -407,3 +579,4 @@ router.delete(['/meal-plans/:planId', '/:id/meal-plans/:planId'], async (req, re
 });
 
 module.exports = router;
+

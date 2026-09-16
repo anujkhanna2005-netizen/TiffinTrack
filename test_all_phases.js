@@ -163,7 +163,7 @@ async function runTests() {
       method: 'POST',
       body: { skip_date: '2026-09-25', meal_type: 'Lunch', reason: 'College Fest' }
     }, studentCookie);
-    assert('Add-on 1: Pause & Skip with ₹80 Credit', skipRes.status === 201 && skipRes.body.credit_amount === 80);
+    assert('Add-on 1: Pause & Skip with Dynamic COD Bill Adjustment', skipRes.status === 201 && Number(skipRes.body.credit_amount) > 0);
 
     // Add-on 2: Menu Voting
     const voteRes = await request('/menu/vote', {

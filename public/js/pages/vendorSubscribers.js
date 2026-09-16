@@ -98,9 +98,9 @@ async function renderVendorSubscribers() {
                   <th>Room</th>
                   <th>Contact</th>
                   <th>Plan</th>
-                  <th>Amount</th>
-                  <th>Renewal Date</th>
-                  <th>Status</th>
+                  <th>Amount Due</th>
+                  <th>Payment Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -112,9 +112,20 @@ async function renderVendorSubscribers() {
                     <td>${s.customer ? s.customer.room : '—'}</td>
                     <td>${s.customer ? s.customer.phone : '—'}</td>
                     <td>${s.plan ? s.plan.name : '—'}</td>
-                    <td>${s.plan ? formatINR(s.plan.price) : '—'}</td>
-                    <td>${formatDate(s.end_date)}</td>
-                    <td><span class="badge badge-${s.status}">${s.status}</span></td>
+                    <td><strong>${s.payment ? formatINR(s.payment.amount_due) : (s.plan ? formatINR(s.plan.price) : '—')}</strong></td>
+                    <td>
+                      <span class="badge ${s.payment && s.payment.status === 'collected' ? 'badge-success' : 'badge-pending'}">
+                        ${s.payment && s.payment.status === 'collected' ? '✓ Collected' : '⏳ Pending Cash'}
+                      </span>
+                    </td>
+                    <td>
+                      ${s.payment && s.payment.status !== 'collected' && s.payment.payment_id ? `
+                        <button class="btn btn-sm btn-primary" style="padding:3px 8px;font-size:0.75rem;background:var(--color-success);border-color:var(--color-success)"
+                          onclick="handleMarkPaymentCollected('${s.payment.payment_id}', '${s.customer ? s.customer.name : 'Student'}')">
+                          💵 Mark Collected
+                        </button>
+                      ` : `<span style="font-size:0.75rem;color:var(--color-text-muted)">Settled</span>`}
+                    </td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -148,3 +159,15 @@ async function handleRejectSubscription(subId) {
     showToast('Error', err.message, 'error');
   }
 }
+
+async function handleMarkPaymentCollected(paymentId, studentName) {
+  if (!confirm(`Confirm cash / direct payment collection from ${studentName}?`)) return;
+  try {
+    const res = await apiFetch(`/vendor/payment/${paymentId}/collect`, { method: 'PATCH' });
+    showToast('Payment Collected', `Cash payment from ${studentName} marked as collected!`, 'success');
+    renderVendorSubscribers();
+  } catch (err) {
+    showToast('Error', err.message, 'error');
+  }
+}
+

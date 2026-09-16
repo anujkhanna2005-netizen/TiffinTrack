@@ -94,6 +94,50 @@ async function renderAdminDashboard() {
         </div>
       ` : ''}
 
+      <!-- Pending Subscription Requests Platform-Wide Queue -->
+      ${data.pending_subscriptions && data.pending_subscriptions.length > 0 ? `
+        <div class="card" style="margin-bottom:20px;border-left:4px solid var(--color-primary);background:#f0fdf4">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="card-title" style="margin-bottom:0;color:#166534">
+              <span class="icon">📋</span> Platform-Wide Subscription Requests (${data.pending_subscriptions.length})
+            </div>
+            <span class="badge" style="background:#bbf7d0;color:#166534;font-weight:700">Admin Tie-up Authority</span>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>Sub ID</th><th>Student</th><th>Residence & Room</th><th>Vendor</th><th>Plan</th><th>Amount Due (COD)</th><th>Requested</th><th>Admin Decision</th></tr>
+              </thead>
+              <tbody>
+                ${data.pending_subscriptions.map(s => `
+                  <tr id="sub-req-row-${s.sub_id}">
+                    <td style="font-size:0.78rem;color:var(--color-text-muted)"><code>${s.sub_id}</code></td>
+                    <td><strong>${s.customer_name}</strong><br><small style="color:var(--color-text-muted)">${s.customer_phone || ''}</small></td>
+                    <td>${s.pg_or_flat_name ? `${s.pg_or_flat_name}, Rm ${s.room_no || '—'}` : 'Campus'}</td>
+                    <td><strong>${s.vendor_name}</strong></td>
+                    <td><span class="badge badge-info">${s.plan_name}</span></td>
+                    <td><strong>${formatINR(s.amount_due)}</strong></td>
+                    <td style="font-size:0.8rem;color:var(--color-text-muted)">${formatDate(s.start_date || s.created_at)}</td>
+                    <td>
+                      <div style="display:flex;gap:6px">
+                        <button class="btn btn-primary btn-sm" style="background:var(--color-success);border-color:var(--color-success);padding:4px 10px;font-size:0.78rem"
+                          onclick="handleAdminApproveSub('${s.sub_id}', '${escapeHtml(s.customer_name)}')">
+                          ✓ Approve
+                        </button>
+                        <button class="btn btn-outline btn-sm" style="color:var(--color-danger);border-color:var(--color-danger);padding:4px 8px;font-size:0.78rem"
+                          onclick="handleAdminRejectSub('${s.sub_id}', '${escapeHtml(s.customer_name)}')">
+                          ✕ Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ` : ''}
+
       <!-- Vendor Performance Table -->
       <div class="card" style="margin-bottom:20px">
         <div class="card-title"><span class="icon">🏪</span> Vendor Performance</div>
@@ -171,3 +215,25 @@ async function handleRejectPendingUser(userId, userName) {
     showToast('Rejection Error', err.message, 'error');
   }
 }
+
+async function handleAdminApproveSub(subId, studentName) {
+  try {
+    const res = await apiFetch(`/admin/subscription/${subId}/approve`, { method: 'PATCH' });
+    showToast('Subscription Approved', `Subscription for ${studentName} approved by Admin!`, 'success');
+    renderAdminDashboard();
+  } catch (err) {
+    showToast('Approval Error', err.message, 'error');
+  }
+}
+
+async function handleAdminRejectSub(subId, studentName) {
+  if (!confirm(`Reject subscription request for ${studentName}?`)) return;
+  try {
+    const res = await apiFetch(`/admin/subscription/${subId}/reject`, { method: 'PATCH' });
+    showToast('Subscription Rejected', `Subscription for ${studentName} rejected.`, 'info');
+    renderAdminDashboard();
+  } catch (err) {
+    showToast('Rejection Error', err.message, 'error');
+  }
+}
+

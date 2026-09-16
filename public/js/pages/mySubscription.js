@@ -96,9 +96,9 @@ function renderSubscriptionDetails(sub, customer) {
 
         <!-- ADD-ON 1: SKIP / PAUSE MEAL -->
         <div class="card" style="margin-bottom:20px">
-          <div class="card-title"><span class="icon">⏸️</span> Add-on 1: Pause & Skip Meal (Get ₹80 Credit)</div>
+          <div class="card-title"><span class="icon">⏸️</span> Add-on 1: Pause & Skip Meal (Billing Adjustment)</div>
           <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:14px">
-            Going home for the weekend or dining out? Skip tomorrow's meal before cutoff and receive an automatic <strong>₹80.00 wallet credit</strong>.
+            Going home for the weekend or dining out? Skip tomorrow's meal before cutoff and receive an automatic <strong>billing deduction</strong> computed from your plan's per-meal rate.
           </p>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
             <div class="form-group">
@@ -119,7 +119,7 @@ function renderSubscriptionDetails(sub, customer) {
           </div>
           <div id="skip-alert"></div>
           <button class="btn btn-primary btn-sm" onclick="handleSkipMealSubmit()" id="btn-skip-submit" style="margin-top:8px">
-            ✓ Request Skip & Claim ₹80 Credit
+            ✓ Request Skip & Adjust Amount Due
           </button>
         </div>
 
@@ -159,13 +159,16 @@ function renderSubscriptionDetails(sub, customer) {
 
       </div>
 
-      <!-- Sidebar: Wallet, Add-on 3 (Group Sub), Plan Info -->
+      <!-- Sidebar: Payment Info, Add-on 3 (Group Sub), Plan Info -->
       <div>
-        <!-- Wallet Card -->
+        <!-- Payment & COD Status Card -->
         <div class="stat-card" style="margin-bottom:16px">
-          <div class="stat-label">Student Wallet Balance</div>
-          <div class="stat-value" id="wallet-balance-val">${formatINR(customer.wallet)}</div>
-          <div class="stat-sub">Includes meal refund credits & savings</div>
+          <div class="stat-label">Payment Mode & Amount Due</div>
+          <div class="stat-value" id="amount-due-val" style="color:var(--color-primary)">${formatINR(sub.amount_due)}</div>
+          <div class="stat-sub">Mode: 💵 Cash on Delivery / Direct UPI</div>
+          <div style="margin-top:6px">
+            Payment Status: <span class="badge ${sub.payment_status === 'collected' ? 'badge-success' : 'badge-pending'}">${sub.payment_status === 'collected' ? 'Collected' : 'Pending Cash'}</span>
+          </div>
         </div>
 
         <!-- ADD-ON 3: FLAT / GROUP SUBSCRIPTION -->
@@ -270,32 +273,34 @@ async function handleSkipMealSubmit() {
   }
 
   btn.disabled = true;
-  btn.textContent = 'Processing refund...';
+  btn.textContent = 'Processing adjustment...';
 
   try {
     const res = await skipMeal(skipDate, mealType, reason);
-    const newBal = res.new_wallet_balance !== undefined ? res.new_wallet_balance : res.wallet_balance;
+    const newDue = res.new_amount_due !== undefined ? res.new_amount_due : res.amount_due;
+    const perMeal = res.per_meal_cost !== undefined ? res.per_meal_cost : 80;
 
-    const walletEl = document.getElementById('wallet-balance-val');
-    if (walletEl && newBal !== undefined) {
-      walletEl.textContent = formatINR(newBal);
+    const amountEl = document.getElementById('amount-due-val');
+    if (amountEl && newDue !== undefined) {
+      amountEl.textContent = formatINR(newDue);
     }
 
     alertDiv.innerHTML = `
       <div class="alert alert-success" style="margin-top:10px">
         ✅ <strong>Meal Skipped Successfully!</strong><br>
-        ₹80.00 credited to your wallet balance. Updated Wallet: <strong>${formatINR(newBal)}</strong>.
+        ₹${parseFloat(perMeal).toFixed(2)} deducted from bill. Updated Amount Due: <strong>${formatINR(newDue)}</strong>.
       </div>
     `;
-    showToast('Skip Confirmed', '₹80.00 credited to your wallet balance.', 'success');
+    showToast('Skip Confirmed', `Amount due adjusted by ₹${parseFloat(perMeal).toFixed(2)}.`, 'success');
     btn.textContent = '✓ Skipped';
     setTimeout(() => renderMySubscription(), 1500);
   } catch (err) {
     alertDiv.innerHTML = '<div class="alert alert-error">❌ ' + err.message + '</div>';
     btn.disabled = false;
-    btn.textContent = '✓ Request Skip & Claim ₹80 Credit';
+    btn.textContent = '✓ Request Skip & Adjust Amount Due';
   }
 }
+
 
 // Add-on 4: Handle Meal Customization
 async function handleSavePreferences() {

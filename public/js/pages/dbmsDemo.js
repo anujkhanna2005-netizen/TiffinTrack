@@ -268,18 +268,18 @@ function renderTransactionSection(txnsData) {
       <div class="txn-demo">
         <!-- Success Panel -->
         <div class="txn-panel">
-          <h4>✅ Scenario 1: Successful Subscription (COMMIT)</h4>
+          <h4>✅ Scenario 1: Subscription Request & COD Ledger (COMMIT)</h4>
           <div style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:8px">
-            Wallet Balance: <strong>₹3,000</strong> &nbsp;|&nbsp; Plan Price: <strong>₹2,400</strong>
+            Student: <strong>C001 (Rahul)</strong> &nbsp;|&nbsp; Plan: <strong>₹2,400 (COD)</strong>
           </div>
           <div class="sql-block" style="font-size:0.78rem;padding:10px">
 <span class="sql-keyword">START</span> TRANSACTION;
-  <span class="sql-comment">-- 1. Deduct wallet balance</span>
-  <span class="sql-keyword">UPDATE</span> customers <span class="sql-keyword">SET</span> wallet_balance = wallet_balance - 2400 <span class="sql-keyword">WHERE</span> customer_id = 'C001';
-  <span class="sql-comment">-- 2. Insert subscription</span>
-  <span class="sql-keyword">INSERT INTO</span> subscriptions (sub_id, customer_id, vendor_id, plan_id, status) <span class="sql-keyword">VALUES</span> (...);
-  <span class="sql-comment">-- 3. Record payment ledger</span>
-  <span class="sql-keyword">INSERT INTO</span> payments (payment_id, sub_id, amount, status) <span class="sql-keyword">VALUES</span> (...);
+  <span class="sql-comment">-- 1. Check vendor active capacity & duplicate guards</span>
+  <span class="sql-keyword">SELECT</span> sub_id <span class="sql-keyword">FROM</span> subscriptions <span class="sql-keyword">WHERE</span> customer_id = 'C001' <span class="sql-keyword">AND</span> status <span class="sql-keyword">IN</span> ('active', 'pending') <span class="sql-keyword">FOR UPDATE</span>;
+  <span class="sql-comment">-- 2. Insert subscription with status = 'pending' & locked price</span>
+  <span class="sql-keyword">INSERT INTO</span> subscriptions (sub_id, customer_id, vendor_id, plan_id, status, mode, locked_price) <span class="sql-keyword">VALUES</span> (...);
+  <span class="sql-comment">-- 3. Initialize COD payment ledger (pending_cash)</span>
+  <span class="sql-keyword">INSERT INTO</span> payments (payment_id, sub_id, amount, amount_due, mode, status) <span class="sql-keyword">VALUES</span> (...);
 <span class="sql-keyword">COMMIT</span>;
           </div>
           <button class="btn btn-secondary" onclick="runSuccessTransaction()" id="btn-txn-success">
@@ -291,15 +291,15 @@ function renderTransactionSection(txnsData) {
 
         <!-- Failure Panel -->
         <div class="txn-panel">
-          <h4>❌ Scenario 2: Payment Gateway Failure (ROLLBACK)</h4>
+          <h4>❌ Scenario 2: Vendor Inactive / Duplicate Request (ROLLBACK)</h4>
           <div style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:8px">
-            Wallet Balance: <strong>₹3,000</strong> &nbsp;|&nbsp; Plan Price: <strong>₹2,400</strong>
+            Student: <strong>C001 (Rahul)</strong> &nbsp;|&nbsp; Plan: <strong>₹2,400</strong>
           </div>
           <div class="sql-block" style="font-size:0.78rem;padding:10px">
 <span class="sql-keyword">START</span> TRANSACTION;
-  <span class="sql-comment">-- 1. Deduct wallet balance</span>
-  <span class="sql-keyword">UPDATE</span> customers <span class="sql-keyword">SET</span> wallet_balance = wallet_balance - 2400 <span class="sql-keyword">WHERE</span> customer_id = 'C001';
-  <span class="sql-comment">-- ✗ Gateway timeout / constraint violation</span>
+  <span class="sql-comment">-- 1. Check duplicate active/pending requests</span>
+  <span class="sql-keyword">SELECT</span> sub_id <span class="sql-keyword">FROM</span> subscriptions <span class="sql-keyword">WHERE</span> customer_id = 'C001' <span class="sql-keyword">AND</span> status = 'pending';
+  <span class="sql-comment">-- ✗ Duplicate request detected! Aborting...</span>
 <span class="sql-keyword">ROLLBACK</span>;
           </div>
           <button class="btn btn-danger" onclick="runFailureTransaction()" id="btn-txn-fail">
@@ -334,11 +334,11 @@ function renderVivaQaSection() {
         <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
           <div style="border-left:3px solid var(--color-primary);padding-left:12px">
             <strong>Q1: Why did you choose MySQL / TiDB Cloud over MongoDB?</strong><br>
-            <span style="font-size:0.85rem;color:var(--color-text-muted)">A: Tiffin subscriptions involve transactional integrity (wallet deduction + subscription creation + delivery schedule creation). ACID transactions and foreign key cascade rules prevent financial inconsistencies that NoSQL document stores cannot guarantee without heavy application-level locking.</span>
+            <span style="font-size:0.85rem;color:var(--color-text-muted)">A: Tiffin subscriptions involve transactional integrity (subscription creation + COD ledger initialization + delivery schedule creation). ACID transactions and foreign key cascade rules prevent order inconsistencies that NoSQL document stores cannot guarantee without heavy application-level locking.</span>
           </div>
           <div style="border-left:3px solid var(--color-primary);padding-left:12px">
-            <strong>Q2: How does the system handle concurrent meal subscriptions without oversubscribing?</strong><br>
-            <span style="font-size:0.85rem;color:var(--color-text-muted)">A: Using pessimistic locking with <code>SELECT ... FOR UPDATE</code> inside a MySQL transaction with <code>REPEATABLE READ</code> isolation level.</span>
+            <strong>Q2: How does the system handle concurrent Vendor vs Admin approval race conditions?</strong><br>
+            <span style="font-size:0.85rem;color:var(--color-text-muted)">A: Using atomic conditional updates (<code>UPDATE subscriptions SET status = 'active', approved_by = ? WHERE sub_id = ? AND status = 'pending'</code>). Whichever commit commits first updates 1 row; the second receives 0 affected rows and returns HTTP 409 Conflict.</span>
           </div>
           <div style="border-left:3px solid var(--color-primary);padding-left:12px">
             <strong>Q3: What is the purpose of database views like <code>top_rated_vendors</code>?</strong><br>
@@ -383,22 +383,23 @@ async function runSuccessTransaction() {
 
   addTxnLog(logDiv, '🔵', 'START TRANSACTION (Isolation: REPEATABLE READ)', 'info');
   await delay(400);
-  addTxnLog(logDiv, '✓', 'Check wallet: ₹3,000 ≥ ₹2,400 → OK', 'done');
+  addTxnLog(logDiv, '✓', 'Check duplicate requests (status IN active, pending) → OK (None)', 'done');
   await delay(400);
-  addTxnLog(logDiv, '✓', 'Deduct ₹2,400 from wallet (UPDATE customers) → OK', 'done');
+  addTxnLog(logDiv, '✓', 'Check vendor capacity & active meal plan → OK', 'done');
   await delay(400);
-  addTxnLog(logDiv, '✓', 'Create subscription record (INSERT INTO subscriptions) → OK', 'done');
+  addTxnLog(logDiv, '✓', 'Insert subscription record (status = "pending", mode = "cash_on_delivery", locked_price = ₹2,400) → OK', 'done');
   await delay(400);
-  addTxnLog(logDiv, '✓', 'Create payment ledger entry (INSERT INTO payments) → OK', 'done');
+  addTxnLog(logDiv, '✓', 'Insert payment ledger (status = "pending_cash", amount_due = ₹2,400) → OK', 'done');
   await delay(300);
-  addTxnLog(logDiv, '🟢', 'COMMIT — All changes persisted to disk', 'done');
+  addTxnLog(logDiv, '🟢', 'COMMIT — All changes persisted to disk atomically', 'done');
 
   resultDiv.innerHTML = `
     <div class="txn-result commit" style="margin-top:10px">
       <div style="font-weight:700;color:var(--color-success)">✅ ACID COMMIT Successful</div>
       <div style="font-size:0.85rem;margin-top:6px">
-        Subscription Status: <strong>ACTIVE</strong><br>
-        Wallet Balance: <span class="txn-wallet">₹600</span>
+        Subscription Status: <span class="badge badge-pending">PENDING APPROVAL</span><br>
+        Payment Mode: <strong>Cash on Delivery (COD)</strong><br>
+        Amount Due: <strong style="color:var(--color-primary)">₹2,400</strong>
       </div>
     </div>
   `;
@@ -418,26 +419,25 @@ async function runFailureTransaction() {
 
   addTxnLog(logDiv, '🔵', 'START TRANSACTION', 'info');
   await delay(400);
-  addTxnLog(logDiv, '✓', 'Check wallet: ₹3,000 ≥ ₹2,400 → OK', 'done');
+  addTxnLog(logDiv, '✓', 'Check existing requests for C001...', 'info');
   await delay(400);
-  addTxnLog(logDiv, '✓', 'Deduct ₹2,400 from wallet → OK', 'done');
-  await delay(400);
-  addTxnLog(logDiv, '✗', 'Payment Gateway Timeout / Constraint Violation!', 'failed');
+  addTxnLog(logDiv, '✗', 'Duplicate Guard Triggered: Found active subscription S001!', 'failed');
   await delay(300);
-  addTxnLog(logDiv, '🔴', 'ROLLBACK — All operations undone; state restored', 'failed');
+  addTxnLog(logDiv, '🔴', 'ROLLBACK — Aborting insertion; database integrity maintained', 'failed');
 
   resultDiv.innerHTML = `
     <div class="txn-result rollback" style="margin-top:10px">
-      <div style="font-weight:700;color:var(--color-danger)">❌ ROLLBACK Executed</div>
+      <div style="font-weight:700;color:var(--color-danger)">❌ ROLLBACK Executed (HTTP 409 Conflict)</div>
       <div style="font-size:0.85rem;margin-top:6px">
-        Subscription Status: <strong>Not Created</strong><br>
-        Wallet Balance: <span class="txn-wallet" style="color:var(--color-text)">₹3,000</span> (restored)
+        Subscription Status: <strong>Unchanged</strong><br>
+        Error: <em>You already have an active subscription. Cancel it first.</em>
       </div>
     </div>
   `;
   btn.disabled = false;
   btn.textContent = '↺ Simulate Again';
 }
+
 
 function addTxnLog(container, icon, text, type) {
   const colors = { done: 'var(--color-success)', failed: 'var(--color-danger)', info: 'var(--color-info)' };

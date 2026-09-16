@@ -171,9 +171,13 @@ async function openSubscribeModal(vendorId) {
               ${renderPlanPreview(plans[0])}
             </div>
 
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:0.82rem;color:#166534">
+              💵 <strong>Payment Method:</strong> Cash on Delivery (COD) / Direct UPI on First Tiffin Handover.
+            </div>
+
             <div class="modal-actions">
               <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-              <button class="btn btn-primary" onclick="confirmSubscription('${vendorId}')" id="btn-confirm-sub">Confirm Subscription</button>
+              <button class="btn btn-primary" onclick="confirmSubscription('${vendorId}')" id="btn-confirm-sub">Request Subscription (COD)</button>
             </div>
           ` : `
             <div class="alert alert-warning" style="margin:16px 0">
@@ -210,12 +214,12 @@ function renderPlanPreview(plan) {
         <strong>${plan.name}</strong>
         <strong style="color:var(--color-primary)">${formatINR(plan.price)}/mo</strong>
       </div>
-      <p style="color:var(--color-text-muted)">${plan.description}</p>
+      <p style="color:var(--color-text-muted)">${plan.description || 'Homestyle healthy food'}</p>
       <div style="display:flex;gap:16px;margin-top:8px;font-size:0.8rem;color:var(--color-text-muted);flex-wrap:wrap">
         <span>📅 Start: ${formatDate(today.toISOString().split('T')[0])}</span>
         <span>📅 End: ${formatDate(endDate.toISOString().split('T')[0])}</span>
         <span>${plan.veg ? '🟢 Veg' : '🔴 Non-Veg'}</span>
-        <span>🍽️ ${plan.meals_per_day} meal${plan.meals_per_day > 1 ? 's' : ''}/day</span>
+        <span>🍽️ ${plan.meals_per_day || 1} meal${(plan.meals_per_day || 1) > 1 ? 's' : ''}/day</span>
       </div>
     </div>
   `;
@@ -234,17 +238,17 @@ async function confirmSubscription(vendorId) {
   const planId = document.getElementById('plan-select').value;
   const btn    = document.getElementById('btn-confirm-sub');
   btn.disabled = true;
-  btn.textContent = 'Processing...';
+  btn.textContent = 'Processing Request...';
 
   // Show animated process steps
   const modal = document.querySelector('.modal');
   modal.innerHTML = `
-    <h3>Subscription Process</h3>
+    <h3>Subscription Request Process</h3>
     <div class="process-steps" id="proc-steps" aria-live="polite">
-      <div class="process-step" id="step-1"><span class="step-icon pending" aria-hidden="true">⏳</span> Checking plan availability...</div>
-      <div class="process-step" id="step-2"><span class="step-icon pending" aria-hidden="true">⏳</span> Checking wallet balance...</div>
-      <div class="process-step" id="step-3"><span class="step-icon pending" aria-hidden="true">⏳</span> Creating subscription...</div>
-      <div class="process-step" id="step-4"><span class="step-icon pending" aria-hidden="true">⏳</span> Processing payment...</div>
+      <div class="process-step" id="step-1"><span class="step-icon pending" aria-hidden="true">⏳</span> Checking vendor active status...</div>
+      <div class="process-step" id="step-2"><span class="step-icon pending" aria-hidden="true">⏳</span> Checking existing active/pending requests...</div>
+      <div class="process-step" id="step-3"><span class="step-icon pending" aria-hidden="true">⏳</span> Creating subscription request (pending)...</div>
+      <div class="process-step" id="step-4"><span class="step-icon pending" aria-hidden="true">⏳</span> Initializing COD payment ledger (pending_cash)...</div>
       <div class="process-step" id="step-5"><span class="step-icon pending" aria-hidden="true">⏳</span> COMMIT</div>
     </div>
     <div id="proc-result" style="margin-top:16px"></div>
@@ -252,9 +256,9 @@ async function confirmSubscription(vendorId) {
 
   const delay = ms => new Promise(r => setTimeout(r, ms));
   try {
-    await delay(400);  markStep('step-1', 'done', '✓');
-    await delay(400);  markStep('step-2', 'done', '✓');
-    await delay(400);  markStep('step-3', 'running', '⟳');
+    await delay(350);  markStep('step-1', 'done', '✓');
+    await delay(350);  markStep('step-2', 'done', '✓');
+    await delay(350);  markStep('step-3', 'running', '⟳');
 
     const result = await createSubscription(planId, vendorId);
 
@@ -264,19 +268,21 @@ async function confirmSubscription(vendorId) {
 
     document.getElementById('proc-result').innerHTML = `
       <div class="alert alert-success" style="margin-top:8px">
-        ✅ <strong>Subscription Activated!</strong><br>
-        <small>Wallet: ${formatINR(result.wallet)} &nbsp;|&nbsp; Plan: ${result.plan.name}</small>
+        ✅ <strong>Subscription Request Submitted!</strong><br>
+        <p style="margin:6px 0 0 0;font-size:0.875rem">
+          Your request for <strong>${result.plan.name}</strong> (Amount Due: ${formatINR(result.plan.price)}) has been submitted to the vendor. You will be notified once approved. Payment will be collected in cash/direct UPI upon meal handover.
+        </p>
       </div>
-      <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="closeModal();navigateTo('studentDashboard')">Go to Dashboard</button>
+      <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="closeModal();navigateTo('studentDashboard')">View in Dashboard</button>
     `;
-    showToast('Subscribed!', `${result.plan.name} is now active.`, 'success');
+    showToast('Request Submitted!', `Request for ${result.plan.name} sent to vendor.`, 'success');
   } catch (err) {
     markStep('step-3', 'failed', '✗');
     document.getElementById('proc-result').innerHTML = `
       <div class="alert alert-error">❌ ${err.message}</div>
       <button class="btn btn-outline" style="margin-top:12px;width:100%" onclick="closeModal()">Close</button>
     `;
-    showToast('Subscription Failed', err.message, 'error');
+    showToast('Request Failed', err.message, 'error');
   }
 }
 
@@ -290,3 +296,4 @@ function markStep(stepId, state, icon) {
   if (state === 'failed')  step.style.color = 'var(--color-danger)';
   if (state === 'running') step.style.color = 'var(--color-info)';
 }
+

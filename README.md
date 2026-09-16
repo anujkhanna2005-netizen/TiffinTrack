@@ -12,16 +12,16 @@
 
 ---
 
-## 🏛️ System Architecture: 3 Core Roles (PATH B Architecture)
+## 🏛️ System Architecture: 3 Core Roles (COD Workflow)
 
-TiffinTrack streamlines meal subscription and fulfillment by adopting a modern **3-Role Operational Architecture**:
+TiffinTrack streamlines meal subscription and fulfillment by adopting a realistic **Direct Request & Cash-on-Delivery (COD)** workflow:
 
-1. 🎓 **Student / Customer**: Discovers local vendors, subscribes to meal plans, tracks daily delivery stages, manages dietary preferences, skips meals for wallet credits, votes on weekly menus, and forms flat groups for collective discounts.
-2. 🍲 **Vendor / Kitchen Partner**: Manages meal plans, publishes daily dynamic menus, monitors active subscriber rosters, reviews student feedback/complaints, and **directly manages fulfillment and delivery lifecycle** (`Prepared` ➔ `Dispatched` ➔ `Delivered`).
-3. 🛡️ **Admin**: Oversees platform compliance, manages user rosters, monitors complaint resolution metrics, audits system activity logs, and inspects database health.
+1. 🎓 **Student / Customer**: Discovers local vendors, submits subscription requests (no prepaid wallet deduction), tracks delivery, manages dietary preferences, skips meals for dynamic per-meal bill reductions, votes on weekly menus, and forms flat groups for 10% collective discounts.
+2. 🍲 **Vendor / Kitchen Partner**: Manages meal plans & locked pricing, approves/rejects student subscription requests, collects cash/direct UPI payments on delivery, publishes daily menus, and directly manages fulfillment (`Prepared` ➔ `Dispatched` ➔ `Delivered`).
+3. 🛡️ **Admin**: Oversees platform compliance, resolves complaints, approves cross-vendor subscription requests, audits system activity logs, and inspects database health.
 
-> **Academic Schema Compatibility (PATH B):**  
-> For complete alignment with the Academic DBMS Course Plan & ER Diagram grading, the relational schema preserves the historical `delivery_agents` table and maintains `deliveries.agent_id` as a nullable foreign key. The runtime application cleanly routes all order preparation and dispatch lifecycle operations directly through the verified Vendor portal.
+> **Academic Schema Compatibility (COD Model):**  
+> For complete alignment with the Academic DBMS Course Plan & ER Diagram grading, the relational schema repurposes `payments` to track COD billing status (`amount_due`, `pending_cash`, `collected`) and retains `Customer.wallet_balance` as an amount-due tracking field reflecting real campus hand-to-hand transactions.
 
 ---
 
@@ -29,22 +29,23 @@ TiffinTrack streamlines meal subscription and fulfillment by adopting a modern *
 
 | Role | Email | Password | Scope |
 |------|-------|----------|-------|
-| 🎓 **Student** | `student@tiffintrack.demo` | `demo123` | Full student dashboard, meal tracker, add-ons |
-| 🍲 **Vendor** | `vendor@tiffintrack.demo` | `demo123` | Menu editor, subscriber roster, delivery fulfillment |
-| 🛡️ **Admin** | `admin@tiffintrack.demo` | `demo123` | Platform analytics, audit logs, DBMS viva showcase |
+| 🎓 **Student** | `student@tiffintrack.demo` | `demo123` | Student dashboard, request COD plans, skip meals, flat groups |
+| 🍲 **Vendor** | `vendor@tiffintrack.demo` | `demo123` | Approve requests, mark payments collected, edit plans, fulfillment |
+| 🛡️ **Admin** | `admin@tiffintrack.demo` | `demo123` | Platform analytics, cross-vendor request approvals, audit logs |
 
 ---
 
 ## ✨ Key Features & Add-ons
 
 - 🔒 **Secure Session Authentication:** SHA-256 token hashing, `httpOnly` secure session cookies, role-based route guards, and automated audit logging.
-- ⚡ **Vendor 1-Click Fulfillment:** Vendors manage delivery status in real-time (`prepared`, `dispatched`, `delivered`) with strict vendor-isolation checks.
-- 📦 **Add-on 1: Pause & Skip Meals:** Students can skip upcoming meal slots and receive automated ₹80 wallet credit.
+- 💵 **Direct Request & Cash on Delivery:** Students request subscriptions without digital wallet deductions; Vendors or Admins approve requests; cash is collected upon delivery.
+- ⚡ **Vendor 1-Click Fulfillment & Payment Collection:** Vendors mark deliveries and record cash collections (`pending_cash` ➔ `collected`) in 1 click.
+- 📦 **Add-on 1: Pause & Skip Meals:** Students can skip upcoming meal slots with dynamic per-meal cost reductions automatically applied to their pending bill.
 - 🗳️ **Add-on 2: Weekly Menu Voting:** Democratic student voting for weekend special menus with live tallying.
-- 👥 **Add-on 3: Flat Group Subscriptions:** Group order pooling with automated 10% group discounts for roommates.
+- 👥 **Add-on 3: Flat Group Subscriptions:** Group order pooling with automated 10% group discounts for roommates (minimum 3 members).
 - 🌶️ **Add-on 4: Meal Customization:** Real-time spice preferences, non-veg/veg filter, and Jain (no onion/garlic) toggles.
-- 🔄 **Add-on 5: 1-Click Vendor Switch (ACID Transaction):** Seamlessly migrate active subscriptions to a new vendor with atomic `BEGIN ... COMMIT / ROLLBACK` guarantees.
-- 📊 **Add-on 6: Live Fulfillment Tracker:** Real-time progress bar reflecting the vendor's kitchen and delivery updates.
+- 🔄 **Add-on 5: 1-Click Vendor Switch (ACID Transaction):** Seamlessly migrate active subscriptions to a new vendor with atomic `BEGIN ... COMMIT / ROLLBACK` guarantees and prorated bill transfers.
+
 
 ---
 
