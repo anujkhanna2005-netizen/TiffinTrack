@@ -10,27 +10,73 @@ async function renderVendorMenu() {
   try {
     const data = await getVendorData();
     currentVendorId = data.vendor ? data.vendor.vendor_id : null;
-    const menu = await getVendorMenu(currentVendorId);
-    renderMenuPage(menu);
+    const [menu, voteData] = await Promise.all([
+      getVendorMenu(currentVendorId),
+      getVendorMenuVotes(currentVendorId).catch(() => ({ total_votes: 0, votes: [], winning_dish: null }))
+    ]);
+    renderMenuPage(menu, voteData);
   } catch (err) {
     showError('Failed to load menu: ' + err.message);
   }
 }
 
-function renderMenuPage(menu) {
+function renderMenuPage(menu, voteData) {
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+  const votes = (voteData && voteData.votes) ? voteData.votes : [];
+  const totalVotes = voteData ? voteData.total_votes : 0;
+  const winningDish = voteData ? voteData.winning_dish : null;
 
   showContent(`
     <div class="page-header">
-      <h1>🍽️ Today's Menu</h1>
+      <h1>🍽️ Today's Menu & Kitchen Specials</h1>
       <p>${today} ${menu.published ? '• <span style="color:var(--color-success)">✅ Published</span>' : '• <span style="color:var(--color-warning)">⏳ Not Published</span>'}</p>
+    </div>
+
+    <!-- ADD-ON 2: VENDOR COMMUNITY DISH VOTES WIDGET -->
+    <div class="card" style="margin-bottom:20px;border-left:4px solid var(--color-primary)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+        <div>
+          <div class="card-title" style="margin-bottom:2px"><span class="icon">🗳️</span> Student Dish Voting Tally</div>
+          <p style="font-size:0.85rem;color:var(--color-text-muted);margin:0">Live votes cast by your active diners for tomorrow's community choice.</p>
+        </div>
+        <div>
+          <span class="badge badge-info" style="font-size:0.85rem">🗳️ ${totalVotes} Total Vote${totalVotes === 1 ? '' : 's'}</span>
+        </div>
+      </div>
+
+      <div id="voted-dish-alert"></div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:10px">
+        ${votes.map(v => {
+          const isWinner = winningDish && winningDish.dish_name === v.dish_name && v.vote_count > 0;
+          return `
+            <div style="border:1px solid ${isWinner ? 'var(--color-primary)' : 'var(--color-border)'};border-radius:var(--radius);padding:12px;background:${isWinner ? 'var(--color-surface-hover)' : 'var(--color-surface)'};display:flex;flex-direction:column;justify-content:space-between">
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <strong style="font-size:0.92rem">${isWinner ? '👑 ' : '🍛 '}${escapeHtml(v.dish_name)}</strong>
+                  <span class="badge ${isWinner ? 'badge-success' : 'badge-pill'}" style="font-size:0.75rem">${v.vote_count} vote${v.vote_count === 1 ? '' : 's'} (${v.vote_percent}%)</span>
+                </div>
+                <!-- Progress bar -->
+                <div style="height:6px;background:var(--color-border);border-radius:3px;margin:8px 0;overflow:hidden">
+                  <div style="height:100%;width:${v.vote_percent}%;background:${isWinner ? 'var(--color-success)' : 'var(--color-primary)'}"></div>
+                </div>
+              </div>
+              <div style="margin-top:8px">
+                <button class="btn btn-outline btn-sm" style="width:100%;font-size:0.78rem;padding:4px 8px" onclick="handleAddVotedDishToMenu('${escapeHtml(v.dish_name)}')">
+                  ➕ Add to Today's Menu
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
     </div>
 
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
       <!-- Menu Items -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-          <div class="card-title" style="margin-bottom:0"><span class="icon">📋</span> Menu Items</div>
+          <div class="card-title" style="margin-bottom:0"><span class="icon">📋</span> Menu Items (${menu.items.length})</div>
           <div style="display:flex;gap:8px">
             ${!menu.published ? `<button class="btn btn-secondary btn-sm" onclick="handlePublishMenu()" id="btn-publish">✅ Publish Menu</button>` : '<span class="badge badge-success">Published</span>'}
           </div>
@@ -51,7 +97,7 @@ function renderMenuPage(menu) {
           <div class="empty-state">
             <div class="empty-icon">🍽️</div>
             <h3>No items yet</h3>
-            <p>Add items to today's menu using the form on the right.</p>
+            <p>Add items to today's menu using the form on the right or the community voting widget above.</p>
           </div>
         `}
       </div>
@@ -72,6 +118,7 @@ function renderMenuPage(menu) {
             <option>Bread</option>
             <option>Side</option>
             <option>Salad</option>
+            <option>Community Choice</option>
             <option>Soup</option>
             <option>Drink</option>
             <option>Dessert</option>
@@ -160,5 +207,22 @@ async function handlePublishMenu() {
     btn.disabled = false;
     btn.textContent = '✅ Publish Menu';
     showToast('Error: ' + err.message, 'error');
+  }
+}
+
+async function handleAddVotedDishToMenu(dishName) {
+  const alertDiv = document.getElementById('voted-dish-alert');
+  try {
+    const res = await addVotedDishToMenu(dishName, 'Community Choice', '1 serving (Voted #1)', currentVendorId);
+    if (alertDiv) {
+      alertDiv.innerHTML = `<div class="alert alert-success" style="margin-top:8px">✅ Added <strong>${escapeHtml(dishName)}</strong> to today's menu!</div>`;
+    }
+    showToast('Dish Added', `"${dishName}" added to today's menu!`, 'success');
+    setTimeout(() => renderVendorMenu(), 600);
+  } catch (err) {
+    if (alertDiv) {
+      alertDiv.innerHTML = `<div class="alert alert-error" style="margin-top:8px">❌ ${err.message}</div>`;
+    }
+    showToast('Error', err.message, 'error');
   }
 }

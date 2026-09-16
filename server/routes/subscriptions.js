@@ -57,6 +57,10 @@ router.get('/', async (req, res) => {
       payment_id: s.payment_id,
       days_remaining: daysRemaining || 24,
       total_days: 30,
+      bread_preference: s.bread_preference || customer.bread_preference || 'standard',
+      spice_level: s.spice_level || customer.spice_level || 'medium',
+      special_instructions: s.special_instructions || customer.special_instructions || '',
+      group_id: s.group_id || null,
       plan: {
         plan_id: s.plan_id,
         name: s.plan_name,
@@ -106,7 +110,7 @@ router.post('/', async (req, res) => {
         const existing = existingRows[0];
         const err = new Error(
           existing.status === 'pending'
-            ? 'You already have a pending subscription request (' + existing.sub_id + '). Please wait for approval or cancel it first.'
+            ? 'You already have a pending subscription request (' + existing.sub_id + '). Please wait for vendor approval.'
             : 'You already have an active subscription (' + existing.sub_id + '). Please cancel or switch your current subscription first.'
         );
         err.statusCode = 409;
@@ -139,10 +143,15 @@ router.post('/', async (req, res) => {
       const lockedPrice = parseFloat(plan.price);
       const lockedMeals = parseInt(plan.meals_included, 10) || 30;
 
-      // 1. Insert subscription with status = 'pending', mode = 'cash_on_delivery', locked_price, locked_meals_included
+      // Fix 4: Snapshot customer's default profile-level preferences into this subscription
+      const defaultBread = customer.bread_preference || 'standard';
+      const defaultSpice = customer.spice_level || 'medium';
+      const defaultInstructions = (customer.special_instructions || '').slice(0, 200).trim() || null;
+
+      // 1. Insert subscription with status = 'pending', mode = 'cash_on_delivery', locked_price, locked_meals_included, and snapshot preferences
       await conn.query(
-        'INSERT INTO subscriptions (sub_id, customer_id, plan_id, vendor_id, start_date, end_date, status, auto_renew, mode, locked_price, locked_meals_included) VALUES (?, ?, ?, ?, ?, ?, "pending", 0, "cash_on_delivery", ?, ?)',
-        [nextSubId, customer.customer_id, plan_id, vendor_id, startDate, endDate, lockedPrice, lockedMeals]
+        'INSERT INTO subscriptions (sub_id, customer_id, plan_id, vendor_id, start_date, end_date, status, auto_renew, mode, locked_price, locked_meals_included, bread_preference, spice_level, special_instructions) VALUES (?, ?, ?, ?, ?, ?, "pending", 0, "cash_on_delivery", ?, ?, ?, ?, ?)',
+        [nextSubId, customer.customer_id, plan_id, vendor_id, startDate, endDate, lockedPrice, lockedMeals, defaultBread, defaultSpice, defaultInstructions]
       );
 
       // 2. Insert Payment record with status = 'pending_cash', amount = lockedPrice, amount_due = lockedPrice, mode = 'cash_on_delivery'
@@ -166,6 +175,9 @@ router.post('/', async (req, res) => {
         locked_meals_included: lockedMeals,
         amount_due: lockedPrice,
         payment_id: payId,
+        bread_preference: defaultBread,
+        spice_level: defaultSpice,
+        special_instructions: defaultInstructions,
         plan: {
           name: plan.name,
           price: lockedPrice
@@ -368,17 +380,75 @@ router.put('/preferences', async (req, res) => {
     const customer = await getActiveCustomer(req);
     if (!customer) return res.status(401).json({ error: 'Authentication required' });
 
-    const { spice_level, no_onion_garlic, dietary_pref } = req.body;
-    const pref = dietary_pref || (no_onion_garlic ? 'jain' : (spice_level || 'veg'));
+    const { spice_level, bread_preference, special_notes, special_instructions, save_as_default, dietary_pref } = req.body;
 
-    await db.query('UPDATE customers SET dietary_pref = ? WHERE customer_id = ?', [pref, customer.customer_id]);
+    const cleanBread = (bread_preference || 'standard').trim();
+    const cleanSpice = (spice_level || 'medium').trim();
+    // Fix 7: Sanitize and cap special instructions to 200 characters
+    const cleanNotes = (special_instructions || special_notes || '').slice(0, 200).trim();
+    const cleanDiet = dietary_pref || (cleanSpice === 'jain' ? 'jain' : 'veg');
 
-    await logAuditAction(req, 'UPDATE_PREFERENCES', 'customers', customer.customer_id, 'Updated dietary preference to ' + pref);
+    // Fetch active subscription to update live delivery preferences
+    const activeSubs = await db.query(
+      'SELECT sub_id, bread_preference, spice_level, special_instructions FROM subscriptions WHERE customer_id = ? AND status IN ("active", "pending") ORDER BY FIELD(status, "active", "pending"), created_at DESC LIMIT 1',
+      [customer.customer_id]
+    );
 
-    return res.json({ success: true, message: 'Meal customization preferences saved successfully!' });
+    let oldValues = {
+      bread_preference: customer.bread_preference || 'standard',
+      spice_level: customer.spice_level || 'medium',
+      special_instructions: customer.special_instructions || ''
+    };
+
+    if (activeSubs.length > 0) {
+      const activeSub = activeSubs[0];
+      oldValues = {
+        bread_preference: activeSub.bread_preference || 'standard',
+        spice_level: activeSub.spice_level || 'medium',
+        special_instructions: activeSub.special_instructions || ''
+      };
+
+      // Fix 4: Update the active subscription's preferences (what the vendor sees for current deliveries)
+      await db.query(
+        'UPDATE subscriptions SET bread_preference = ?, spice_level = ?, special_instructions = ? WHERE sub_id = ?',
+        [cleanBread, cleanSpice, cleanNotes, activeSub.sub_id]
+      );
+    }
+
+    // Always update or sync profile defaults if requested or as fallback
+    if (save_as_default !== false) {
+      await db.query(
+        'UPDATE customers SET bread_preference = ?, spice_level = ?, special_instructions = ?, dietary_pref = ? WHERE customer_id = ?',
+        [cleanBread, cleanSpice, cleanNotes, cleanDiet, customer.customer_id]
+      );
+    }
+
+    const newValues = {
+      bread_preference: cleanBread,
+      spice_level: cleanSpice,
+      special_instructions: cleanNotes,
+      dietary_pref: cleanDiet
+    };
+
+    // Fix 6: Audit log with old_values and new_values
+    await logAuditAction(
+      req,
+      'CUSTOMER_UPDATED_MEAL_PREFERENCES',
+      'subscriptions',
+      activeSubs.length > 0 ? activeSubs[0].sub_id : customer.customer_id,
+      `Customer updated meal preferences: Bread=${cleanBread}, Spice=${cleanSpice}, Notes="${cleanNotes}"`,
+      oldValues,
+      newValues
+    );
+
+    return res.json({
+      success: true,
+      message: 'Meal customization preferences saved and synced with vendor kitchen!',
+      preferences: newValues
+    });
   } catch (err) {
     console.error('Preferences error:', err);
-    return res.status(500).json({ error: 'Failed to update preferences' });
+    return res.status(500).json({ error: 'Failed to update preferences: ' + err.message });
   }
 });
 

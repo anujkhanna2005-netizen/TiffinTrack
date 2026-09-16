@@ -127,29 +127,30 @@ function renderSubscriptionDetails(sub, customer) {
         <div class="card" style="margin-bottom:20px">
           <div class="card-title"><span class="icon">🌶️</span> Add-on 4: Meal Customization & Spice Preferences</div>
           <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:14px">
-            Set your daily cooking preferences for the vendor.
+            Set your daily cooking preferences for the vendor. Active subscription preferences are updated live for kitchen dispatch.
           </p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div class="form-group">
               <label for="pref-spice" style="font-weight:600">Spice Level</label>
               <select id="pref-spice" class="form-control">
-                <option value="low">🌶️ Low Spice / Mild</option>
-                <option value="medium" selected>🌶️🌶️ Medium Spice (Standard)</option>
-                <option value="high">🌶️🌶️🌶️ High Spice (Desi)</option>
+                <option value="low" ${(sub.spice_level === 'low' || customer.spice_level === 'low') ? 'selected' : ''}>🌶️ Low Spice / Mild</option>
+                <option value="medium" ${(sub.spice_level === 'medium' || customer.spice_level === 'medium' || (!sub.spice_level && !customer.spice_level)) ? 'selected' : ''}>🌶️🌶️ Medium Spice (Standard)</option>
+                <option value="high" ${(sub.spice_level === 'high' || customer.spice_level === 'high') ? 'selected' : ''}>🌶️🌶️🌶️ High Spice (Desi)</option>
+                <option value="jain" ${(sub.spice_level === 'jain' || customer.spice_level === 'jain') ? 'selected' : ''}>🌱 Jain (No Onion / Garlic)</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="pref-roti" style="font-weight:600">Bread Preference</label>
+              <label for="pref-roti" style="font-weight:600">Bread / Add-on Preference</label>
               <select id="pref-roti" class="form-control">
-                <option value="standard">Standard Rotis</option>
-                <option value="extra_roti">+1 Extra Butter Roti</option>
-                <option value="rice_only">Extra Rice instead of Roti</option>
+                <option value="standard" ${(sub.bread_preference === 'standard' || customer.bread_preference === 'standard' || (!sub.bread_preference && !customer.bread_preference)) ? 'selected' : ''}>Standard Rotis</option>
+                <option value="extra_roti" ${(sub.bread_preference === 'extra_roti' || customer.bread_preference === 'extra_roti') ? 'selected' : ''}>🍞 +1 Extra Butter Roti</option>
+                <option value="rice_only" ${(sub.bread_preference === 'rice_only' || customer.bread_preference === 'rice_only') ? 'selected' : ''}>🍚 Extra Rice instead of Roti</option>
               </select>
             </div>
           </div>
           <div class="form-group">
-            <label for="pref-notes" style="font-weight:600">Special Cooking Instructions</label>
-            <input type="text" id="pref-notes" class="form-control" placeholder="e.g. Less oil, no coriander, warm packaging" />
+            <label for="pref-notes" style="font-weight:600">Special Cooking Instructions (Max 200 chars)</label>
+            <input type="text" id="pref-notes" maxlength="200" class="form-control" placeholder="e.g. Less oil, no coriander, warm packaging" value="${escapeHtml(sub.special_instructions || customer.special_instructions || '')}" />
           </div>
           <div id="pref-alert"></div>
           <button class="btn btn-outline btn-sm" onclick="handleSavePreferences()" id="btn-pref-submit">
@@ -166,16 +167,18 @@ function renderSubscriptionDetails(sub, customer) {
           <div class="stat-label">Payment Mode & Amount Due</div>
           <div class="stat-value" id="amount-due-val" style="color:var(--color-primary)">${formatINR(sub.amount_due)}</div>
           <div class="stat-sub">Mode: 💵 Cash on Delivery / Direct UPI</div>
-          <div style="margin-top:6px">
-            Payment Status: <span class="badge ${sub.payment_status === 'collected' ? 'badge-success' : 'badge-pending'}">${sub.payment_status === 'collected' ? 'Collected' : 'Pending Cash'}</span>
+          <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span>Payment Status:</span>
+            <span class="badge ${sub.payment_status === 'collected' ? 'badge-success' : 'badge-pending'}">${sub.payment_status === 'collected' ? 'Collected' : 'Pending Cash'}</span>
+            ${sub.group_id ? `<span class="badge badge-info" style="font-size:0.75rem">👥 Group ${sub.group_id}</span>` : ''}
           </div>
         </div>
 
         <!-- ADD-ON 3: FLAT / GROUP SUBSCRIPTION -->
         <div class="card" style="margin-bottom:16px">
-          <div class="card-title"><span class="icon">👥</span> Add-on 3: Flat Group (10% Off)</div>
+          <div class="card-title"><span class="icon">👥</span> Add-on 3: Flat Group Discounts</div>
           <p style="font-size:0.82rem;color:var(--color-text-muted);margin-bottom:10px;line-height:1.4">
-            Coordinate with roommates in your flat. Form a group of <strong>at least 3 members</strong> to unlock an automatic <strong>10% flat discount</strong>!
+            Coordinate with roommates in your flat: <strong>3-4 members</strong> unlock a <strong>5% discount</strong>, and <strong>5+ members</strong> unlock a <strong>10% discount</strong> on pending bills!
           </p>
           <div class="form-group">
             <label for="group-code-input" style="font-size:0.8rem;font-weight:600">Join Existing Group Code</label>

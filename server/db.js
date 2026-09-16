@@ -44,7 +44,7 @@ function getPool() {
   return pool;
 }
 
-const CURRENT_SCHEMA_VERSION = '1.0.2';
+const CURRENT_SCHEMA_VERSION = '1.0.3';
 let isSchemaSynced = false;
 let schemaInitPromise = null;
 
@@ -99,6 +99,56 @@ async function ensureSchema() {
         if (!colNames.has('mode')) {
           try { await p.query("ALTER TABLE subscriptions ADD COLUMN mode VARCHAR(50) NOT NULL DEFAULT 'cash_on_delivery'"); } catch (e) {}
         }
+        if (!colNames.has('bread_preference')) {
+          try { await p.query("ALTER TABLE subscriptions ADD COLUMN bread_preference VARCHAR(50) NOT NULL DEFAULT 'standard'"); } catch (e) {}
+        }
+        if (!colNames.has('spice_level')) {
+          try { await p.query("ALTER TABLE subscriptions ADD COLUMN spice_level VARCHAR(50) NOT NULL DEFAULT 'medium'"); } catch (e) {}
+        }
+        if (!colNames.has('special_instructions')) {
+          try { await p.query("ALTER TABLE subscriptions ADD COLUMN special_instructions VARCHAR(200) NULL DEFAULT NULL"); } catch (e) {}
+        }
+        if (!colNames.has('group_id')) {
+          try { await p.query("ALTER TABLE subscriptions ADD COLUMN group_id VARCHAR(32) NULL DEFAULT NULL"); } catch (e) {}
+        }
+
+        const [custCols] = await p.query(
+          "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customers'"
+        );
+        const custColNames = new Set((custCols || []).map(c => (c.COLUMN_NAME || c.column_name || '').toLowerCase()));
+
+        if (!custColNames.has('bread_preference')) {
+          try { await p.query("ALTER TABLE customers ADD COLUMN bread_preference VARCHAR(50) NOT NULL DEFAULT 'standard'"); } catch (e) {}
+        }
+        if (!custColNames.has('spice_level')) {
+          try { await p.query("ALTER TABLE customers ADD COLUMN spice_level VARCHAR(50) NOT NULL DEFAULT 'medium'"); } catch (e) {}
+        }
+        if (!custColNames.has('special_instructions')) {
+          try { await p.query("ALTER TABLE customers ADD COLUMN special_instructions VARCHAR(200) NULL DEFAULT NULL"); } catch (e) {}
+        }
+
+        const [voteCols] = await p.query(
+          "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'menu_votes'"
+        );
+        const voteColNames = new Set((voteCols || []).map(c => (c.COLUMN_NAME || c.column_name || '').toLowerCase()));
+
+        if (!voteColNames.has('vendor_id')) {
+          try { await p.query("ALTER TABLE menu_votes ADD COLUMN vendor_id VARCHAR(32) NULL DEFAULT NULL AFTER customer_id"); } catch (e) {}
+        }
+
+        // Fix 5: Backfill vendor_id for all existing menu_votes rows
+        try {
+          await p.query(`
+            UPDATE menu_votes mv
+            JOIN daily_menus dm ON mv.menu_id = dm.menu_id
+            SET mv.vendor_id = dm.vendor_id
+            WHERE mv.vendor_id IS NULL
+          `);
+          // If any vote rows had orphaned menu_ids, fallback to V001
+          await p.query("UPDATE menu_votes SET vendor_id = 'V001' WHERE vendor_id IS NULL");
+        } catch (e) {
+          console.warn('[DB Vote Backfill Note]', e.message);
+        }
 
         const [payCols] = await p.query(
           "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'payments'"
@@ -139,7 +189,9 @@ async function ensureSchema() {
         // Ensure indexes
         try { await p.query("CREATE INDEX idx_subs_status ON subscriptions(status)"); } catch (e) {}
         try { await p.query("CREATE INDEX idx_subs_vendor_status ON subscriptions(vendor_id, status)"); } catch (e) {}
+        try { await p.query("CREATE INDEX idx_subs_group ON subscriptions(group_id)"); } catch (e) {}
         try { await p.query("CREATE INDEX idx_pay_status ON payments(status)"); } catch (e) {}
+        try { await p.query("CREATE INDEX idx_vote_vendor ON menu_votes(vendor_id)"); } catch (e) {}
 
         // Record schema version marker
         await p.query(

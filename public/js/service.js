@@ -178,8 +178,9 @@ async function getSkipHistory() {
 }
 
 // ---- ADD-ON 2: MENU VOTING ---------------------------------
-async function getMenuVoteOptions() {
-  return cachedApiFetch('/menu/vote-options', 30000);
+async function getMenuVoteOptions(vendorId) {
+  const url = '/menu/vote-options' + (vendorId ? '?vendor_id=' + encodeURIComponent(vendorId) : '');
+  return cachedApiFetch(url, 15000);
 }
 
 async function submitMenuVote(dish_option, vendor_id) {
@@ -187,6 +188,22 @@ async function submitMenuVote(dish_option, vendor_id) {
   const res = await apiFetch('/menu/vote', {
     method: 'POST',
     body: JSON.stringify({ dish_option, vendor_id })
+  });
+  clearApiCache();
+  return res;
+}
+
+async function getVendorMenuVotes(vendorId) {
+  const url = vendorId ? `/vendor/${vendorId}/menu-votes` : '/vendor/menu-votes';
+  return cachedApiFetch(url, 10000);
+}
+
+async function addVotedDishToMenu(dishName, category, quantity, vendorId) {
+  clearApiCache();
+  const url = vendorId ? `/vendor/${vendorId}/menu/add-voted-dish` : '/vendor/menu/add-voted-dish';
+  const res = await apiFetch(url, {
+    method: 'POST',
+    body: JSON.stringify({ dish_name: dishName, category, quantity })
   });
   clearApiCache();
   return res;

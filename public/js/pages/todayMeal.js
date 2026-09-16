@@ -24,14 +24,19 @@ async function renderTodayMeal() {
       return;
     }
 
-    // Get today's menu from the subscribed vendor
-    const menu = await getVendorMenu(subscription.vendor_id);
-    const todayDelivery = deliveries.find(d => d.meal_type === 'Lunch');
+    // Get today's menu and live voting options from the subscribed vendor
+    const [menu, voteData] = await Promise.all([
+      getVendorMenu(subscription.vendor_id),
+      getMenuVoteOptions(subscription.vendor_id).catch(() => ({ options: [], user_voted: null }))
+    ]);
+
+    const voteOptions = (voteData && voteData.options) ? voteData.options : [];
+    const userVotedDish = voteData ? voteData.user_voted : null;
 
     showContent(`
       <div class="page-header">
         <h1>🍽️ Today's Menu</h1>
-        <p>${subscription.vendor.name} • ${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+        <p>${escapeHtml(subscription.vendor.name)} • ${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </div>
 
       <!-- Menu -->
@@ -41,14 +46,14 @@ async function renderTodayMeal() {
           <div class="menu-grid">
             ${menu.items.map(item => `
               <div class="menu-item">
-                <div class="item-name">${item.name}</div>
-                <div class="item-category">${item.category}</div>
-                <div class="item-quantity">${item.quantity}</div>
+                <div class="item-name">${escapeHtml(item.name)}</div>
+                <div class="item-category">${escapeHtml(item.category)}</div>
+                <div class="item-quantity">${escapeHtml(item.quantity)}</div>
               </div>
             `).join('')}
           </div>
           <p style="margin-top:12px;font-size:0.8rem;color:var(--color-text-muted)">
-            Menu published by ${subscription.vendor.name}
+            Menu published by ${escapeHtml(subscription.vendor.name)}
           </p>
         ` : `
           <div class="empty-state">
@@ -61,35 +66,46 @@ async function renderTodayMeal() {
 
       <!-- ADD-ON 2: COMMUNITY MENU VOTING -->
       <div class="card" style="margin-bottom:20px">
-        <div class="card-title"><span class="icon">🗳️</span> Add-on 2: Weekly Community Dish Voting</div>
-        <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:14px">
-          Vote for your favorite dish to be included in tomorrow's special menu. Most voted dish wins!
-        </p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
-          <button class="btn btn-outline" style="text-align:left;padding:12px" onclick="handleCastVote('Paneer Butter Masala', '${subscription.vendor_id}')">
-            🍛 <strong>Paneer Butter Masala</strong><br><span style="font-size:0.75rem;color:var(--color-text-muted)">Creamy tomato gravy</span>
-          </button>
-          <button class="btn btn-outline" style="text-align:left;padding:12px" onclick="handleCastVote('Rajma Chawal Special', '${subscription.vendor_id}')">
-            🍚 <strong>Rajma Chawal Special</strong><br><span style="font-size:0.75rem;color:var(--color-text-muted)">Punjabi style slow cooked</span>
-          </button>
-          <button class="btn btn-outline" style="text-align:left;padding:12px" onclick="handleCastVote('Hyderabadi Veg Biryani', '${subscription.vendor_id}')">
-            🥘 <strong>Hyderabadi Veg Biryani</strong><br><span style="font-size:0.75rem;color:var(--color-text-muted)">Served with fresh raita</span>
-          </button>
-          <button class="btn btn-outline" style="text-align:left;padding:12px" onclick="handleCastVote('Chole Bhature Platter', '${subscription.vendor_id}')">
-            🫓 <strong>Chole Bhature Platter</strong><br><span style="font-size:0.75rem;color:var(--color-text-muted)">Authentic Delhi style</span>
-          </button>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          <div class="card-title" style="margin-bottom:0"><span class="icon">🗳️</span> Add-on 2: Weekly Community Dish Voting</div>
+          ${userVotedDish ? `<span class="badge badge-success">✓ You Voted: ${escapeHtml(userVotedDish)}</span>` : ''}
         </div>
-        <div id="vote-alert" style="margin-top:12px"></div>
+        <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:14px">
+          Vote for your favorite dish to be included in tomorrow's special menu for <strong>${escapeHtml(subscription.vendor.name)}</strong>. The vendor reviews student votes live in their kitchen center!
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          ${voteOptions.map(opt => {
+            const isVoted = userVotedDish && userVotedDish.toLowerCase() === opt.dish_name.toLowerCase();
+            return `
+              <button class="btn ${isVoted ? 'btn-primary' : 'btn-outline'}" 
+                style="text-align:left;padding:12px;display:flex;flex-direction:column;justify-content:space-between;border-color:${isVoted ? 'var(--color-primary)' : 'var(--color-border)'}" 
+                ${userVotedDish ? 'disabled' : ''} 
+                onclick="handleCastVote('${escapeHtml(opt.dish_name)}', '${subscription.vendor_id}')">
+                <div>
+                  <div style="font-weight:700;font-size:0.92rem">${isVoted ? '✓ ' : '🍛 '}${escapeHtml(opt.dish_name)}</div>
+                  <div style="font-size:0.75rem;color:${isVoted ? 'rgba(255,255,255,0.85)' : 'var(--color-text-muted)'};margin-top:2px">${escapeHtml(opt.description || opt.cuisine || '')}</div>
+                </div>
+                <div style="margin-top:8px;font-size:0.75rem;font-weight:600;color:${isVoted ? '#fff' : 'var(--color-primary)'}">
+                  🗳️ ${opt.votes || 0} student vote${(opt.votes || 0) === 1 ? '' : 's'}
+                </div>
+              </button>
+            `;
+          }).join('')}
+        </div>
+        <div id="vote-alert" style="margin-top:12px">
+          ${userVotedDish ? `<div class="alert alert-info" style="font-size:0.82rem">You have already recorded your vote for today's menu. Check back tomorrow for the winning selection!</div>` : ''}
+        </div>
       </div>
 
       <!-- Plan Info -->
       <div class="card">
         <div class="card-title"><span class="icon">📋</span> Your Plan</div>
         <div style="font-size:0.875rem;display:flex;gap:24px;flex-wrap:wrap;color:var(--color-text-muted)">
-          <div><strong style="color:var(--color-text)">${subscription.plan.name}</strong></div>
+          <div><strong style="color:var(--color-text)">${escapeHtml(subscription.plan.name)}</strong></div>
           <div>🍽️ ${subscription.plan.meals_per_day} meals/day</div>
           <div>${subscription.plan.veg ? '🟢 Vegetarian' : '🔴 Non-Vegetarian'}</div>
           <div>📅 Valid until ${formatDate(subscription.end_date)}</div>
+          <div>🍞 Preference: <strong>${subscription.bread_preference === 'extra_roti' ? '+1 Extra Butter Roti' : (subscription.bread_preference === 'rice_only' ? 'Extra Rice (No Roti)' : 'Standard Roti')}</strong></div>
         </div>
       </div>
     `);
@@ -105,10 +121,11 @@ async function handleCastVote(dishName, vendorId) {
     alertDiv.innerHTML = `
       <div class="alert alert-success" style="margin-top:8px">
         ✅ <strong>Vote Cast for ${dishName}!</strong><br>
-        Your vote has been recorded for tomorrow's community menu selection.
+        Your vote has been sent to your vendor kitchen for tomorrow's community menu selection.
       </div>
     `;
     showToast('Vote Recorded', 'Voted for ' + dishName, 'success');
+    setTimeout(() => renderTodayMeal(), 1000);
   } catch (err) {
     alertDiv.innerHTML = '<div class="alert alert-error">❌ ' + err.message + '</div>';
   }

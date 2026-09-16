@@ -64,19 +64,47 @@ async function renderVendorDeliveries() {
                   <th>Delivery ID</th>
                   <th>Student Name</th>
                   <th>Room / Residence</th>
-                  <th>Locality</th>
+                  <th>Meal Add-ons & Cooking Notes</th>
                   <th>Meal Slot</th>
                   <th>Current Status</th>
                   <th style="text-align:right">Fulfillment Action</th>
                 </tr>
               </thead>
               <tbody>
-                ${deliveries.map(d => `
+                ${deliveries.map(d => {
+                  let addonBadge = '';
+                  if (d.bread_preference === 'extra_roti') {
+                    addonBadge += '<span class="badge" style="background:#fff3e0;color:#e65100;font-weight:700;margin-right:4px">🍞 +1 Extra Roti</span>';
+                  } else if (d.bread_preference === 'rice_only') {
+                    addonBadge += '<span class="badge" style="background:#e8f5e9;color:#2e7d32;margin-right:4px">🍚 Rice Only</span>';
+                  } else {
+                    addonBadge += '<span class="badge" style="background:var(--color-surface-hover);color:var(--color-text-muted);margin-right:4px">🍞 Std Roti</span>';
+                  }
+
+                  if (d.spice_level === 'high') {
+                    addonBadge += '<span class="badge" style="background:#ffebee;color:#c62828;font-weight:600">🌶️ High Spice</span>';
+                  } else if (d.spice_level === 'low') {
+                    addonBadge += '<span class="badge" style="background:#e0f2f1;color:#00695c">🌶️ Mild</span>';
+                  } else if (d.spice_level === 'jain') {
+                    addonBadge += '<span class="badge" style="background:#f3e5f5;color:#6a1b9a">🌱 Jain</span>';
+                  }
+
+                  if (d.special_instructions) {
+                    addonBadge += `<div style="font-size:0.75rem;color:var(--color-text);margin-top:4px;background:#faf7f3;padding:2px 6px;border-radius:4px;border-left:2px solid var(--color-primary)">📝 "${escapeHtml(d.special_instructions)}"</div>`;
+                  }
+
+                  return `
                   <tr id="row-vdel-${escapeHtml(d.delivery_id)}">
                     <td style="font-size:0.8rem;color:var(--color-text-muted)"><code>${escapeHtml(d.delivery_id)}</code></td>
-                    <td><strong>${escapeHtml(d.customer_name || (d.customer ? d.customer.name : 'Student'))}</strong></td>
-                    <td>${escapeHtml(d.customer_address || (d.customer ? `${d.customer.residence}, Rm ${d.customer.room}` : 'Campus'))}</td>
-                    <td>${escapeHtml(d.customer_locality || 'Campus Area')}</td>
+                    <td>
+                      <strong>${escapeHtml(d.customer_name || (d.customer ? d.customer.name : 'Student'))}</strong>
+                      <div style="font-size:0.75rem;color:var(--color-text-muted)">${escapeHtml(d.customer_phone || '')}</div>
+                    </td>
+                    <td>
+                      <div>${escapeHtml(d.customer_address || (d.customer ? `${d.customer.residence}, Rm ${d.customer.room}` : 'Campus'))}</div>
+                      <div style="font-size:0.75rem;color:var(--color-text-muted)">${escapeHtml(d.customer_locality || 'Campus Area')}</div>
+                    </td>
+                    <td>${addonBadge}</td>
                     <td><span class="badge badge-pill">${escapeHtml(d.meal_type || 'Lunch')}</span></td>
                     <td id="badge-vdel-${escapeHtml(d.delivery_id)}">${deliveryStatusBadge(d.status)}</td>
                     <td style="text-align:right">
@@ -95,7 +123,7 @@ async function renderVendorDeliveries() {
                       </div>
                     </td>
                   </tr>
-                `).join('')}
+                `;}).join('')}
               </tbody>
             </table>
           </div>

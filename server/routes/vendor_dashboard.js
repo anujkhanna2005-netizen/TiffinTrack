@@ -74,7 +74,9 @@ router.get('/', async (req, res) => {
       `, [vendor.vendor_id]),
       db.query(`
         SELECT s.sub_id, s.start_date, s.end_date, s.status, s.locked_price, s.locked_meals_included, s.approved_by, s.approved_at,
+               s.bread_preference, s.spice_level, s.special_instructions,
                c.customer_id, c.name AS customer_name, c.phone AS customer_phone, c.pg_or_flat_name, c.room_no, c.locality,
+               c.bread_preference AS cust_bread, c.spice_level AS cust_spice, c.special_instructions AS cust_instructions, c.dietary_pref,
                p.plan_id, p.name AS plan_name, p.price,
                pay.payment_id, pay.amount_due, pay.status AS payment_status, pay.collected_at
         FROM subscriptions s
@@ -97,6 +99,10 @@ router.get('/', async (req, res) => {
     const subscribers = subRows.map(s => {
       const lockedPrice = s.locked_price !== null ? parseFloat(s.locked_price) : (parseFloat(s.price) || 2800);
       const amountDue = s.amount_due !== null && s.amount_due !== undefined ? parseFloat(s.amount_due) : lockedPrice;
+      const breadPref = s.bread_preference || s.cust_bread || 'standard';
+      const spicePref = s.spice_level || s.cust_spice || 'medium';
+      const specialNotes = (s.special_instructions || s.cust_instructions || '').slice(0, 200).trim();
+
       return {
         sub_id: s.sub_id,
         start_date: s.start_date,
@@ -104,12 +110,18 @@ router.get('/', async (req, res) => {
         status: s.status,
         approved_by: s.approved_by,
         approved_at: s.approved_at,
+        bread_preference: breadPref,
+        spice_level: spicePref,
+        special_instructions: specialNotes,
         customer: {
           customer_id: s.customer_id,
           name: s.customer_name,
           residence: s.pg_or_flat_name,
           room: s.room_no,
-          phone: s.customer_phone
+          phone: s.customer_phone,
+          bread_preference: breadPref,
+          spice_level: spicePref,
+          special_instructions: specialNotes
         },
         plan: {
           plan_id: s.plan_id,
@@ -591,6 +603,156 @@ router.delete(['/meal-plans/:planId', '/:id/meal-plans/:planId'], async (req, re
   } catch (err) {
     console.error('Delete meal plan error:', err);
     res.status(500).json({ error: 'Failed to delete meal plan: ' + err.message });
+  }
+});
+
+// GET /api/vendor/menu-votes (Fetch student dish vote tallies for vendor kitchen)
+router.get(['/menu-votes', '/:id/menu-votes', '/menu/votes', '/:id/menu/votes'], async (req, res) => {
+  try {
+    let vendorId = req.params.id;
+    if (!vendorId || vendorId === 'menu-votes' || vendorId === 'votes') {
+      const vendor = await getActiveVendor(req);
+      if (!vendor) return res.status(404).json({ error: 'Vendor profile not found' });
+      vendorId = vendor.vendor_id;
+    }
+
+    const votes = await db.query(`
+      SELECT item_name, COUNT(*) as vote_count, MAX(vote_date) as last_voted
+      FROM menu_votes
+      WHERE vendor_id = ?
+      GROUP BY item_name
+      ORDER BY vote_count DESC
+    `, [vendorId]);
+
+    const totalVotes = votes.reduce((acc, v) => acc + parseInt(v.vote_count, 10), 0);
+
+    // Default dish choices if no votes have been submitted yet
+    const candidateDishes = [
+      'Paneer Butter Masala',
+      'Rajma Chawal Special',
+      'Hyderabadi Veg Biryani',
+      'Chole Bhature Platter',
+      'Dal Makhani & Butter Naan'
+    ];
+
+    const results = candidateDishes.map((dish, idx) => {
+      const found = votes.find(v => v.item_name.toLowerCase() === dish.toLowerCase());
+      const cnt = found ? parseInt(found.vote_count, 10) : 0;
+      const pct = totalVotes > 0 ? Math.round((cnt / totalVotes) * 100) : 0;
+      return {
+        dish_id: idx + 1,
+        dish_name: dish,
+        vote_count: cnt,
+        vote_percent: pct
+      };
+    });
+
+    // Also include any other customized dish student voted on
+    for (const v of votes) {
+      if (!results.some(r => r.dish_name.toLowerCase() === v.item_name.toLowerCase())) {
+        const cnt = parseInt(v.vote_count, 10);
+        results.push({
+          dish_id: results.length + 1,
+          dish_name: v.item_name,
+          vote_count: cnt,
+          vote_percent: totalVotes > 0 ? Math.round((cnt / totalVotes) * 100) : 0
+        });
+      }
+    }
+
+    results.sort((a, b) => b.vote_count - a.vote_count);
+
+    return res.json({
+      vendor_id: vendorId,
+      total_votes: totalVotes,
+      votes: results,
+      winning_dish: results.length > 0 && results[0].vote_count > 0 ? results[0] : null
+    });
+  } catch (err) {
+    console.error('Fetch vendor menu votes error:', err);
+    return res.status(500).json({ error: 'Failed to fetch menu votes: ' + err.message });
+  }
+});
+
+// POST /api/vendor/menu/add-voted-dish (Fix 6: Ownership check + Audit Log)
+router.post(['/menu/add-voted-dish', '/:id/menu/add-voted-dish'], requireAuth, requireRole('vendor'), async (req, res) => {
+  try {
+    let vendorId = req.params.id;
+    const activeVendor = await getActiveVendor(req);
+    if (!activeVendor) return res.status(404).json({ error: 'Vendor profile not found' });
+
+    if (!vendorId || vendorId === 'add-voted-dish') {
+      vendorId = activeVendor.vendor_id;
+    }
+
+    // Fix 6: Ownership guard - vendor can only add dish to their own menu
+    if (activeVendor.vendor_id !== vendorId) {
+      return res.status(403).json({ error: 'Forbidden: You cannot modify another vendor\'s menu.' });
+    }
+
+    const { dish_name, category, quantity } = req.body;
+    if (!dish_name) {
+      return res.status(422).json({ error: 'Dish name is required' });
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = await db.query('SELECT * FROM daily_menus WHERE vendor_id = ? AND date = ?', [vendorId, today]);
+
+    let items = [];
+    let menuId = 'M' + Date.now().toString().slice(-4);
+
+    if (rows.length > 0) {
+      menuId = rows[0].menu_id;
+      items = normalizeMenuItems(rows[0].items);
+    }
+
+    // Check if dish already exists in today's menu
+    const existingIndex = items.findIndex(i => i.name.toLowerCase() === dish_name.toLowerCase());
+    const newItem = {
+      item_id: String(Date.now()),
+      name: dish_name,
+      category: category || 'Community Choice',
+      quantity: quantity || '1 serving (Voted #1)'
+    };
+
+    if (existingIndex === -1) {
+      items.push(newItem);
+    } else {
+      items[existingIndex] = newItem;
+    }
+
+    await db.query(
+      'INSERT INTO daily_menus (menu_id, vendor_id, date, meal_type, items, published) VALUES (?, ?, ?, "lunch", ?, 1) ON DUPLICATE KEY UPDATE items = VALUES(items), published = 1',
+      [menuId, vendorId, today, JSON.stringify(items)]
+    );
+
+    // Get vote count at time of addition for audit log
+    const voteCountRow = await db.query(
+      'SELECT COUNT(*) as cnt FROM menu_votes WHERE vendor_id = ? AND item_name = ?',
+      [vendorId, dish_name]
+    );
+    const currentVotes = (voteCountRow && voteCountRow[0]) ? voteCountRow[0].cnt : 0;
+
+    // Fix 6: Log VENDOR_ADDED_VOTED_DISH_TO_MENU to audit log
+    await logAuditAction(
+      req,
+      'VENDOR_ADDED_VOTED_DISH_TO_MENU',
+      'daily_menus',
+      menuId,
+      `Vendor added voted community dish "${dish_name}" to today's menu (Votes: ${currentVotes})`,
+      null,
+      { dish_name, current_votes: currentVotes, menu_id: menuId }
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: `"${dish_name}" added to today's menu as Community Choice!`,
+      dish: newItem,
+      menu_items: items
+    });
+  } catch (err) {
+    console.error('Add voted dish error:', err);
+    return res.status(500).json({ error: 'Failed to add voted dish to menu: ' + err.message });
   }
 });
 

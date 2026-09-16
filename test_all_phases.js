@@ -158,6 +158,9 @@ async function runTests() {
     }
 
     console.log('\n--- 3. STUDENT ADD-ONS & WORKFLOWS ---');
+    // Ensure C001 is actively subscribed to V001
+    await db.query('UPDATE subscriptions SET vendor_id = "V001", plan_id = "P001", status = "active" WHERE customer_id = "C001" AND sub_id = "S001"');
+
     // Add-on 1: Skip Meal
     const skipRes = await request('/subscription/skip', {
       method: 'POST',
@@ -166,6 +169,7 @@ async function runTests() {
     assert('Add-on 1: Pause & Skip with Dynamic COD Bill Adjustment', skipRes.status === 201 && Number(skipRes.body.credit_amount) > 0);
 
     // Add-on 2: Menu Voting
+    await db.query('DELETE FROM menu_votes WHERE customer_id = "C001" AND vote_date = CURRENT_DATE');
     const voteRes = await request('/menu/vote', {
       method: 'POST',
       body: { dish_option: 'Hyderabadi Veg Biryani with Mirchi ka Salan', vendor_id: 'V001' }

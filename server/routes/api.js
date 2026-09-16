@@ -113,39 +113,160 @@ router.get('/customer', async (req, res) => {
   }
 });
 
+const { logAuditAction } = require('../middleware/auth');
+const { getGroupDiscountPercent } = require('../utils/discounts');
+
 // Menu Voting routes
 router.get('/menu/vote-options', async (req, res) => {
-  res.json([
-    { id: 1, dish_name: 'Paneer Butter Masala & Garlic Naan', cuisine: 'North Indian', votes: 42 },
-    { id: 2, dish_name: 'Hyderabadi Veg Biryani with Mirchi ka Salan', cuisine: 'Mughlai', votes: 38 },
-    { id: 3, dish_name: 'Chole Bhature & Sweet Lassi', cuisine: 'Punjabi', votes: 29 },
-    { id: 4, dish_name: 'South Indian Special Dosa & Vada Platter', cuisine: 'South Indian', votes: 19 }
-  ]);
+  try {
+    let customerId = 'C001';
+    let defaultVendor = 'V001';
+
+    if (req.user && req.user.profile && req.user.profile.customer_id) {
+      customerId = req.user.profile.customer_id;
+      const subRows = await db.query(
+        'SELECT vendor_id FROM subscriptions WHERE customer_id = ? AND status IN ("active", "pending") ORDER BY FIELD(status, "active", "pending") LIMIT 1',
+        [customerId]
+      );
+      if (subRows.length > 0) defaultVendor = subRows[0].vendor_id;
+    }
+
+    const vendorId = req.query.vendor_id || defaultVendor;
+    const today = new Date().toISOString().slice(0, 10);
+
+    const voteCounts = await db.query(
+      'SELECT item_name, COUNT(*) as cnt FROM menu_votes WHERE vendor_id = ? GROUP BY item_name',
+      [vendorId]
+    );
+
+    const voteMap = {};
+    for (const v of voteCounts) {
+      voteMap[v.item_name.toLowerCase()] = parseInt(v.cnt, 10);
+    }
+
+    const baseOptions = [
+      { id: 1, dish_name: 'Paneer Butter Masala', cuisine: 'North Indian', description: 'Rich creamy tomato gravy with cottage cheese' },
+      { id: 2, dish_name: 'Rajma Chawal Special', cuisine: 'Punjabi', description: 'Slow-cooked spiced red kidney beans' },
+      { id: 3, dish_name: 'Hyderabadi Veg Biryani', cuisine: 'Mughlai', description: 'Fragrant basmati rice served with raita' },
+      { id: 4, dish_name: 'Chole Bhature Platter', cuisine: 'Delhi Style', description: 'Authentic Amritsari chana with bhature' }
+    ];
+
+    const options = baseOptions.map(opt => {
+      const votes = voteMap[opt.dish_name.toLowerCase()] || 0;
+      return {
+        ...opt,
+        votes
+      };
+    });
+
+    // Check if user already voted today
+    const userVotes = await db.query(
+      'SELECT item_name FROM menu_votes WHERE customer_id = ? AND vendor_id = ? AND vote_date = ? LIMIT 1',
+      [customerId, vendorId, today]
+    );
+
+    const userVoted = userVotes.length > 0 ? userVotes[0].item_name : null;
+
+    res.json({
+      vendor_id: vendorId,
+      options,
+      user_voted: userVoted
+    });
+  } catch (err) {
+    console.error('Fetch vote options error:', err);
+    res.status(500).json({ error: 'Failed to fetch voting options' });
+  }
 });
 
+// POST /api/menu/vote (Fix 6: Active subscriber guard + 409 uniqueness check + Audit log)
 router.post('/menu/vote', async (req, res) => {
   try {
     const { dish_option, item_name, menu_id } = req.body;
     let customerId = 'C001';
-    if (req.user && req.user.profile) customerId = req.user.profile.customer_id;
+    if (req.user && req.user.profile && req.user.profile.customer_id) {
+      customerId = req.user.profile.customer_id;
+    }
+
+    let vendorId = req.body.vendor_id;
+    const selectedDish = (dish_option || item_name || 'Paneer Butter Masala').trim();
+    const today = new Date().toISOString().slice(0, 10);
+
+    // If vendor_id not explicitly supplied in body, find customer's active vendor
+    if (!vendorId) {
+      const activeSub = await db.query(
+        'SELECT vendor_id FROM subscriptions WHERE customer_id = ? AND status = "active" LIMIT 1',
+        [customerId]
+      );
+      vendorId = activeSub.length > 0 ? activeSub[0].vendor_id : 'V001';
+    }
+
+    // Fix 6 Guard 1: Verify customer is an ACTIVE subscriber of that vendor (403 if not)
+    const subCheck = await db.query(
+      'SELECT sub_id FROM subscriptions WHERE customer_id = ? AND vendor_id = ? AND status = "active" LIMIT 1',
+      [customerId, vendorId]
+    );
+
+    if (subCheck.length === 0) {
+      return res.status(403).json({
+        error: 'Forbidden: Only active subscribers of this kitchen can cast a menu vote.'
+      });
+    }
+
+    // Find or default menu_id
+    let targetMenuId = menu_id;
+    if (!targetMenuId) {
+      const menuRows = await db.query(
+        'SELECT menu_id FROM daily_menus WHERE vendor_id = ? AND date = ? LIMIT 1',
+        [vendorId, today]
+      );
+      targetMenuId = menuRows.length > 0 ? menuRows[0].menu_id : 'M001';
+    }
+
+    // Fix 6 Guard 2: Check duplicate vote constraint for (customer_id, menu_id, vote_date) -> 409
+    const existingVote = await db.query(
+      'SELECT vote_id FROM menu_votes WHERE customer_id = ? AND (menu_id = ? OR vendor_id = ?) AND vote_date = ? LIMIT 1',
+      [customerId, targetMenuId, vendorId, today]
+    );
+
+    if (existingVote.length > 0) {
+      return res.status(409).json({
+        error: 'You have already voted for today\'s community menu selection. Duplicate votes are prohibited.'
+      });
+    }
 
     const countRes = await db.query('SELECT COUNT(*) as cnt FROM menu_votes');
     const voteId = 'VOTE' + String(countRes[0].cnt + 1).padStart(3, '0');
-    const today = new Date().toISOString().slice(0, 10);
 
     await db.query(
-      'INSERT INTO menu_votes (vote_id, customer_id, menu_id, item_name, vote_date) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE item_name = VALUES(item_name)',
-      [voteId, customerId, menu_id || 'M001', dish_option || item_name || 'Paneer Butter Masala', today]
+      'INSERT INTO menu_votes (vote_id, customer_id, vendor_id, menu_id, item_name, vote_date) VALUES (?, ?, ?, ?, ?, ?)',
+      [voteId, customerId, vendorId, targetMenuId, selectedDish, today]
     );
 
-    res.json({ success: true, message: 'Vote recorded for ' + (dish_option || item_name || 'Dish') });
+    // Audit log
+    await logAuditAction(
+      req,
+      'CUSTOMER_CAST_MENU_VOTE',
+      'menu_votes',
+      voteId,
+      `Customer cast vote for dish "${selectedDish}" (Vendor: ${vendorId})`
+    );
+
+    res.json({
+      success: true,
+      message: 'Vote recorded for ' + selectedDish,
+      dish_name: selectedDish,
+      vote_id: voteId
+    });
   } catch (err) {
     console.error('Menu vote error:', err);
-    res.status(500).json({ error: 'Failed to record vote' });
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'You have already voted for today\'s menu selection.' });
+    }
+    res.status(500).json({ error: 'Failed to record vote: ' + err.message });
   }
 });
 
-// Group Subscription routes (Add-on 3: Flat Group Discount - Minimum 3 Members Required)
+// Group Subscription routes (Add-on 3: Centralized Discount Tiers)
 router.get('/groups', async (req, res) => {
   try {
     const groups = await db.query('SELECT * FROM group_subscriptions ORDER BY member_count DESC LIMIT 10');
@@ -155,25 +276,40 @@ router.get('/groups', async (req, res) => {
   }
 });
 
+// POST /api/groups/create
 router.post('/groups/create', async (req, res) => {
   try {
     const { group_name, flat_address, residence_name, locality, vendor_id } = req.body;
     const resName = (group_name || residence_name || 'Flat Group').trim();
     const loc = locality || 'Campus Area';
+    const targetVendor = vendor_id || 'V001';
+
+    let customerId = null;
+    if (req.user && req.user.profile && req.user.profile.customer_id) {
+      customerId = req.user.profile.customer_id;
+    }
 
     const countRes = await db.query('SELECT COUNT(*) as cnt FROM group_subscriptions');
     const groupId = 'GRP' + String(countRes[0].cnt + 1).padStart(3, '0');
     const today = new Date().toISOString().slice(0, 10);
 
-    // Initial group creation starts with 1 member: discount NOT unlocked until 3 members join
+    // Initial group creation starts with 1 member: discount = 0%
     await db.query(
       'INSERT INTO group_subscriptions (group_id, residence_name, locality, vendor_id, member_count, discount_applied, discount_percent, formed_date) VALUES (?, ?, ?, ?, 1, 0, 0.00, ?) ON DUPLICATE KEY UPDATE member_count = member_count + 1',
-      [groupId, resName, loc, vendor_id || 'V001', today]
+      [groupId, resName, loc, targetVendor, today]
     );
+
+    // Link customer's active/pending subscription to group_id
+    if (customerId) {
+      await db.query(
+        'UPDATE subscriptions SET group_id = ? WHERE customer_id = ? AND status IN ("active", "pending")',
+        [groupId, customerId]
+      );
+    }
 
     return res.status(201).json({
       success: true,
-      message: 'Group created! Invite 2 more roommates (Min 3 members) to unlock the 10% discount.',
+      message: 'Group created! Invite 2 more roommates (Min 3 members) to unlock the 5% tier (10% for 5+).',
       group_id: groupId,
       group_code: groupId,
       group_name: resName,
@@ -190,11 +326,17 @@ router.post('/groups/create', async (req, res) => {
   }
 });
 
+// POST /api/groups/join (Fix 1: NEVER touches locked_price + Fix 2: Centralized Tiers: 3-4 -> 5%, 5+ -> 10% + Fix 6: Audit log)
 router.post('/groups/join', async (req, res) => {
   try {
     const { group_code, group_id } = req.body;
     const targetId = (group_code || group_id || '').trim().toUpperCase();
     if (!targetId) return res.status(422).json({ error: 'Please enter a group code (e.g. GRP001 or FLAT4B)' });
+
+    let customerId = null;
+    if (req.user && req.user.profile && req.user.profile.customer_id) {
+      customerId = req.user.profile.customer_id;
+    }
 
     const rows = await db.query('SELECT * FROM group_subscriptions WHERE UPPER(group_id) = ? OR UPPER(residence_name) = ?', [targetId, targetId]);
     
@@ -203,19 +345,20 @@ router.post('/groups/join', async (req, res) => {
     let newCount = 1;
 
     if (!group) {
-      // Auto-create group on-the-fly starting with 1 member (Needs 3 for discount)
-      const groupId = targetId.startsWith('GRP') ? targetId : targetId.slice(0, 16);
+      // Auto-create group on-the-fly starting with 1 member
+      const genGroupId = targetId.startsWith('GRP') ? targetId : targetId.slice(0, 16);
       await db.query(
         'INSERT INTO group_subscriptions (group_id, residence_name, locality, vendor_id, member_count, discount_applied, discount_percent, formed_date) VALUES (?, ?, "Campus Area", "V001", 1, 0, 0.00, ?) ON DUPLICATE KEY UPDATE member_count = member_count + 1',
-        [groupId, targetId, today]
+        [genGroupId, targetId, today]
       );
-      group = { group_id: groupId, residence_name: targetId, member_count: 1 };
+      group = { group_id: genGroupId, residence_name: targetId, member_count: 1 };
       newCount = 1;
     } else {
       newCount = (group.member_count || 1) + 1;
-      // Discount rule: >= 5 members: 15%, >= 3 members: 10%, < 3 members: 0%
-      const discountPercent = newCount >= 5 ? 15.00 : (newCount >= 3 ? 10.00 : 0.00);
-      const isDiscountApplied = newCount >= 3 ? 1 : 0;
+      
+      // Fix 2: Centralized discount tiers (3-4 members -> 5%, 5+ members -> 10%)
+      const discountPercent = getGroupDiscountPercent(newCount);
+      const isDiscountApplied = discountPercent > 0 ? 1 : 0;
 
       await db.query(
         'UPDATE group_subscriptions SET member_count = ?, discount_percent = ?, discount_applied = ? WHERE group_id = ?',
@@ -224,28 +367,58 @@ router.post('/groups/join', async (req, res) => {
       group.member_count = newCount;
     }
 
-    const discountUnlocked = newCount >= 3;
-    const discountPct = newCount >= 5 ? 15 : (newCount >= 3 ? 10 : 0);
+    const effectiveGroupId = group.group_id;
+
+    // Link current student's subscription to this group_id
+    if (customerId) {
+      await db.query(
+        'UPDATE subscriptions SET group_id = ? WHERE customer_id = ? AND status IN ("active", "pending")',
+        [effectiveGroupId, customerId]
+      );
+    }
+
+    // Fix 2: Calculate centralized discount percentage
+    const discountPercent = getGroupDiscountPercent(newCount);
+    const discountUnlocked = discountPercent > 0;
     const needed = Math.max(0, 3 - newCount);
+
+    // Fix 1: Apply discount ONLY to payments.amount_due, NEVER to subscriptions.locked_price!
+    if (discountUnlocked) {
+      await db.query(`
+        UPDATE payments pay
+        JOIN subscriptions sub ON pay.subscription_id = sub.sub_id
+        SET pay.amount_due = ROUND(sub.locked_price * (1 - (? / 100)), 2)
+        WHERE sub.group_id = ? AND pay.status = 'pending_cash' AND pay.amount_due > 0
+      `, [discountPercent, effectiveGroupId]);
+
+      // Fix 6: Audit log group discount application
+      await logAuditAction(
+        req,
+        'GROUP_DISCOUNT_APPLIED',
+        'group_subscriptions',
+        effectiveGroupId,
+        `Group discount tier of ${discountPercent}% applied for group ${effectiveGroupId} (${newCount} members). Payments amount_due updated (locked_price preserved).`
+      );
+    }
 
     let message = '';
     if (discountUnlocked) {
-      message = `🎉 Group Threshold Reached (${newCount} members)! ${discountPct}% Flat Group Discount is now ACTIVE for all roommates!`;
+      message = `🎉 Group Tier Reached (${newCount} members)! ${discountPercent}% Flat Group Discount is now ACTIVE on pending bills for all roommates!`;
     } else {
-      message = `Joined "${group.residence_name}"! Current members: ${newCount}/3. Need ${needed} more roommate(s) to unlock the 10% discount.`;
+      message = `Joined "${group.residence_name}"! Current members: ${newCount}/3. Need ${needed} more roommate(s) to unlock the 5% tier.`;
     }
 
     return res.json({
       success: true,
       message,
-      group_id: group.group_id,
-      group_code: group.group_id,
+      group_id: effectiveGroupId,
+      group_code: effectiveGroupId,
       group_name: group.residence_name,
       member_count: newCount,
       min_members_needed: 3,
       members_remaining: needed,
       discount_unlocked: discountUnlocked,
-      discount_percentage: discountPct
+      discount_percentage: discountPercent
     });
   } catch (err) {
     console.error('Join group error:', err);

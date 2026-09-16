@@ -28,7 +28,9 @@ router.get('/', async (req, res) => {
 
     let sql = `
       SELECT d.*, d.date AS delivery_date, s.customer_id, s.vendor_id,
+             s.bread_preference AS sub_bread, s.spice_level AS sub_spice, s.special_instructions AS sub_instructions,
              c.name AS customer_name, c.pg_or_flat_name, c.room_no, c.locality AS customer_locality, c.phone AS customer_phone,
+             c.bread_preference AS cust_bread, c.spice_level AS cust_spice, c.special_instructions AS cust_instructions, c.dietary_pref,
              v.name AS vendor_name, v.locality AS vendor_locality, v.contact AS vendor_contact
       FROM deliveries d
       JOIN subscriptions s ON d.subscription_id = s.sub_id
@@ -48,29 +50,62 @@ router.get('/', async (req, res) => {
     }
 
     const rows = await db.query(sql, params);
-    const formatted = rows.map(d => ({
-      delivery_id: d.delivery_id,
-      subscription_id: d.subscription_id,
-      date: d.date,
-      delivery_date: d.date,
-      meal_type: d.meal_type === 'lunch' ? 'Lunch' : (d.meal_type === 'dinner' ? 'Dinner' : d.meal_type),
-      status: d.status,
-      notes: d.notes,
-      delivered_time: d.delivered_time,
-      menu_items: ['Dal Makhani', 'Paneer Butter Masala', '4 Rotis', 'Jeera Rice', 'Salad'],
-      customer_name: d.customer_name,
-      customer_phone: d.customer_phone,
-      customer_residence: d.pg_or_flat_name,
-      customer_room: d.room_no,
-      customer_locality: d.customer_locality,
-      customer_address: (d.pg_or_flat_name || 'Campus') + ', Room ' + (d.room_no || '101'),
-      vendor: {
-        vendor_id: d.vendor_id,
-        name: d.vendor_name,
-        locality: d.vendor_locality,
-        phone: d.vendor_contact
+
+    // Fetch published daily menus for these deliveries to attach dynamic menu items
+    const vendorDates = [...new Set(rows.map(r => `${r.vendor_id}_${r.date}`))];
+    const menuMap = {};
+
+    if (rows.length > 0) {
+      try {
+        const menuRows = await db.query('SELECT vendor_id, date, items FROM daily_menus WHERE published = 1');
+        for (const m of menuRows) {
+          let parsed = m.items;
+          if (typeof parsed === 'string') {
+            try { parsed = JSON.parse(parsed); } catch (e) { parsed = []; }
+          }
+          if (Array.isArray(parsed)) {
+            const itemNames = parsed.map(i => (typeof i === 'string' ? i : (i.name || i.item_name || 'Daily Special')));
+            menuMap[`${m.vendor_id}_${m.date}`] = itemNames;
+          }
+        }
+      } catch (menuErr) {
+        console.warn('[Deliveries Menu Fetch Notice]', menuErr.message);
       }
-    }));
+    }
+
+    const formatted = rows.map(d => {
+      const dynamicMenu = menuMap[`${d.vendor_id}_${d.date}`] || ['Fresh Homestyle Dal', 'Seasonal Sabzi', '4 Phulkas', 'Steamed Rice', 'Salad'];
+      const breadPref = d.sub_bread || d.cust_bread || 'standard';
+      const spicePref = d.sub_spice || d.cust_spice || 'medium';
+      const instructions = (d.sub_instructions || d.cust_instructions || '').slice(0, 200).trim();
+
+      return {
+        delivery_id: d.delivery_id,
+        subscription_id: d.subscription_id,
+        date: d.date,
+        delivery_date: d.date,
+        meal_type: d.meal_type === 'lunch' ? 'Lunch' : (d.meal_type === 'dinner' ? 'Dinner' : d.meal_type),
+        status: d.status,
+        notes: d.notes,
+        delivered_time: d.delivered_time,
+        menu_items: dynamicMenu,
+        bread_preference: breadPref,
+        spice_level: spicePref,
+        special_instructions: instructions,
+        customer_name: d.customer_name,
+        customer_phone: d.customer_phone,
+        customer_residence: d.pg_or_flat_name,
+        customer_room: d.room_no,
+        customer_locality: d.customer_locality,
+        customer_address: (d.pg_or_flat_name || 'Campus') + ', Room ' + (d.room_no || '101'),
+        vendor: {
+          vendor_id: d.vendor_id,
+          name: d.vendor_name,
+          locality: d.vendor_locality,
+          phone: d.vendor_contact
+        }
+      };
+    });
 
     return res.json(formatted);
   } catch (err) {
