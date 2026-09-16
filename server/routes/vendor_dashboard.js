@@ -340,14 +340,20 @@ router.patch('/subscription/:id/approve', requireAuth, requireRole('vendor'), as
     }
 
     // Generate initial delivery schedule entry upon activation
-    const delCount = await db.query('SELECT COUNT(*) as cnt FROM deliveries');
-    const cntVal = (delCount && delCount[0] && delCount[0].cnt !== undefined) ? delCount[0].cnt : 1;
-    const delId = 'D' + String(cntVal + 1).padStart(3, '0');
-    const today = new Date().toISOString().slice(0, 10);
-    await db.query(
-      'INSERT INTO deliveries (delivery_id, subscription_id, agent_id, date, meal_type, status, notes) VALUES (?, ?, "A001", ?, "lunch", "prepared", "Daily fresh meal delivery") ON DUPLICATE KEY UPDATE status = VALUES(status)',
-      [delId, id, today]
-    );
+    try {
+      const delCount = await db.query('SELECT COUNT(*) as cnt FROM deliveries');
+      const cntVal = (delCount && delCount[0] && delCount[0].cnt !== undefined) ? delCount[0].cnt : 1;
+      const delId = 'D' + String(cntVal + 1).padStart(3, '0');
+      const today = new Date().toISOString().slice(0, 10);
+      const agents = await db.query('SELECT agent_id FROM delivery_agents LIMIT 1');
+      const agentId = (agents && agents.length > 0) ? agents[0].agent_id : null;
+      await db.query(
+        'INSERT INTO deliveries (delivery_id, subscription_id, agent_id, date, meal_type, status, notes) VALUES (?, ?, ?, ?, "lunch", "prepared", "Daily fresh meal delivery") ON DUPLICATE KEY UPDATE status = VALUES(status)',
+        [delId, id, agentId, today]
+      );
+    } catch (delErr) {
+      console.warn('Initial delivery generation notice:', delErr.message);
+    }
 
     await logAuditAction(req, 'VENDOR_APPROVE_SUBSCRIPTION', 'subscriptions', id, 'Vendor approved subscription ' + id);
 

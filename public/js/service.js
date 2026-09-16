@@ -296,6 +296,28 @@ async function rejectComplaint(complaint_id, reason) {
   });
 }
 
+async function getAdminSubscriptions() {
+  return apiFetch('/admin/subscriptions');
+}
+
+async function adminApproveSubscription(sub_id) {
+  return apiFetch('/admin/subscription/' + sub_id + '/approve', {
+    method: 'PATCH'
+  });
+}
+
+async function adminRejectSubscription(sub_id) {
+  return apiFetch('/admin/subscription/' + sub_id + '/reject', {
+    method: 'PATCH'
+  });
+}
+
+async function adminPurgeDummyData() {
+  return apiFetch('/admin/purge-dummy-data', {
+    method: 'POST'
+  });
+}
+
 async function getAdminAuditLogs() {
   return apiFetch('/admin/audit-logs');
 }

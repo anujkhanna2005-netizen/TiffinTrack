@@ -26,12 +26,13 @@ const navConfig = {
     { label: 'Complaints',      page: 'vendorComplaints' }
   ],
   admin: [
-    { label: 'Dashboard',   page: 'adminDashboard' },
-    { label: 'Vendors',     page: 'adminVendors' },
-    { label: 'Customers',   page: 'adminCustomers' },
-    { label: 'Complaints',  page: 'adminComplaints' },
-    { label: 'Ratings',     page: 'adminRatings' },
-    { label: 'DBMS Demo',   page: 'dbmsDemo' }
+    { label: 'Dashboard',     page: 'adminDashboard' },
+    { label: 'Subscriptions', page: 'adminSubscriptions' },
+    { label: 'Vendors',       page: 'adminVendors' },
+    { label: 'Customers',     page: 'adminCustomers' },
+    { label: 'Complaints',    page: 'adminComplaints' },
+    { label: 'Ratings',       page: 'adminRatings' },
+    { label: 'DBMS Demo',     page: 'dbmsDemo' }
   ]
 };
 
@@ -45,27 +46,28 @@ const roleLabels = {
 
 // Page registry
 const pages = {
-  roleSwitcher:      renderRoleSwitcher,
-  studentDashboard:  renderStudentDashboard,
-  findTiffin:        renderFindTiffin,
-  vendorDetails:     renderVendorDetails,
-  mySubscription:    renderMySubscription,
-  todayMeal:         renderTodayMeal,
-  studentRatings:    renderStudentRatings,
-  studentComplaints: renderStudentComplaints,
-  vendorDashboard:   renderVendorDashboard,
-  vendorMealPlans:   renderVendorMealPlans,
-  vendorMenu:        renderVendorMenu,
-  vendorSubscribers: renderVendorSubscribers,
-  vendorDeliveries:  renderVendorDeliveries,
-  vendorRatings:     renderVendorRatings,
-  vendorComplaints:  renderVendorComplaints,
-  adminDashboard:    renderAdminDashboard,
-  adminVendors:      renderAdminVendors,
-  adminCustomers:    renderAdminCustomers,
-  adminComplaints:   renderAdminComplaints,
-  adminRatings:      renderAdminRatings,
-  dbmsDemo:          renderDbmsDemo
+  roleSwitcher:       renderRoleSwitcher,
+  studentDashboard:   renderStudentDashboard,
+  findTiffin:         renderFindTiffin,
+  vendorDetails:      renderVendorDetails,
+  mySubscription:     renderMySubscription,
+  todayMeal:          renderTodayMeal,
+  studentRatings:     renderStudentRatings,
+  studentComplaints:  renderStudentComplaints,
+  vendorDashboard:    renderVendorDashboard,
+  vendorMealPlans:    renderVendorMealPlans,
+  vendorMenu:         renderVendorMenu,
+  vendorSubscribers:  renderVendorSubscribers,
+  vendorDeliveries:   renderVendorDeliveries,
+  vendorRatings:      renderVendorRatings,
+  vendorComplaints:   renderVendorComplaints,
+  adminDashboard:     renderAdminDashboard,
+  adminSubscriptions: renderAdminSubscriptions,
+  adminVendors:       renderAdminVendors,
+  adminCustomers:     renderAdminCustomers,
+  adminComplaints:    renderAdminComplaints,
+  adminRatings:       renderAdminRatings,
+  dbmsDemo:           renderDbmsDemo
 };
 
 function navigateTo(pageName, params) {

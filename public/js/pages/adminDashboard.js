@@ -9,10 +9,22 @@ async function renderAdminDashboard() {
     const data = await getAdminData();
     const { stats, vendor_performance, customer_activity, complaint_overview } = data;
 
+    const pendingList = data.pending_subscriptions || [];
+
     showContent(`
-      <div class="page-header">
-        <h1>🔧 Admin Dashboard</h1>
-        <p>TiffinTrack Administrator — Platform Overview</p>
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div>
+          <h1>🔧 Admin Dashboard</h1>
+          <p>TiffinTrack Administrator — Platform Overview & Approvals</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="navigateTo('adminSubscriptions')">
+            📋 Subscriptions Hub (${pendingList.length} Pending)
+          </button>
+          <button class="btn btn-outline btn-sm" style="color:var(--color-danger);border-color:var(--color-danger)" onclick="handleAdminPurgeDummy()">
+            🧹 Purge Dummy Data
+          </button>
+        </div>
       </div>
 
       <!-- Platform Stats -->
@@ -24,6 +36,12 @@ async function renderAdminDashboard() {
         <div class="stat-card">
           <div class="stat-label">Total Vendors</div>
           <div class="stat-value">${stats.total_vendors}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending Requests</div>
+          <div class="stat-value" style="color:${pendingList.length > 0 ? '#ea580c' : 'var(--color-success)'}">
+            ${pendingList.length}
+          </div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Active Subscriptions</div>
@@ -40,14 +58,8 @@ async function renderAdminDashboard() {
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Pending Approvals</div>
-          <div class="stat-value" style="color:${stats.pending_approvals > 0 ? '#ea580c' : 'var(--color-text)'}">
-            ${stats.pending_approvals || 0}
-          </div>
-        </div>
-        <div class="stat-card">
           <div class="stat-label">Platform Avg Rating</div>
-          <div class="stat-value">${stats.platform_avg_rating ? stats.platform_avg_rating.toFixed(1) : '—'}</div>
+          <div class="stat-value">⭐ ${stats.avg_rating ? stats.avg_rating.toFixed(1) : '—'}</div>
         </div>
       </div>
 
@@ -94,33 +106,40 @@ async function renderAdminDashboard() {
         </div>
       ` : ''}
 
-      <!-- Pending Subscription Requests Platform-Wide Queue -->
-      ${data.pending_subscriptions && data.pending_subscriptions.length > 0 ? `
-        <div class="card" style="margin-bottom:20px;border-left:4px solid var(--color-primary);background:#f0fdf4">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <div class="card-title" style="margin-bottom:0;color:#166534">
-              <span class="icon">📋</span> Platform-Wide Subscription Requests (${data.pending_subscriptions.length})
-            </div>
-            <span class="badge" style="background:#bbf7d0;color:#166534;font-weight:700">Admin Tie-up Authority</span>
+      <!-- Pending Subscription Requests Platform-Wide Queue (Always Visible) -->
+      <div class="card" style="margin-bottom:20px;border-left:4px solid var(--color-primary);background:#fcfdfd">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title" style="margin-bottom:0;color:var(--color-primary)">
+            <span class="icon">📋</span> Pending Subscription Requests (${pendingList.length})
           </div>
+          <span class="badge" style="background:#dbeafe;color:#1e40af;font-weight:700">Admin Tie-up Authority</span>
+        </div>
+
+        ${pendingList.length === 0 ? `
+          <div style="text-align:center;padding:24px;color:var(--color-text-muted)">
+            <span style="font-size:1.8rem">✨</span>
+            <div style="font-weight:600;margin-top:6px">No pending subscription requests right now.</div>
+            <div style="font-size:0.8rem;margin-top:2px">When students request a Cash-on-Delivery plan, you can approve them here or in the Subscriptions tab.</div>
+          </div>
+        ` : `
           <div class="table-wrapper">
             <table>
               <thead>
                 <tr><th>Sub ID</th><th>Student</th><th>Residence & Room</th><th>Vendor</th><th>Plan</th><th>Amount Due (COD)</th><th>Requested</th><th>Admin Decision</th></tr>
               </thead>
               <tbody>
-                ${data.pending_subscriptions.map(s => `
+                ${pendingList.map(s => `
                   <tr id="sub-req-row-${s.sub_id}">
                     <td style="font-size:0.78rem;color:var(--color-text-muted)"><code>${s.sub_id}</code></td>
-                    <td><strong>${s.customer_name}</strong><br><small style="color:var(--color-text-muted)">${s.customer_phone || ''}</small></td>
-                    <td>${s.pg_or_flat_name ? `${s.pg_or_flat_name}, Rm ${s.room_no || '—'}` : 'Campus'}</td>
-                    <td><strong>${s.vendor_name}</strong></td>
-                    <td><span class="badge badge-info">${s.plan_name}</span></td>
+                    <td><strong>${escapeHtml(s.customer_name)}</strong><br><small style="color:var(--color-text-muted)">${escapeHtml(s.customer_phone || '')}</small></td>
+                    <td>${s.pg_or_flat_name ? `${escapeHtml(s.pg_or_flat_name)}, Rm ${escapeHtml(s.room_no || '—')}` : 'Campus'}</td>
+                    <td><strong>${escapeHtml(s.vendor_name)}</strong></td>
+                    <td><span class="badge badge-info">${escapeHtml(s.plan_name)}</span></td>
                     <td><strong>${formatINR(s.amount_due)}</strong></td>
                     <td style="font-size:0.8rem;color:var(--color-text-muted)">${formatDate(s.start_date || s.created_at)}</td>
                     <td>
                       <div style="display:flex;gap:6px">
-                        <button class="btn btn-primary btn-sm" style="background:var(--color-success);border-color:var(--color-success);padding:4px 10px;font-size:0.78rem"
+                        <button class="btn btn-primary btn-sm" style="background:var(--color-success);border-color:var(--color-success);padding:4px 10px;font-size:0.78rem;font-weight:600"
                           onclick="handleAdminApproveSub('${s.sub_id}', '${escapeHtml(s.customer_name)}')">
                           ✓ Approve
                         </button>
@@ -135,8 +154,8 @@ async function renderAdminDashboard() {
               </tbody>
             </table>
           </div>
-        </div>
-      ` : ''}
+        `}
+      </div>
 
       <!-- Vendor Performance Table -->
       <div class="card" style="margin-bottom:20px">

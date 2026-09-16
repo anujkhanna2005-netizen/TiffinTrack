@@ -75,9 +75,23 @@ async function ensureSchema() {
           try { await p.query("ALTER TABLE payments ADD COLUMN collected_at DATETIME NULL DEFAULT NULL"); } catch (e) {}
         }
 
-        // Modify subscriptions status to ensure pending/rejected allowed
+        // Alter deliveries table columns to prevent truncation or FK errors
         try {
-          await p.query("ALTER TABLE subscriptions MODIFY COLUMN status ENUM('pending', 'active', 'cancelled', 'expired', 'paused', 'rejected') NOT NULL DEFAULT 'pending'");
+          await p.query("ALTER TABLE deliveries MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'prepared'");
+        } catch (e) {}
+        try {
+          await p.query("ALTER TABLE deliveries MODIFY COLUMN meal_type VARCHAR(50) NOT NULL DEFAULT 'lunch'");
+        } catch (e) {}
+        try {
+          await p.query("ALTER TABLE deliveries MODIFY COLUMN agent_id VARCHAR(50) NULL DEFAULT NULL");
+        } catch (e) {}
+
+        // Modify subscriptions status to VARCHAR(50) so all status strings are allowed
+        try {
+          await p.query("ALTER TABLE subscriptions MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'pending'");
+        } catch (e) {}
+        try {
+          await p.query("ALTER TABLE subscriptions MODIFY COLUMN mode VARCHAR(50) NOT NULL DEFAULT 'cash_on_delivery'");
         } catch (e) {}
 
         // Modify payments status and mode

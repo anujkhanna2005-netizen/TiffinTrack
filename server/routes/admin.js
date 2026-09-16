@@ -46,13 +46,16 @@ router.get('/', async (req, res) => {
         COALESCE(v.name, '—') AS vendor_name, 
         COALESCE(p.name, '—') AS plan_name, 
         COALESCE(s.status, 'none') AS sub_status,
+        s.sub_id,
         u.status AS user_status
       FROM customers c
       JOIN users u ON c.user_id = u.user_id
-      LEFT JOIN subscriptions s ON c.customer_id = s.customer_id AND s.status = 'active'
+      LEFT JOIN subscriptions s ON c.customer_id = s.customer_id AND (s.status = 'active' OR s.status = 'pending')
       LEFT JOIN vendors v ON s.vendor_id = v.vendor_id
       LEFT JOIN meal_plans p ON s.plan_id = p.plan_id
-      ORDER BY c.customer_id ASC
+      ORDER BY 
+        CASE WHEN s.status = 'pending' THEN 0 WHEN s.status = 'active' THEN 1 ELSE 2 END,
+        c.customer_id ASC
     `);
 
     // Complaint Overview
@@ -365,14 +368,20 @@ router.patch('/subscription/:id/approve', requireAuth, requireRole('admin'), asy
     }
 
     // Generate initial delivery schedule entry upon activation
-    const delCount = await db.query('SELECT COUNT(*) as cnt FROM deliveries');
-    const cntVal = (delCount && delCount[0] && delCount[0].cnt !== undefined) ? delCount[0].cnt : 1;
-    const delId = 'D' + String(cntVal + 1).padStart(3, '0');
-    const today = new Date().toISOString().slice(0, 10);
-    await db.query(
-      'INSERT INTO deliveries (delivery_id, subscription_id, agent_id, date, meal_type, status, notes) VALUES (?, ?, "A001", ?, "lunch", "prepared", "Daily fresh meal delivery") ON DUPLICATE KEY UPDATE status = VALUES(status)',
-      [delId, id, today]
-    );
+    try {
+      const delCount = await db.query('SELECT COUNT(*) as cnt FROM deliveries');
+      const cntVal = (delCount && delCount[0] && delCount[0].cnt !== undefined) ? delCount[0].cnt : 1;
+      const delId = 'D' + String(cntVal + 1).padStart(3, '0');
+      const today = new Date().toISOString().slice(0, 10);
+      const agents = await db.query('SELECT agent_id FROM delivery_agents LIMIT 1');
+      const agentId = (agents && agents.length > 0) ? agents[0].agent_id : null;
+      await db.query(
+        'INSERT INTO deliveries (delivery_id, subscription_id, agent_id, date, meal_type, status, notes) VALUES (?, ?, ?, ?, "lunch", "prepared", "Daily fresh meal delivery") ON DUPLICATE KEY UPDATE status = VALUES(status)',
+        [delId, id, agentId, today]
+      );
+    } catch (delErr) {
+      console.warn('Initial delivery generation notice:', delErr.message);
+    }
 
     await logAuditAction(req, 'ADMIN_APPROVE_SUBSCRIPTION', 'subscriptions', id, 'Admin approved subscription ' + id);
 
@@ -404,6 +413,113 @@ router.patch('/subscription/:id/reject', requireAuth, requireRole('admin'), asyn
   } catch (err) {
     console.error('Admin reject subscription error:', err);
     return res.status(500).json({ error: 'Failed to reject subscription: ' + err.message });
+  }
+});
+
+// GET /api/admin/subscriptions (Admin view all subscriptions across platform)
+router.get('/subscriptions', async (req, res) => {
+  try {
+    const subs = await db.query(`
+      SELECT 
+        s.sub_id,
+        s.customer_id,
+        s.plan_id,
+        s.vendor_id,
+        s.start_date,
+        s.end_date,
+        s.status,
+        s.approved_by,
+        s.approved_at,
+        s.mode,
+        COALESCE(s.locked_price, p.price) AS price,
+        COALESCE(s.locked_meals_included, p.meals_included) AS meals_included,
+        c.name AS customer_name,
+        c.phone AS customer_phone,
+        c.pg_or_flat_name,
+        c.room_no,
+        c.locality AS customer_locality,
+        v.name AS vendor_name,
+        p.name AS plan_name,
+        COALESCE(pay.amount_due, s.locked_price, p.price) AS amount_due,
+        COALESCE(pay.status, 'pending_cash') AS payment_status
+      FROM subscriptions s
+      JOIN customers c ON s.customer_id = c.customer_id
+      JOIN vendors v ON s.vendor_id = v.vendor_id
+      JOIN meal_plans p ON s.plan_id = p.plan_id
+      LEFT JOIN payments pay ON s.sub_id = pay.subscription_id
+      ORDER BY 
+        CASE WHEN s.status = 'pending' THEN 0 WHEN s.status = 'active' THEN 1 ELSE 2 END,
+        s.created_at DESC
+    `);
+    return res.json(subs);
+  } catch (err) {
+    console.error('Fetch admin subscriptions error:', err);
+    return res.status(500).json({ error: 'Failed to fetch subscriptions' });
+  }
+});
+
+// POST /api/admin/purge-dummy-data (Admin purges all test/dummy data)
+router.post('/purge-dummy-data', requireAuth, requireRole('admin'), async (req, res) => {
+  try {
+    await db.transaction(async (conn) => {
+      // 1. Delete dummy complaints
+      await conn.query(`
+        DELETE FROM complaints 
+        WHERE customer_id IN (SELECT customer_id FROM customers WHERE email LIKE '%@tiffintrack.demo' OR email LIKE '%dummy%')
+      `);
+      
+      // 2. Delete dummy deliveries, payments, skip requests, and subscriptions for dummy customers
+      await conn.query(`
+        DELETE FROM deliveries 
+        WHERE subscription_id IN (SELECT sub_id FROM subscriptions WHERE customer_id IN (SELECT customer_id FROM customers WHERE email LIKE '%@tiffintrack.demo'))
+      `);
+      await conn.query(`
+        DELETE FROM payments 
+        WHERE subscription_id IN (SELECT sub_id FROM subscriptions WHERE customer_id IN (SELECT customer_id FROM customers WHERE email LIKE '%@tiffintrack.demo'))
+      `);
+      await conn.query(`
+        DELETE FROM skip_requests 
+        WHERE customer_id IN (SELECT customer_id FROM customers WHERE email LIKE '%@tiffintrack.demo')
+      `);
+      await conn.query(`
+        DELETE FROM group_members 
+        WHERE customer_id IN (SELECT customer_id FROM customers WHERE email LIKE '%@tiffintrack.demo')
+      `);
+      await conn.query(`
+        DELETE FROM menu_votes 
+        WHERE customer_id IN (SELECT customer_id FROM customers WHERE email LIKE '%@tiffintrack.demo')
+      `);
+      await conn.query(`
+        DELETE FROM meal_customizations 
+        WHERE customer_id IN (SELECT customer_id FROM customers WHERE email LIKE '%@tiffintrack.demo')
+      `);
+      await conn.query(`
+        DELETE FROM subscriptions 
+        WHERE customer_id IN (SELECT customer_id FROM customers WHERE email LIKE '%@tiffintrack.demo')
+      `);
+      await conn.query(`
+        DELETE FROM ratings 
+        WHERE customer_id IN (SELECT customer_id FROM customers WHERE email LIKE '%@tiffintrack.demo')
+      `);
+
+      // 3. Delete dummy delivery agents
+      try {
+        await conn.query(`DELETE FROM delivery_agents WHERE email LIKE '%@tiffintrack.demo'`);
+      } catch (e) {}
+
+      // 4. Delete dummy customer profiles & user logins (except admin and real users)
+      await conn.query(`DELETE FROM customers WHERE email LIKE '%@tiffintrack.demo'`);
+      await conn.query(`DELETE FROM users WHERE role = 'delivery_agent' OR (role = 'customer' AND email LIKE '%@tiffintrack.demo')`);
+      
+      // Also delete any orphan complaints
+      await conn.query(`DELETE FROM complaints WHERE customer_id NOT IN (SELECT customer_id FROM customers)`);
+    });
+
+    await logAuditAction(req, 'PURGE_DUMMY_DATA', 'system', 'all', 'Admin purged dummy test users and dummy complaints');
+    return res.json({ success: true, message: 'Dummy test accounts, sample complaints, and dummy data successfully purged!' });
+  } catch (err) {
+    console.error('Purge dummy data error:', err);
+    return res.status(500).json({ error: 'Failed to purge dummy data: ' + err.message });
   }
 });
 
