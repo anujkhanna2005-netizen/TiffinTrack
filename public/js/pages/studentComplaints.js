@@ -12,70 +12,102 @@ async function renderStudentComplaints() {
     ]);
 
     showContent(`
-      <div class="page-header">
-        <h1>📢 Complaints</h1>
-        <p>Submit and track your complaints.</p>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <!-- Submit Form -->
-        <div class="card">
-          <div class="card-title"><span class="icon">✍️</span> Submit a Complaint</div>
-          <div id="complaint-alert"></div>
-
-          ${!subscription ? '<div class="alert alert-warning">You need an active subscription to submit a complaint.</div>' : ''}
-
-          <div class="form-group">
-            <label for="issue-type">Issue Type</label>
-            <select id="issue-type" class="form-control" ${!subscription ? 'disabled' : ''}>
-              <option value="">-- Select Issue --</option>
-              <option>Late Delivery</option>
-              <option>Missing Item</option>
-              <option>Poor Taste</option>
-              <option>Food Quality</option>
-              <option>Wrong Meal</option>
-              <option>Other</option>
-            </select>
+      <div class="max-w-6xl mx-auto py-2 flex flex-col gap-6">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-bold uppercase tracking-wider mb-2">
+              <span class="material-symbols-outlined text-[14px]">support_agent</span>
+              Student Support & Dispute Resolution
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-heading">
+              Complaints & Issue Reporting
+            </h1>
+            <p class="text-slate-500 text-sm mt-1 max-w-xl">
+              Report quality anomalies, late deliveries, or missing items. Every ticket is logged for administrative review and vendor audit.
+            </p>
           </div>
-
-          <div class="form-group">
-            <label for="complaint-desc">Description</label>
-            <textarea id="complaint-desc" class="form-control" placeholder="Describe your issue in detail..." rows="4" ${!subscription ? 'disabled' : ''}></textarea>
-          </div>
-
-          <button class="btn btn-primary" onclick="submitComplaintForm('${subscription ? subscription.vendor_id : ''}')"
-            id="btn-submit-complaint" ${!subscription ? 'disabled' : ''}>
-            Submit Complaint
-          </button>
         </div>
 
-        <!-- Complaint History -->
-        <div class="card">
-          <div class="card-title"><span class="icon">📋</span> My Complaints (${myComplaints.length})</div>
-          ${myComplaints.length > 0 ? `
-            <div style="display:flex;flex-direction:column;gap:12px">
-              ${myComplaints.map(c => `
-                <div style="border:1px solid var(--color-border);border-radius:var(--radius);padding:12px">
-                  <div style="display:flex;justify-content:space-between;align-items:center">
-                    <span class="complaint-id">${c.complaint_id}</span>
-                    <span class="badge badge-${c.status}">${c.status}</span>
-                  </div>
-                  <div style="font-size:0.875rem;font-weight:600;margin-top:6px">${c.issue_type}</div>
-                  <div style="font-size:0.82rem;color:var(--color-text-muted);margin-top:2px">${c.description}</div>
-                  <div style="font-size:0.78rem;color:var(--color-text-light);margin-top:6px">
-                    ${c.vendor ? c.vendor.name : ''} • ${formatDate(c.created_at)}
-                  </div>
-                </div>
-              `).join('')}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Submit Form (6 cols) -->
+          <div class="lg:col-span-6 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-heading font-bold text-slate-900 text-base flex items-center gap-2">
+                <span class="material-symbols-outlined text-purple-600 text-[20px]">edit_document</span>
+                File a Grievance Ticket
+              </h3>
+              <span class="text-xs text-slate-400">24-48h Resolution</span>
             </div>
-          ` : `
-            <div class="empty-state">
-              <div class="empty-icon">✅</div>
-              <h3>No Complaints</h3>
-              <p>You haven't submitted any complaints yet.</p>
+
+            <div id="complaint-alert"></div>
+
+            ${!subscription ? '<div class="alert alert-warning text-xs">You need an active subscription to submit a formal ticket.</div>' : ''}
+
+            <div>
+              <label for="issue-type" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Anomaly Category</label>
+              <select id="issue-type" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600" ${!subscription ? 'disabled' : ''}>
+                <option value="">-- Select Category --</option>
+                <option>Late Delivery</option>
+                <option>Missing Item</option>
+                <option>Poor Taste</option>
+                <option>Food Quality / Hygiene</option>
+                <option>Wrong Meal</option>
+                <option>Other</option>
+              </select>
             </div>
-          `}
+
+            <div>
+              <label for="complaint-desc" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Detailed Description</label>
+              <textarea id="complaint-desc" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600" placeholder="Specify details (e.g. food was cold on delivery, extra roti missing, delayed past 1:30 PM)..." rows="4" ${!subscription ? 'disabled' : ''}></textarea>
+            </div>
+
+            <button class="btn btn-primary btn-sm text-xs font-bold w-full" onclick="submitComplaintForm('${subscription ? subscription.vendor_id : ''}')"
+              id="btn-submit-complaint" ${!subscription ? 'disabled' : ''}>
+              Submit Complaint Ticket
+            </button>
+          </div>
+
+          <!-- Complaint History (6 cols) -->
+          <div class="lg:col-span-6 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-heading font-bold text-slate-900 text-base flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-700 text-[20px]">history</span>
+                Ticket History (${myComplaints.length})
+              </h3>
+              <span class="text-xs text-slate-400">Campus Oversight</span>
+            </div>
+
+            ${myComplaints.length > 0 ? `
+              <div class="space-y-3">
+                ${myComplaints.map(c => `
+                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                      <span class="font-mono font-bold text-slate-700">#${c.complaint_id}</span>
+                      <span class="badge badge-${c.status}">${c.status}</span>
+                    </div>
+                    <div class="text-sm font-bold text-slate-900">${c.issue_type}</div>
+                    <div class="text-xs text-slate-600 leading-relaxed">${c.description}</div>
+                    <div class="text-[11px] text-slate-400 pt-1 border-t border-slate-200/60 flex justify-between">
+                      <span>${c.vendor ? c.vendor.name : 'Vendor Kitchen'}</span>
+                      <span>${formatDate(c.created_at)}</span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : `
+              <div class="text-center py-8 text-slate-500 text-xs bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                <span class="material-symbols-outlined text-emerald-600 text-4xl mb-1">verified_user</span>
+                <div class="font-bold text-slate-700">No active grievances</div>
+                <div class="text-slate-400 mt-0.5">You have zero open complaint tickets.</div>
+              </div>
+            `}
+          </div>
+
         </div>
+
       </div>
     `);
   } catch (err) {

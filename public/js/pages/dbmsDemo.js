@@ -14,19 +14,23 @@ async function renderDbmsDemo() {
     ]);
 
     showContent(`
-      <div class="page-header">
-        <h1>🗄️ DBMS Academic Viva & Architecture Showcase</h1>
-        <p>MySQL 8.0 / TiDB Cloud Relational Engine — Live Queries, Views, Composite Indexes, Triggers & ACID Transactions</p>
+      <div class="page-header" style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span class="badge" style="background:#e8f5e9;color:#15803d;font-weight:700">Relational Architecture Engine</span>
+          <span style="font-size:0.8rem;color:var(--color-text-muted)">• MySQL 8.0 / TiDB Cloud</span>
+        </div>
+        <h1 style="font-size:1.6rem;font-weight:800;color:var(--color-text);margin:0">🗄️ DBMS Academic Viva & Architecture Showcase</h1>
+        <p style="color:var(--color-text-muted);margin-top:4px;font-size:0.88rem">Live Queries, Views, Composite Indexes, Triggers & ACID Transactions Inspector</p>
       </div>
 
       <!-- DBMS NAVIGATION TABS -->
-      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-        <button class="btn btn-secondary active" id="tab-btn-queries" onclick="switchDbmsTab('queries')">⚡ Relational Queries</button>
-        <button class="btn btn-secondary" id="tab-btn-views" onclick="switchDbmsTab('views')">👁️ Live Database Views</button>
-        <button class="btn btn-secondary" id="tab-btn-indexes" onclick="switchDbmsTab('indexes')">🗂️ B-Tree Composite Indexes</button>
-        <button class="btn btn-secondary" id="tab-btn-triggers" onclick="switchDbmsTab('triggers')">⚙️ Automated Triggers</button>
-        <button class="btn btn-secondary" id="tab-btn-transactions" onclick="switchDbmsTab('transactions')">🔒 ACID Transactions</button>
-        <button class="btn btn-secondary" id="tab-btn-viva" onclick="switchDbmsTab('viva')">🎓 Academic Viva Q&A (3NF/BCNF)</button>
+      <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;background:var(--color-surface);padding:8px;border-radius:var(--radius-lg);border:1px solid var(--color-border);box-shadow:var(--shadow-sm)">
+        <button class="btn btn-secondary active" id="tab-btn-queries" onclick="switchDbmsTab('queries')" style="font-weight:600;font-size:0.85rem">⚡ Relational Queries</button>
+        <button class="btn btn-secondary" id="tab-btn-views" onclick="switchDbmsTab('views')" style="font-weight:600;font-size:0.85rem">👁️ Live Database Views</button>
+        <button class="btn btn-secondary" id="tab-btn-indexes" onclick="switchDbmsTab('indexes')" style="font-weight:600;font-size:0.85rem">🗂️ B-Tree Composite Indexes</button>
+        <button class="btn btn-secondary" id="tab-btn-triggers" onclick="switchDbmsTab('triggers')" style="font-weight:600;font-size:0.85rem">⚙️ Automated Triggers</button>
+        <button class="btn btn-secondary" id="tab-btn-transactions" onclick="switchDbmsTab('transactions')" style="font-weight:600;font-size:0.85rem">🔒 ACID Transactions</button>
+        <button class="btn btn-secondary" id="tab-btn-viva" onclick="switchDbmsTab('viva')" style="font-weight:600;font-size:0.85rem">🎓 Academic Viva Q&A (3NF/BCNF)</button>
       </div>
 
       <!-- TAB 1: RELATIONAL QUERIES -->

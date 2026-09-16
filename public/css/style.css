@@ -1,33 +1,35 @@
 /* ============================================================
    TiffinTrack - Main Stylesheet
    public/css/style.css
-   Clean academic prototype UI — functional, readable, clear
+   Modern Food-Tech Green Design System
    ============================================================ */
 
-/* ---- CSS VARIABLES (Stitch Design System Tokens) ----------------------- */
+/* ---- CSS VARIABLES (TiffinTrack Design System Tokens) ------------------- */
 :root {
-  --color-primary:               #e07b39;   /* warm saffron-orange */
-  --color-primary-dark:          #9a4601;   /* stitch primary */
-  --color-primary-light:         #ffb68c;   /* primary-fixed-dim */
-  --color-primary-container:     #e07b39;
-  --color-on-primary-container:  #4f2100;
-  --color-secondary:             #186c37;   /* stitch secondary green */
-  --color-secondary-container:   #a0f2af;   /* stitch secondary container */
-  --color-on-secondary-container:#1e713b;
-  --color-danger:                #ba1a1a;   /* stitch error */
-  --color-warning:               #f59e0b;
-  --color-success:               #186c37;
-  --color-info:                  #2563eb;
+  --color-primary:               #15803d;   /* Primary Food-Tech Green */
+  --color-primary-dark:          #00652c;   /* Deep Leaf */
+  --color-primary-light:         #95f8a7;   /* Primary Fixed */
+  --color-primary-container:     #15803d;
+  --color-on-primary-container:  #d3ffd5;
+  --color-secondary:             #006c49;   /* Secondary Forest */
+  --color-secondary-container:   #6cf8bb;
+  --color-on-secondary-container:#00714d;
+  --color-danger:                #ba1a1a;   /* Error */
+  --color-danger-bg:             #ffdad6;
+  --color-warning:               #f59e0b;   /* Saffron Warm */
+  --color-warning-bg:            #fff2e7;
+  --color-success:               #15803d;
+  --color-info:                  #0284c7;
 
-  --color-bg:                    #fff8f4;   /* stitch warm surface */
-  --color-surface:               #ffffff;   /* surface-container-lowest */
-  --color-surface-low:           #fdf2e7;   /* surface-container-low */
-  --color-surface-high:          #f1e6dc;   /* surface-container-high */
-  --color-border:                #dcc1b4;   /* outline-variant */
-  --color-border-subtle:         #ece1d7;   /* surface-container-highest */
-  --color-text:                  #201b15;   /* on-surface */
-  --color-text-muted:            #554339;   /* on-surface-variant */
-  --color-text-light:            #897367;   /* outline */
+  --color-bg:                    #faf8ff;   /* Warm Surface Canvas */
+  --color-surface:               #ffffff;   /* Surface Container Lowest */
+  --color-surface-low:           #f2f3ff;   /* Surface Low */
+  --color-surface-high:          #e2e7ff;   /* Surface High */
+  --color-border:                #e2e8f0;   /* Border Subtle */
+  --color-border-subtle:         #dae2fd;   /* Surface Container Highest */
+  --color-text:                  #131b2e;   /* On-Surface */
+  --color-text-muted:            #475569;   /* On-Surface-Variant / Slate */
+  --color-text-light:            #6f7a6e;   /* Outline */
 
   --radius-sm:                   0.25rem;   /* 4px */
   --radius:                      0.5rem;    /* 8px */
@@ -36,10 +38,10 @@
   --radius-xl:                   1.5rem;    /* 24px */
   --radius-full:                 9999px;
 
-  --shadow-sm:                   0 1px 3px rgba(32, 27, 21, 0.05);
-  --shadow-md:                   0 4px 16px -2px rgba(32, 27, 21, 0.08);
-  --shadow-lg:                   0 12px 32px -4px rgba(32, 27, 21, 0.12);
-  --shadow-xl:                   0 20px 48px -8px rgba(32, 27, 21, 0.16);
+  --shadow-sm:                   0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow-md:                   0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --shadow-lg:                   0 10px 25px -3px rgba(21, 128, 61, 0.08), 0 4px 10px -4px rgba(15, 23, 42, 0.05);
+  --shadow-xl:                   0 20px 35px -5px rgba(15, 23, 42, 0.1), 0 8px 12px -6px rgba(15, 23, 42, 0.05);
 
   --font:                        'Inter', system-ui, -apple-system, sans-serif;
   --font-heading:                'Plus Jakarta Sans', var(--font);
@@ -67,49 +69,69 @@ a:hover { text-decoration: none; color: var(--color-primary-dark); }
 ul { list-style: none; }
 img { max-width: 100%; display: block; }
 
-/* ---- NAVBAR (Stitch App Header) -------------------------- */
+/* ---- NAVBAR (Design System Glassmorphic Header) ---------- */
 .navbar {
   display:          flex;
   align-items:      center;
   justify-content:  space-between;
-  background:       rgba(255, 255, 255, 0.94);
-  backdrop-filter:  blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background:       rgba(255, 255, 255, 0.88);
+  backdrop-filter:  blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom:    1px solid var(--color-border);
   padding:          0 28px;
-  height:           68px;
+  height:           70px;
   position:         sticky;
   top: 0;
   z-index:          100;
-  box-shadow:       var(--shadow-sm);
+  box-shadow:       0 1px 8px rgba(0,0,0,0.03);
   transform:        translateZ(0);
   will-change:      transform;
 }
 .navbar-brand {
   display:     flex;
   align-items: center;
-  gap:         10px;
+  gap:         12px;
   font-family: var(--font-heading);
-  font-weight: 800;
-  font-size:   1.35rem;
-  color:       var(--color-primary-dark);
   cursor:      pointer;
-  letter-spacing: -0.02em;
+}
+.brand-logo-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #15803d 0%, #00652c 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(21, 128, 61, 0.25);
+}
+.brand-emblem-icon {
+  font-size: 1.35rem;
+}
+.brand-name {
+  font-weight: 800;
+  font-size:   1.25rem;
+  letter-spacing: -0.025em;
+  color: #131b2e;
+  line-height: 1.1;
+}
+.brand-subtitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #15803d;
 }
 .brand-icon { font-size: 1.5rem; }
-.brand-name {
-  background: linear-gradient(135deg, #e07b39 0%, #9a4601 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+
 .nav-links {
   display:    flex;
-  gap:        6px;
+  gap:        4px;
   flex:       1;
   justify-content: center;
+  flex-wrap: wrap;
 }
 .nav-links a {
-  padding:       7px 16px;
+  padding:       7px 15px;
   border-radius: var(--radius-full);
   color:         var(--color-text-muted);
   font-size:     0.875rem;
@@ -117,25 +139,25 @@ img { max-width: 100%; display: block; }
   transition:    all var(--transition);
 }
 .nav-links a:hover {
-  background: var(--color-surface-high);
+  background: var(--color-surface-low);
   color:      var(--color-text);
 }
 .nav-links a.active {
-  background: var(--color-primary);
+  background: #15803d;
   color:      #ffffff;
-  box-shadow: 0 2px 8px rgba(224, 123, 57, 0.3);
+  box-shadow: 0 2px 8px rgba(21, 128, 61, 0.25);
 }
 .navbar-right { display: flex; align-items: center; gap: 12px; }
 .role-badge {
   font-size:     0.7rem;
   font-weight:   700;
-  padding:       4px 12px;
+  padding:       5px 12px;
   border-radius: var(--radius-full);
-  background:    var(--color-surface-low);
-  color:         var(--color-primary-dark);
-  border:        1px solid var(--color-border);
+  background:    #d3ffd5;
+  color:         #00652c;
+  border:        1px solid #95f8a7;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.04em;
 }
 
 /* ---- DEMO BANNER ----------------------------------------- */
@@ -302,7 +324,7 @@ img { max-width: 100%; display: block; }
 .btn-primary {
   background: var(--color-primary);
   color:      #ffffff;
-  box-shadow: 0 2px 6px rgba(224, 123, 57, 0.25);
+  box-shadow: 0 2px 8px rgba(21, 128, 61, 0.25);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--color-primary-dark);
@@ -313,7 +335,7 @@ img { max-width: 100%; display: block; }
   color:      #ffffff;
 }
 .btn-secondary:hover:not(:disabled) {
-  background: #14592d;
+  background: #005236;
   color:      #ffffff;
 }
 .btn-danger {
@@ -359,7 +381,9 @@ img { max-width: 100%; display: block; }
 .table-wrapper {
   overflow-x: auto;
   border:     1px solid var(--color-border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
 }
 table {
   width:           100%;
@@ -367,52 +391,54 @@ table {
   font-size:       0.9rem;
 }
 th {
-  background:  #f7f4f0;
-  padding:     10px 14px;
+  background:  #f8fafc;
+  padding:     12px 16px;
   text-align:  left;
   font-weight: 600;
   color:       var(--color-text-muted);
-  font-size:   0.8rem;
+  font-size:   0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.05em;
   border-bottom: 1px solid var(--color-border);
 }
 td {
-  padding:     10px 14px;
-  border-bottom: 1px solid #f0ebe3;
+  padding:     12px 16px;
+  border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
 }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: #faf7f3; }
+tr:hover td { background: #f8fafc; }
 
 /* ---- STATUS BADGES --------------------------------------- */
 .badge {
-  display:       inline-block;
-  padding:       3px 10px;
-  border-radius: 20px;
-  font-size:     0.76rem;
+  display:       inline-flex;
+  align-items:   center;
+  gap:           4px;
+  padding:       4px 10px;
+  border-radius: var(--radius-full);
+  font-size:     0.75rem;
   font-weight:   600;
   text-transform: capitalize;
 }
 .badge-active, .badge-delivered, .badge-success, .badge-resolved {
-  background: #e6f4ea; color: var(--color-success);
+  background: #d1fae5; color: #065f46;
 }
 .badge-pending {
-  background: #fff8e1; color: #7a5200;
+  background: #fef3c7; color: #92400e;
 }
-.badge-out_for_delivery, .badge-in_progress {
-  background: #e8f0fe; color: var(--color-info);
+.badge-out_for_delivery, .badge-dispatched, .badge-in_progress {
+  background: #e0f2fe; color: #0369a1;
 }
-.badge-cancelled, .badge-danger {
-  background: #fce8e6; color: var(--color-danger);
+.badge-cancelled, .badge-danger, .badge-skipped {
+  background: #fee2e2; color: #991b1b;
 }
 .badge-none {
-  background: #f0ebe3; color: var(--color-text-muted);
+  background: #f1f5f9; color: var(--color-text-muted);
 }
 
 /* ---- STAR RATING ----------------------------------------- */
 .stars {
-  color: #f4b942;
+  color: #f59e0b;
   letter-spacing: 2px;
 }
 .stars-input {
@@ -424,14 +450,14 @@ tr:hover td { background: #faf7f3; }
   border: none;
   font-size: 1.6rem;
   cursor: pointer;
-  color: #d4c5b0;
+  color: #cbd5e1;
   transition: color 0.15s;
   padding: 0;
   line-height: 1;
 }
-.star-btn.active, .star-btn:hover { color: #f4b942; }
+.star-btn.active, .star-btn:hover { color: #f59e0b; }
 
-/* ---- FORMS & INPUTS (Stitch Design Inputs) ---------------- */
+/* ---- FORMS & INPUTS (Design Inputs) ---------------------- */
 .form-group {
   margin-bottom: 18px;
 }
@@ -456,13 +482,13 @@ tr:hover td { background: #faf7f3; }
 }
 .form-control:focus {
   border-color: var(--color-primary);
-  background:   var(--color-surface-low);
-  box-shadow:   0 0 0 3px rgba(224, 123, 57, 0.18);
+  background:   #ffffff;
+  box-shadow:   0 0 0 3px rgba(21, 128, 61, 0.15);
 }
 select.form-control { cursor: pointer; }
 textarea.form-control { resize: vertical; min-height: 90px; }
 
-/* ---- VENDOR CARDS (Stitch Food Cards) -------------------- */
+/* ---- VENDOR CARDS (Design Food Cards) -------------------- */
 .vendor-grid {
   display:               grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -481,9 +507,9 @@ textarea.form-control { resize: vertical; min-height: 90px; }
   justify-content: space-between;
 }
 .vendor-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   transform:  translateY(-3px);
-  border-color: #d8cec4;
+  border-color: var(--color-primary-light);
 }
 .vendor-card-header {
   display:       flex;
@@ -507,7 +533,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
   font-family: var(--font-heading);
   font-size:   1.15rem;
   font-weight: 800;
-  color:       var(--color-primary-dark);
+  color:       var(--color-primary);
   white-space: nowrap;
 }
 .vendor-meta {
@@ -543,12 +569,13 @@ textarea.form-control { resize: vertical; min-height: 90px; }
   gap:            32px;
   text-align:     center;
   padding:        24px;
-  background:     linear-gradient(135deg, #fff9f4 0%, #fff3e8 100%);
+  background:     linear-gradient(135deg, #faf8ff 0%, #f0fdf4 100%);
 }
 .role-switcher-brand {
   font-size:   2.5rem;
-  font-weight: 700;
+  font-weight: 800;
   color:       var(--color-primary);
+  font-family: var(--font-heading);
 }
 .role-switcher-tagline {
   color:     var(--color-text-muted);
@@ -564,8 +591,10 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 }
 .role-grid {
   display:               grid;
-  grid-template-columns: repeat(2, 200px);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap:                   16px;
+  max-width:             800px;
+  width:                 100%;
 }
 .role-card {
   background:    var(--color-surface);
@@ -585,7 +614,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 }
 .role-card:hover {
   border-color: var(--color-primary);
-  box-shadow:   var(--shadow-md);
+  box-shadow:   var(--shadow-lg);
   transform:    translateY(-2px);
   color:        var(--color-primary);
 }

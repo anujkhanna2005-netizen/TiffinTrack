@@ -13,35 +13,49 @@ async function renderVendorSubscribers() {
     const pendingList = subscribers.filter(s => s.status === 'pending' || s.status === 'paused');
 
     showContent(`
-      <div class="page-header">
-        <h1>👥 Subscribers & Subscription Requests</h1>
-        <p>Review student subscription applications, manage active diners, and track plans</p>
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:24px">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span class="badge" style="background:#e8f5e9;color:#15803d;font-weight:700">Diner Operations</span>
+            <span style="font-size:0.8rem;color:var(--color-text-muted)">• Subscriber Roster</span>
+          </div>
+          <h1 style="font-size:1.6rem;font-weight:800;color:var(--color-text);margin:0">👥 Subscribers & Subscription Requests</h1>
+          <p style="color:var(--color-text-muted);margin-top:4px;font-size:0.88rem">Review student subscription applications, manage active diners, and track collections</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="renderVendorSubscribers()" style="display:flex;align-items:center;gap:6px">
+          ↺ Refresh List
+        </button>
       </div>
 
       <!-- Stats Summary -->
-      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
-        <div class="stat-card">
-          <div class="stat-label">Active Subscribers</div>
-          <div class="stat-value">${activeList.length}</div>
+      <div class="stat-grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:24px">
+        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+          <div class="stat-label" style="font-weight:600;font-size:0.85rem">Active Subscribers</div>
+          <div class="stat-value" style="font-size:2rem;font-weight:800;color:var(--color-primary);margin-top:4px">${activeList.length}</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Pending Approvals</div>
-          <div class="stat-value" style="color:${pendingList.length > 0 ? 'var(--color-warning)' : 'var(--color-success)'}">
+        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+          <div class="stat-label" style="font-weight:600;font-size:0.85rem">Pending Approvals</div>
+          <div class="stat-value" style="font-size:2rem;font-weight:800;color:${pendingList.length > 0 ? '#ea580c' : 'var(--color-success)'};margin-top:4px">
             ${pendingList.length}
           </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Monthly Revenue</div>
-          <div class="stat-value" style="font-size:1.1rem;margin-top:6px">
-            Est. ${formatINR(activeList.reduce((acc, s) => acc + (s.plan ? s.plan.price : 0), 0))}
+        <div class="stat-card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+          <div class="stat-label" style="font-weight:600;font-size:0.85rem">Monthly Recurring Value</div>
+          <div class="stat-value" style="font-size:1.5rem;font-weight:800;color:var(--color-text);margin-top:4px">
+            ${formatINR(activeList.reduce((acc, s) => acc + (s.plan ? s.plan.price : 0), 0))}
           </div>
         </div>
       </div>
 
       <!-- Pending Approval Section -->
       ${pendingList.length > 0 ? `
-        <div class="card" style="margin-bottom:20px;border-left:4px solid var(--color-warning)">
-          <div class="card-title"><span class="icon">⏳</span> Pending Subscription Requests (${pendingList.length})</div>
+        <div class="card" style="margin-bottom:24px;border-left:4px solid #ea580c;background:#fffaf0;border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="card-title" style="margin-bottom:0;color:#9a3412;font-size:1.1rem;font-weight:800">
+              <span class="icon">⏳</span> Pending Subscription Requests (${pendingList.length})
+            </div>
+            <span class="badge" style="background:#fed7aa;color:#9a3412;font-weight:700">Action Required</span>
+          </div>
           <div class="table-wrapper">
             <table>
               <thead>
@@ -51,26 +65,26 @@ async function renderVendorSubscribers() {
                   <th>Phone</th>
                   <th>Plan Requested</th>
                   <th>Price</th>
-                  <th>Date</th>
-                  <th>Vendor Actions</th>
+                  <th>Requested Date</th>
+                  <th>Vendor Decision</th>
                 </tr>
               </thead>
               <tbody>
                 ${pendingList.map(s => `
                   <tr>
-                    <td><strong>${s.customer ? s.customer.name : 'Student'}</strong></td>
-                    <td>${s.customer ? `${s.customer.residence}, Room ${s.customer.room}` : '—'}</td>
-                    <td>${s.customer ? s.customer.phone : '—'}</td>
-                    <td><span class="badge badge-info">${s.plan ? s.plan.name : 'Standard'}</span></td>
-                    <td><strong>${s.plan ? formatINR(s.plan.price) : '—'}</strong></td>
-                    <td>${formatDate(s.start_date)}</td>
+                    <td><strong>${escapeHtml(s.customer ? s.customer.name : 'Student')}</strong></td>
+                    <td>${s.customer ? `${escapeHtml(s.customer.residence)}, Rm ${escapeHtml(s.customer.room)}` : '—'}</td>
+                    <td>${s.customer ? escapeHtml(s.customer.phone) : '—'}</td>
+                    <td><span class="badge badge-info">${s.plan ? escapeHtml(s.plan.name) : 'Standard'}</span></td>
+                    <td><strong style="color:var(--color-primary)">${s.plan ? formatINR(s.plan.price) : '—'}</strong></td>
+                    <td style="font-size:0.82rem;color:var(--color-text-muted)">${formatDate(s.start_date)}</td>
                     <td>
                       <div style="display:flex;gap:6px">
-                        <button class="btn btn-primary btn-sm" style="padding:3px 10px;font-size:0.75rem"
-                          onclick="handleApproveSubscription('${s.sub_id}', '${s.customer ? s.customer.name : 'Student'}')">
+                        <button class="btn btn-primary btn-sm" style="background:var(--color-success);border-color:var(--color-success);padding:4px 12px;font-size:0.78rem;font-weight:700"
+                          onclick="handleApproveSubscription('${s.sub_id}', '${s.customer ? escapeHtml(s.customer.name) : 'Student'}')">
                           ✓ Approve
                         </button>
-                        <button class="btn btn-outline btn-sm" style="color:var(--color-danger);border-color:var(--color-danger);padding:3px 10px;font-size:0.75rem"
+                        <button class="btn btn-outline btn-sm" style="color:var(--color-danger);border-color:var(--color-danger);padding:4px 10px;font-size:0.78rem"
                           onclick="handleRejectSubscription('${s.sub_id}')">
                           ✕ Reject
                         </button>
@@ -85,8 +99,10 @@ async function renderVendorSubscribers() {
       ` : ''}
 
       <!-- Active Subscribers Table -->
-      <div class="card">
-        <div class="card-title"><span class="icon">👥</span> Active Subscriber Roster (${activeList.length})</div>
+      <div class="card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+        <div class="card-title" style="font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--color-border)">
+          <span class="icon">👥</span> Active Subscriber Roster (${activeList.length})
+        </div>
         ${activeList.length > 0 ? `
           <div class="table-wrapper">
             <table>
@@ -131,34 +147,34 @@ async function renderVendorSubscribers() {
 
                   return `
                   <tr>
-                    <td style="font-size:0.78rem;color:var(--color-text-muted)">${s.sub_id}</td>
+                    <td style="font-size:0.78rem;font-family:monospace;color:var(--color-text-muted)"><code>${s.sub_id}</code></td>
                     <td>
                       <strong>${escapeHtml(s.customer ? s.customer.name : '—')}</strong>
                       <div style="font-size:0.75rem;color:var(--color-text-muted)">${escapeHtml(s.customer ? s.customer.phone : '')}</div>
                     </td>
                     <td>${escapeHtml(s.customer ? `${s.customer.residence}, Rm ${s.customer.room}` : '—')}</td>
                     <td>${prefBadge}</td>
-                    <td>${escapeHtml(s.plan ? s.plan.name : '—')}</td>
+                    <td><span class="badge badge-info">${escapeHtml(s.plan ? s.plan.name : '—')}</span></td>
                     <td><strong>${s.payment ? formatINR(s.payment.amount_due) : (s.plan ? formatINR(s.plan.price) : '—')}</strong></td>
                     <td>
-                      <span class="badge ${s.payment && s.payment.status === 'collected' ? 'badge-success' : 'badge-pending'}">
+                      <span class="badge ${s.payment && s.payment.status === 'collected' ? 'badge-success' : 'badge-pending'}" style="font-weight:700">
                         ${s.payment && s.payment.status === 'collected' ? '✓ Collected' : '⏳ Pending Cash'}
                       </span>
                     </td>
                     <td>
                       ${s.payment && s.payment.status !== 'collected' && s.payment.payment_id ? `
-                        <button class="btn btn-sm btn-primary" style="padding:3px 8px;font-size:0.75rem;background:var(--color-success);border-color:var(--color-success)"
+                        <button class="btn btn-sm btn-primary" style="padding:4px 10px;font-size:0.75rem;font-weight:700;background:var(--color-success);border-color:var(--color-success)"
                           onclick="handleMarkPaymentCollected('${s.payment.payment_id}', '${s.customer ? escapeHtml(s.customer.name) : 'Student'}')">
                           💵 Mark Collected
                         </button>
-                      ` : `<span style="font-size:0.75rem;color:var(--color-text-muted)">Settled</span>`}
+                      ` : `<span style="font-size:0.75rem;color:var(--color-text-muted)">✓ Settled</span>`}
                     </td>
                   </tr>
                 `;}).join('')}
               </tbody>
             </table>
           </div>
-        ` : `<div class="empty-state"><div class="empty-icon">👥</div><p>No active subscribers yet.</p></div>`}
+        ` : `<div class="empty-state" style="padding:36px"><div class="empty-icon" style="font-size:2.5rem">👥</div><p style="color:var(--color-text-muted)">No active subscribers yet.</p></div>`}
       </div>
     `);
   } catch (err) {

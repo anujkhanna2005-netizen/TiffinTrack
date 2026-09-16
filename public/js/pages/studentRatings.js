@@ -16,72 +16,107 @@ async function renderStudentRatings() {
 
     if (!subscription) {
       showContent(`
-        <div class="page-header"><h1>⭐ Ratings & Reviews</h1></div>
-        <div class="card" style="text-align:center;padding:48px">
-          <div style="font-size:3rem;margin-bottom:12px">⭐</div>
-          <h2 style="font-size:1.1rem;font-weight:700">No Active Subscription</h2>
-          <p style="color:var(--color-text-muted)">You need an active subscription to rate a vendor.</p>
-          <button class="btn btn-primary" style="margin-top:16px" onclick="navigateTo('findTiffin')">Find a Plan</button>
+        <div class="max-w-6xl mx-auto py-2">
+          <div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm max-w-lg mx-auto">
+            <div class="text-4xl mb-3">⭐</div>
+            <h2 class="text-xl font-extrabold text-slate-900 font-heading">No Active Subscription</h2>
+            <p class="text-xs text-slate-500 mt-1 mb-6">You need an active tiffin meal plan subscription to submit reviews.</p>
+            <button class="btn btn-primary btn-sm text-xs font-bold" onclick="navigateTo('findTiffin')">Browse Tiffin Kitchens</button>
+          </div>
         </div>
       `);
       return;
     }
 
     showContent(`
-      <div class="page-header">
-        <h1>⭐ Rate Your Vendor</h1>
-        <p>Rating for <strong>${subscription.vendor.name}</strong></p>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <!-- Rating Form -->
-        <div class="card">
-          <div class="card-title"><span class="icon">✍️</span> Submit a Rating</div>
-          <div id="rating-alert"></div>
-
-          ${renderStarRow('taste', 'Taste')}
-          ${renderStarRow('hygiene', 'Hygiene')}
-          ${renderStarRow('punctuality', 'Punctuality')}
-          ${renderStarRow('value', 'Value for Money')}
-
-          <div class="form-group" style="margin-top:8px">
-            <label for="review-text">Review (Optional)</label>
-            <textarea id="review-text" class="form-control" placeholder="Share your experience..." rows="3"></textarea>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-            <div id="overall-preview" style="font-size:0.875rem;color:var(--color-text-muted)">
-              Overall: —
+      <div class="max-w-6xl mx-auto py-2 flex flex-col gap-6">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-wider mb-2">
+              <span class="material-symbols-outlined text-[14px]">star</span>
+              Quality & Feedback Oversight
             </div>
-            <button class="btn btn-primary" onclick="submitRatingForm('${subscription.vendor_id}')" id="btn-submit-rating">
-              Submit Rating
-            </button>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-heading">
+              Rate Your Meal Experience
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">
+              Rating for <strong>${subscription.vendor.name}</strong> • ${subscription.plan.name}
+            </p>
           </div>
         </div>
 
-        <!-- Info Card -->
-        <div>
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-title"><span class="icon">📊</span> Rating Formula</div>
-            <div style="font-size:0.875rem;color:var(--color-text-muted);line-height:2">
-              <div>Taste × <strong>35%</strong></div>
-              <div>Hygiene × <strong>25%</strong></div>
-              <div>Punctuality × <strong>25%</strong></div>
-              <div>Value × <strong>15%</strong></div>
-              <div style="margin-top:8px;border-top:1px solid var(--color-border);padding-top:8px;color:var(--color-text)">
-                = <strong>Overall Rating</strong>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Rating Form (7 cols) -->
+          <div class="lg:col-span-7 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-heading font-bold text-slate-900 text-base flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-500 text-[20px]">rate_review</span>
+                Submit Quality Assessment
+              </h3>
+              <span class="text-xs text-slate-400">Weighted Scoring</span>
+            </div>
+
+            <div id="rating-alert"></div>
+
+            <div class="space-y-4 bg-slate-50 rounded-2xl p-5 border border-slate-200/80">
+              ${renderStarRow('taste', 'Taste & Flavor (35% weight)')}
+              ${renderStarRow('hygiene', 'Hygiene & Cleanliness (25% weight)')}
+              ${renderStarRow('punctuality', 'Delivery Warmth & Timing (25% weight)')}
+              ${renderStarRow('value', 'Portion Size & Value for Money (15% weight)')}
+            </div>
+
+            <div>
+              <label for="review-text" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Detailed Review (Optional)</label>
+              <textarea id="review-text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600" placeholder="Share your experience with the roti softness, dal thickness, delivery timing..." rows="3"></textarea>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+              <div id="overall-preview" class="text-xs font-bold text-slate-600">
+                Calculated Rating: <span class="text-amber-600">—</span>
+              </div>
+              <button class="btn btn-primary btn-sm text-xs font-bold" onclick="submitRatingForm('${subscription.vendor_id}')" id="btn-submit-rating">
+                Submit Quality Review
+              </button>
+            </div>
+          </div>
+
+          <!-- Info & Weighting Card (5 cols) -->
+          <div class="lg:col-span-5 flex flex-col gap-6">
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <h3 class="font-heading font-bold text-slate-900 text-base flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-700 text-[20px]">calculate</span>
+                Campus Rating Matrix
+              </h3>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                TiffinTrack uses a transparent weighted algorithm to maintain kitchen accountability across college hostels:
+              </p>
+              
+              <div class="space-y-2 text-xs">
+                <div class="flex justify-between p-2.5 bg-slate-50 rounded-xl">
+                  <span class="font-medium text-slate-700">🍛 Taste & Recipe</span>
+                  <span class="font-bold text-emerald-800">35%</span>
+                </div>
+                <div class="flex justify-between p-2.5 bg-slate-50 rounded-xl">
+                  <span class="font-medium text-slate-700">🧼 Kitchen Hygiene</span>
+                  <span class="font-bold text-emerald-800">25%</span>
+                </div>
+                <div class="flex justify-between p-2.5 bg-slate-50 rounded-xl">
+                  <span class="font-medium text-slate-700">🛵 On-time Delivery</span>
+                  <span class="font-bold text-emerald-800">25%</span>
+                </div>
+                <div class="flex justify-between p-2.5 bg-slate-50 rounded-xl">
+                  <span class="font-medium text-slate-700">💰 Value for Money</span>
+                  <span class="font-bold text-emerald-800">15%</span>
+                </div>
               </div>
             </div>
           </div>
-          <div class="card">
-            <div class="card-title"><span class="icon">🏪</span> Current Vendor</div>
-            <div style="font-size:0.9rem">
-              <div><strong>${subscription.vendor.name}</strong></div>
-              <div style="color:var(--color-text-muted);margin-top:4px">${subscription.vendor.locality}</div>
-              <div style="margin-top:8px">${renderStars(null)}</div>
-            </div>
-          </div>
+
         </div>
+
       </div>
     `);
   } catch (err) {

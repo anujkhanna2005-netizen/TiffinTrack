@@ -1,5 +1,5 @@
 // ============================================================
-// TiffinTrack - My Subscription Page
+// TiffinTrack - Manage Subscription & Add-ons
 // public/js/pages/mySubscription.js
 // ============================================================
 
@@ -12,12 +12,36 @@ async function renderMySubscription() {
     ]);
 
     showContent(`
-      <div class="page-header">
-        <h1>📋 My Subscription</h1>
-        <p>Manage your current meal plan subscription.</p>
-      </div>
+      <div class="max-w-6xl mx-auto py-2 flex flex-col gap-6">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
+              <span class="material-symbols-outlined text-[14px]">event_repeat</span>
+              Subscription & Add-ons Center
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-heading">
+              Manage Your Active Plan
+            </h1>
+            <p class="text-slate-500 text-sm mt-1 max-w-xl">
+              Customize daily rotis & spice level, skip meals with automatic bill adjustments, unlock flat group discounts, or switch vendors instantly.
+            </p>
+          </div>
 
-      ${subscription ? renderSubscriptionDetails(subscription, customer) : renderNoSub()}
+          ${subscription && subscription.status === 'active' ? `
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                Active Subscription
+              </span>
+            </div>
+          ` : ''}
+        </div>
+
+        ${subscription ? renderSubscriptionDetails(subscription, customer) : renderNoSub()}
+
+      </div>
     `);
   } catch (err) {
     showError('Failed to load subscription: ' + err.message);
@@ -29,125 +53,239 @@ function renderSubscriptionDetails(sub, customer) {
   const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
   return `
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
-      <div>
-        <!-- Subscription Summary Card -->
-        <div class="card subscription-card" style="margin-bottom:20px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-            <h2 style="font-size:1.1rem;font-weight:700">${sub.plan.name}</h2>
-            <span class="badge badge-active">Active</span>
-          </div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Left Column: Subscription Card + Add-on 1 & Add-on 4 (7 cols) -->
+      <div class="lg:col-span-7 flex flex-col gap-6">
+        
+        <!-- Plan Overview Card -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md">
+                  ${sub.plan.veg ? '🟢 Pure Veg Plan' : '🔴 Non-Veg Plan'}
+                </span>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 font-heading mt-1.5">${sub.plan.name}</h2>
+                <div class="text-xs text-slate-500 mt-0.5">By <strong>${sub.vendor.name}</strong> • ${sub.vendor.locality}</div>
+              </div>
 
-          <div class="sub-meta-grid" style="grid-template-columns:repeat(3,1fr)">
-            <div class="sub-meta-item">
-              <div class="label">Vendor</div>
-              <div class="value">${sub.vendor.name}</div>
+              <div class="text-right">
+                <div class="text-xs text-slate-400 font-semibold uppercase">Locked Plan Rate</div>
+                <div class="text-xl font-extrabold text-emerald-800">${formatINR(sub.locked_price || sub.plan.price)}<span class="text-xs font-normal text-slate-500">/mo</span></div>
+              </div>
             </div>
-            <div class="sub-meta-item">
-              <div class="label">Cuisine</div>
-              <div class="value">${sub.vendor.cuisine}</div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 rounded-2xl p-4 border border-slate-200/80 mb-4">
+              <div>
+                <div class="text-[11px] text-slate-400 font-bold uppercase">Meals / Day</div>
+                <div class="text-sm font-bold text-slate-800 mt-0.5">${sub.plan.meals_per_day || 1} meal(s)</div>
+              </div>
+              <div>
+                <div class="text-[11px] text-slate-400 font-bold uppercase">Days Remaining</div>
+                <div class="text-sm font-bold text-emerald-700 mt-0.5">${daysLeft > 0 ? daysLeft + ' days' : 'Expired'}</div>
+              </div>
+              <div>
+                <div class="text-[11px] text-slate-400 font-bold uppercase">Validity Window</div>
+                <div class="text-xs font-semibold text-slate-700 mt-0.5">${formatDate(sub.start_date)} - ${formatDate(sub.end_date)}</div>
+              </div>
             </div>
-            <div class="sub-meta-item">
-              <div class="label">Location</div>
-              <div class="value">${sub.vendor.locality}</div>
-            </div>
-            <div class="sub-meta-item">
-              <div class="label">Monthly Price</div>
-              <div class="value" style="color:var(--color-primary)">${formatINR(sub.plan.price)}</div>
-            </div>
-            <div class="sub-meta-item">
-              <div class="label">Start Date</div>
-              <div class="value">${formatDate(sub.start_date)}</div>
-            </div>
-            <div class="sub-meta-item">
-              <div class="label">End Date</div>
-              <div class="value">${formatDate(sub.end_date)}</div>
-            </div>
-            <div class="sub-meta-item">
-              <div class="label">Days Left</div>
-              <div class="value">${daysLeft > 0 ? daysLeft + ' days' : 'Expired'}</div>
-            </div>
-            <div class="sub-meta-item">
-              <div class="label">Meals/Day</div>
-              <div class="value">${sub.plan.meals_per_day}</div>
-            </div>
-            <div class="sub-meta-item">
-              <div class="label">Meal Type</div>
-              <div class="value">${sub.plan.veg ? '🟢 Veg' : '🔴 Non-Veg'}</div>
+
+            <div class="text-xs text-slate-600 bg-slate-50/50 p-3 rounded-xl border border-slate-200/60 mb-4">
+              ${sub.plan.description || 'Nutritious homestyle meals cooked fresh daily.'}
             </div>
           </div>
 
-          <div style="margin-top:16px;padding:12px;background:#faf7f3;border-radius:var(--radius)">
-            <div style="font-size:0.82rem;color:var(--color-text-muted)">Plan Description</div>
-            <div style="font-size:0.9rem;margin-top:4px">${sub.plan.description || 'Homestyle healthy meals.'}</div>
-          </div>
+          <div id="cancel-result"></div>
 
-          <div id="cancel-result" style="margin-top:12px"></div>
-
-          <div class="sub-actions" style="margin-top:16px;display:flex;gap:10px">
-            <button class="btn btn-outline btn-sm" onclick="openSwitchVendorModal('${sub.vendor_id}')">
-              🔄 Switch Vendor
+          <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100">
+            <button class="btn btn-outline btn-sm text-xs font-semibold flex items-center gap-1.5" onclick="openSwitchVendorModal('${sub.vendor_id}')">
+              <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+              One-Click Switch Vendor (ACID)
             </button>
-            <button class="btn btn-danger btn-sm" onclick="handleCancelFromSubPage()" id="btn-cancel-sub-page">
+            <button class="btn btn-danger btn-sm text-xs font-semibold flex items-center gap-1.5" onclick="handleCancelFromSubPage()" id="btn-cancel-sub-page">
+              <span class="material-symbols-outlined text-[16px]">cancel</span>
               Cancel Subscription
             </button>
           </div>
         </div>
 
         <!-- ADD-ON 1: SKIP / PAUSE MEAL -->
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-title"><span class="icon">⏸️</span> Add-on 1: Pause & Skip Meal (Billing Adjustment)</div>
-          <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:14px">
-            Going home for the weekend or dining out? Skip tomorrow's meal before cutoff and receive an automatic <strong>billing deduction</strong> computed from your plan's per-meal rate.
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-heading font-bold text-slate-900 text-base flex items-center gap-2">
+              <span class="material-symbols-outlined text-amber-600 text-[20px]">pause_circle</span>
+              Add-on 1: Pause & Skip Meal (Instant Bill Credit)
+            </h3>
+            <span class="text-[11px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full">Per-meal Deduction</span>
+          </div>
+
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Going home for the weekend or dining out? Skip tomorrow's meal before cutoff and receive an automatic <strong>billing deduction</strong> computed directly from your plan's rate.
           </p>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-            <div class="form-group">
-              <label for="skip-date" style="font-weight:600">Skip Date</label>
-              <input type="date" id="skip-date" class="form-control" value="${tomorrow}" min="${tomorrow}" />
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label for="skip-date" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Skip Date</label>
+              <input type="date" id="skip-date" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600" value="${tomorrow}" min="${tomorrow}" />
             </div>
-            <div class="form-group">
-              <label for="skip-meal" style="font-weight:600">Meal</label>
-              <select id="skip-meal" class="form-control">
-                <option value="lunch">Lunch</option>
-                <option value="dinner">Dinner</option>
+            <div>
+              <label for="skip-meal" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Meal Window</label>
+              <select id="skip-meal" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600">
+                <option value="lunch">Lunch Service</option>
+                <option value="dinner">Dinner Service</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="skip-reason" style="font-weight:600">Reason</label>
-              <input type="text" id="skip-reason" class="form-control" placeholder="e.g. Visiting home" />
+            <div>
+              <label for="skip-reason" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Reason</label>
+              <input type="text" id="skip-reason" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600" placeholder="e.g. Weekend at home" />
             </div>
           </div>
+
           <div id="skip-alert"></div>
-          <button class="btn btn-primary btn-sm" onclick="handleSkipMealSubmit()" id="btn-skip-submit" style="margin-top:8px">
-            ✓ Request Skip & Adjust Amount Due
+
+          <button class="btn btn-primary btn-sm text-xs font-bold w-full sm:w-auto" onclick="handleSkipMealSubmit()" id="btn-skip-submit">
+            ✓ Request Skip & Deduct From COD Bill
           </button>
         </div>
 
-        <!-- ADD-ON 4: MEAL CUSTOMIZATION -->
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-title"><span class="icon">🌶️</span> Add-on 4: Meal Customization & Spice Preferences</div>
-          <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:14px">
-            Set your daily cooking preferences for the vendor. Active subscription preferences are updated live for kitchen dispatch.
+        <!-- ADD-ON 4: MEAL CUSTOMIZATION & PREFERENCES -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-heading font-bold text-slate-900 text-base flex items-center gap-2">
+              <span class="material-symbols-outlined text-emerald-700 text-[20px]">tune</span>
+              Add-on 4: Meal Customization & Spice Preferences
+            </h3>
+            <span class="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">Live Kitchen Dispatch</span>
+          </div>
+
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Set your daily cooking preferences for the vendor. Active subscription preferences are transmitted directly to the kitchen terminal for daily preparation.
           </p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-            <div class="form-group">
-              <label for="pref-spice" style="font-weight:600">Spice Level</label>
-              <select id="pref-spice" class="form-control">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="pref-spice" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Spice Level</label>
+              <select id="pref-spice" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600">
                 <option value="low" ${(sub.spice_level === 'low' || customer.spice_level === 'low') ? 'selected' : ''}>🌶️ Low Spice / Mild</option>
                 <option value="medium" ${(sub.spice_level === 'medium' || customer.spice_level === 'medium' || (!sub.spice_level && !customer.spice_level)) ? 'selected' : ''}>🌶️🌶️ Medium Spice (Standard)</option>
-                <option value="high" ${(sub.spice_level === 'high' || customer.spice_level === 'high') ? 'selected' : ''}>🌶️🌶️🌶️ High Spice (Desi)</option>
+                <option value="high" ${(sub.spice_level === 'high' || customer.spice_level === 'high') ? 'selected' : ''}>🌶️🌶️🌶️ High Spice (Desi Tadka)</option>
                 <option value="jain" ${(sub.spice_level === 'jain' || customer.spice_level === 'jain') ? 'selected' : ''}>🌱 Jain (No Onion / Garlic)</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="pref-roti" style="font-weight:600">Bread / Add-on Preference</label>
-              <select id="pref-roti" class="form-control">
-                <option value="standard" ${(sub.bread_preference === 'standard' || customer.bread_preference === 'standard' || (!sub.bread_preference && !customer.bread_preference)) ? 'selected' : ''}>Standard Rotis</option>
+            <div>
+              <label for="pref-roti" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Bread / Add-on Preference</label>
+              <select id="pref-roti" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600">
+                <option value="standard" ${(sub.bread_preference === 'standard' || customer.bread_preference === 'standard' || (!sub.bread_preference && !customer.bread_preference)) ? 'selected' : ''}>Standard Roti Count (4 Phulkas)</option>
                 <option value="extra_roti" ${(sub.bread_preference === 'extra_roti' || customer.bread_preference === 'extra_roti') ? 'selected' : ''}>🍞 +1 Extra Butter Roti</option>
-                <option value="rice_only" ${(sub.bread_preference === 'rice_only' || customer.bread_preference === 'rice_only') ? 'selected' : ''}>🍚 Extra Rice instead of Roti</option>
+                <option value="rice_only" ${(sub.bread_preference === 'rice_only' || customer.bread_preference === 'rice_only') ? 'selected' : ''}>🍚 Extra Rice instead of Rotis</option>
               </select>
             </div>
           </div>
+
+          <div>
+            <label for="pref-notes" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Special Cooking Instructions (Max 200 chars)</label>
+            <input type="text" id="pref-notes" maxlength="200" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600" placeholder="e.g. Less oil in dal, extra salad, warm packaging" value="${escapeHtml(sub.special_instructions || customer.special_instructions || '')}" />
+          </div>
+
+          <div id="pref-alert"></div>
+
+          <button class="btn btn-outline btn-sm text-xs font-bold" onclick="handleSavePreferences()" id="btn-pref-submit">
+            💾 Save Preferences to Kitchen
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Payment Status & Add-on 3 Flat Group Savings (5 cols) -->
+      <div class="lg:col-span-5 flex flex-col gap-6">
+        
+        <!-- Payment & COD Status Card -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Payment Ledger</span>
+              <span class="badge ${sub.payment_status === 'collected' ? 'badge-success' : 'badge-pending'}">
+                ${sub.payment_status === 'collected' ? 'Payment Collected' : 'Pending COD Collection'}
+              </span>
+            </div>
+
+            <div class="text-xs text-slate-500 mb-1">Current Amount Due (COD)</div>
+            <div class="text-3xl font-extrabold text-amber-700 font-heading mb-2" id="amount-due-val">
+              ${formatINR(sub.amount_due)}
+            </div>
+            
+            <div class="space-y-2 bg-slate-50 rounded-2xl p-3.5 border border-slate-200/80 text-xs">
+              <div class="flex justify-between text-slate-600">
+                <span>Base Plan Price</span>
+                <span class="font-bold text-slate-900">${formatINR(sub.locked_price || sub.plan.price)}</span>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Group Discount Applied</span>
+                <span class="font-bold text-emerald-700">${sub.group_id ? 'Active Tier' : '0%'}</span>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Payment Mode</span>
+                <span class="font-bold text-slate-800">Cash on Delivery / UPI</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADD-ON 3: FLAT / GROUP SUBSCRIPTION -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-heading font-bold text-slate-900 text-base flex items-center gap-2">
+              <span class="material-symbols-outlined text-purple-600 text-[20px]">groups</span>
+              Add-on 3: Flat Group Savings
+            </h3>
+            <span class="text-[11px] font-bold text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-full">5% - 10% Off</span>
+          </div>
+
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Coordinate with roommates in your hostel flat: <strong>3-4 members</strong> unlock a <strong>5% discount</strong>, and <strong>5+ members</strong> unlock a <strong>10% discount</strong> on pending COD bills!
+          </p>
+
+          <div>
+            <label for="group-code-input" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Join Group by Code</label>
+            <div class="flex gap-2">
+              <input type="text" id="group-code-input" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 uppercase font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600" placeholder="e.g. FLAT4B" onkeydown="if(event.key==='Enter'){handleJoinGroup();}" />
+              <button class="btn btn-primary btn-sm text-xs font-bold px-4" id="btn-join-group" onclick="handleJoinGroup()">Join</button>
+            </div>
+
+            <div class="flex items-center gap-1.5 mt-2 text-[11px] text-slate-500">
+              <span>Quick demo codes:</span>
+              <a href="#" onclick="setAndJoinGroup('FLAT4B');return false;" class="font-mono font-bold text-emerald-700 bg-slate-100 px-1.5 py-0.5 rounded hover:bg-emerald-50">FLAT4B</a>
+              <a href="#" onclick="setAndJoinGroup('HOSTEL-A');return false;" class="font-mono font-bold text-emerald-700 bg-slate-100 px-1.5 py-0.5 rounded hover:bg-emerald-50">HOSTEL-A</a>
+              <a href="#" onclick="setAndJoinGroup('ROOM302');return false;" class="font-mono font-bold text-emerald-700 bg-slate-100 px-1.5 py-0.5 rounded hover:bg-emerald-50">ROOM302</a>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-100">
+            <button class="btn btn-outline btn-sm text-xs font-bold w-full" onclick="handleCreateFlatGroup('${customer.residence || 'Campus PG'}')">
+              ➕ Create New Flat Group
+            </button>
+          </div>
+
+          <div id="group-alert"></div>
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+function renderNoSub() {
+  return `
+    <div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm max-w-lg mx-auto">
+      <div class="text-4xl mb-3">📭</div>
+      <h2 class="text-xl font-extrabold text-slate-900 font-heading">No Active Subscription</h2>
+      <p class="text-xs text-slate-500 mt-1 mb-6">You do not have an active meal plan subscription at the moment.</p>
+      <button class="btn btn-primary btn-sm text-xs font-bold" onclick="navigateTo('findTiffin')">Browse Tiffin Kitchens</button>
+    </div>
+  `;
+}
           <div class="form-group">
             <label for="pref-notes" style="font-weight:600">Special Cooking Instructions (Max 200 chars)</label>
             <input type="text" id="pref-notes" maxlength="200" class="form-control" placeholder="e.g. Less oil, no coriander, warm packaging" value="${escapeHtml(sub.special_instructions || customer.special_instructions || '')}" />

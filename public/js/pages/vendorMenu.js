@@ -27,42 +27,61 @@ function renderMenuPage(menu, voteData) {
   const winningDish = voteData ? voteData.winning_dish : null;
 
   showContent(`
-    <div class="page-header">
-      <h1>🍽️ Today's Menu & Kitchen Specials</h1>
-      <p>${today} ${menu.published ? '• <span style="color:var(--color-success)">✅ Published</span>' : '• <span style="color:var(--color-warning)">⏳ Not Published</span>'}</p>
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:24px">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span class="badge" style="background:#e8f5e9;color:#15803d;font-weight:700">Kitchen Management</span>
+          <span style="font-size:0.8rem;color:var(--color-text-muted)">• Daily Specials</span>
+        </div>
+        <h1 style="font-size:1.6rem;font-weight:800;color:var(--color-text);margin:0">🍽️ Today's Menu & Kitchen Specials</h1>
+        <p style="color:var(--color-text-muted);margin-top:4px;font-size:0.88rem">
+          ${today} &nbsp;•&nbsp; ${menu.published ? '<span style="color:var(--color-success);font-weight:700">✅ Published & Live</span>' : '<span style="color:var(--color-warning);font-weight:700">⏳ Draft / Not Published</span>'}
+        </p>
+      </div>
+      <div style="display:flex;gap:10px">
+        ${!menu.published ? `
+          <button class="btn btn-primary" onclick="handlePublishMenu()" id="btn-publish" style="display:flex;align-items:center;gap:6px;padding:10px 18px;font-weight:700;box-shadow:var(--shadow-sm)">
+            <span>✅</span> Publish Menu to Students
+          </button>
+        ` : `
+          <span class="badge badge-success" style="padding:8px 16px;font-size:0.88rem;border-radius:9999px">✓ Live on Campus</span>
+        `}
+      </div>
     </div>
 
     <!-- ADD-ON 2: VENDOR COMMUNITY DISH VOTES WIDGET -->
-    <div class="card" style="margin-bottom:20px;border-left:4px solid var(--color-primary)">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+    <div class="card" style="margin-bottom:24px;border-left:4px solid var(--color-primary);background:var(--color-surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
         <div>
-          <div class="card-title" style="margin-bottom:2px"><span class="icon">🗳️</span> Student Dish Voting Tally</div>
-          <p style="font-size:0.85rem;color:var(--color-text-muted);margin:0">Live votes cast by your active diners for tomorrow's community choice.</p>
+          <div class="card-title" style="margin-bottom:3px;font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:8px">
+            <span class="icon">🗳️</span> Student Dish Voting Tally
+          </div>
+          <p style="font-size:0.85rem;color:var(--color-text-muted);margin:0">Live votes cast by active diners for upcoming community choice dishes.</p>
         </div>
         <div>
-          <span class="badge badge-info" style="font-size:0.85rem">🗳️ ${totalVotes} Total Vote${totalVotes === 1 ? '' : 's'}</span>
+          <span class="badge badge-info" style="font-size:0.85rem;padding:6px 12px;font-weight:700;border-radius:9999px">🗳️ ${totalVotes} Total Vote${totalVotes === 1 ? '' : 's'}</span>
         </div>
       </div>
 
       <div id="voted-dish-alert"></div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:10px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:12px">
         ${votes.map(v => {
           const isWinner = winningDish && winningDish.dish_name === v.dish_name && v.vote_count > 0;
           return `
-            <div style="border:1px solid ${isWinner ? 'var(--color-primary)' : 'var(--color-border)'};border-radius:var(--radius);padding:12px;background:${isWinner ? 'var(--color-surface-hover)' : 'var(--color-surface)'};display:flex;flex-direction:column;justify-content:space-between">
+            <div style="border:1.5px solid ${isWinner ? 'var(--color-primary)' : 'var(--color-border)'};border-radius:var(--radius);padding:14px;background:${isWinner ? 'rgba(21,128,61,0.04)' : 'var(--color-surface)'};display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow-sm)">
               <div>
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                  <strong style="font-size:0.92rem">${isWinner ? '👑 ' : '🍛 '}${escapeHtml(v.dish_name)}</strong>
-                  <span class="badge ${isWinner ? 'badge-success' : 'badge-pill'}" style="font-size:0.75rem">${v.vote_count} vote${v.vote_count === 1 ? '' : 's'} (${v.vote_percent}%)</span>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <strong style="font-size:0.95rem;color:var(--color-text)">${isWinner ? '👑 ' : '🍛 '}${escapeHtml(v.dish_name)}</strong>
+                  <span class="badge ${isWinner ? 'badge-success' : 'badge-pill'}" style="font-size:0.75rem;font-weight:700">${v.vote_count} vote${v.vote_count === 1 ? '' : 's'} (${v.vote_percent}%)</span>
                 </div>
                 <!-- Progress bar -->
-                <div style="height:6px;background:var(--color-border);border-radius:3px;margin:8px 0;overflow:hidden">
-                  <div style="height:100%;width:${v.vote_percent}%;background:${isWinner ? 'var(--color-success)' : 'var(--color-primary)'}"></div>
+                <div style="height:8px;background:var(--color-border);border-radius:9999px;margin:10px 0;overflow:hidden">
+                  <div style="height:100%;width:${v.vote_percent}%;background:${isWinner ? 'var(--color-success)' : 'var(--color-primary)'};border-radius:9999px;transition:width 0.4s ease"></div>
                 </div>
               </div>
-              <div style="margin-top:8px">
-                <button class="btn btn-outline btn-sm" style="width:100%;font-size:0.78rem;padding:4px 8px" onclick="handleAddVotedDishToMenu('${escapeHtml(v.dish_name)}')">
+              <div style="margin-top:10px">
+                <button class="btn btn-outline btn-sm" style="width:100%;font-size:0.8rem;padding:6px 10px;font-weight:600;border-radius:6px;border-color:var(--color-primary);color:var(--color-primary)" onclick="handleAddVotedDishToMenu('${escapeHtml(v.dish_name)}')">
                   ➕ Add to Today's Menu
                 </button>
               </div>
@@ -72,13 +91,12 @@ function renderMenuPage(menu, voteData) {
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px">
       <!-- Menu Items -->
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-          <div class="card-title" style="margin-bottom:0"><span class="icon">📋</span> Menu Items (${menu.items.length})</div>
-          <div style="display:flex;gap:8px">
-            ${!menu.published ? `<button class="btn btn-secondary btn-sm" onclick="handlePublishMenu()" id="btn-publish">✅ Publish Menu</button>` : '<span class="badge badge-success">Published</span>'}
+      <div class="card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--color-border)">
+          <div class="card-title" style="margin-bottom:0;font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:8px">
+            <span class="icon">📋</span> Current Published Inclusions (${menu.items.length})
           </div>
         </div>
 
@@ -87,32 +105,34 @@ function renderMenuPage(menu, voteData) {
         ${menu.items.length > 0 ? `
           <div class="table-wrapper">
             <table>
-              <thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Item Name</th><th>Category</th><th>Serving Portion</th><th>Action</th></tr></thead>
               <tbody id="menu-table-body">
                 ${menu.items.map(item => renderMenuTableRow(item)).join('')}
               </tbody>
             </table>
           </div>
         ` : `
-          <div class="empty-state">
-            <div class="empty-icon">🍽️</div>
-            <h3>No items yet</h3>
-            <p>Add items to today's menu using the form on the right or the community voting widget above.</p>
+          <div class="empty-state" style="padding:36px 16px">
+            <div class="empty-icon" style="font-size:2.5rem;margin-bottom:8px">🍽️</div>
+            <h3 style="font-size:1.1rem;font-weight:700">No items added yet</h3>
+            <p style="font-size:0.85rem;color:var(--color-text-muted)">Add dishes to today's menu using the form on the right or the community voting tally above.</p>
           </div>
         `}
       </div>
 
       <!-- Add Item Form -->
-      <div class="card">
-        <div class="card-title"><span class="icon">➕</span> Add Menu Item</div>
+      <div class="card" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);height:fit-content">
+        <div class="card-title" style="font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span class="icon">➕</span> Add Custom Dish
+        </div>
         <div id="add-item-alert"></div>
 
-        <div class="form-group">
-          <label for="item-name">Item Name</label>
-          <input type="text" id="item-name" class="form-control" placeholder="e.g. Dal Makhani" />
+        <div class="form-group" style="margin-bottom:12px">
+          <label for="item-name" style="font-weight:600;font-size:0.85rem;margin-bottom:4px;display:block">Item / Dish Name</label>
+          <input type="text" id="item-name" class="form-control" placeholder="e.g. Shahi Paneer" />
         </div>
-        <div class="form-group">
-          <label for="item-category">Category</label>
+        <div class="form-group" style="margin-bottom:12px">
+          <label for="item-category" style="font-weight:600;font-size:0.85rem;margin-bottom:4px;display:block">Category</label>
           <select id="item-category" class="form-control">
             <option>Main</option>
             <option>Bread</option>
@@ -124,11 +144,13 @@ function renderMenuPage(menu, voteData) {
             <option>Dessert</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="item-quantity">Quantity / Serving</label>
-          <input type="text" id="item-quantity" class="form-control" placeholder="e.g. 200g, 2 pcs" />
+        <div class="form-group" style="margin-bottom:16px">
+          <label for="item-quantity" style="font-weight:600;font-size:0.85rem;margin-bottom:4px;display:block">Quantity / Serving Size</label>
+          <input type="text" id="item-quantity" class="form-control" placeholder="e.g. 250ml bowl, 4 pcs" />
         </div>
-        <button class="btn btn-primary" onclick="handleAddMenuItem()" id="btn-add-item" style="width:100%">Add Item</button>
+        <button class="btn btn-primary" onclick="handleAddMenuItem()" id="btn-add-item" style="width:100%;font-weight:700;padding:10px">
+          + Add Item
+        </button>
       </div>
     </div>
   `);

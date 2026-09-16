@@ -10,6 +10,18 @@ let _activeFilter = 'All';
 let _searchQuery  = '';
 let _hasActiveSub = false;
 
+// Image helper for vendors
+function getVendorImage(vId) {
+  const map = {
+    'V001': '/images/tiffin_homestyle.png',
+    'V002': '/images/thali_special.png',
+    'V003': '/images/rajasthani_thali.png',
+    'V004': '/images/chole_bhature.png',
+    'V005': '/images/high_protein_bowl.png'
+  };
+  return map[vId] || '/images/fresh_phulkas.png';
+}
+
 async function renderFindTiffin() {
   showLoading('cards');
   try {
@@ -19,33 +31,59 @@ async function renderFindTiffin() {
     ]);
 
     _allVendors   = vendors;
-    _hasActiveSub = subscription !== null;
+    _hasActiveSub = subscription !== null && subscription.status === 'active';
 
     showContent(`
-      <div class="page-header">
-        <h1>🔍 Find Tiffin Near You</h1>
-        <p>Browse local vendors and subscribe to a meal plan that suits you.</p>
-      </div>
+      <div class="max-w-6xl mx-auto py-2 flex flex-col gap-6">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
+              <span class="material-symbols-outlined text-[14px]">storefront</span>
+              Campus Tiffin Marketplace
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-heading">
+              Find & Subscribe to Local Kitchens
+            </h1>
+            <p class="text-slate-500 text-sm mt-1 max-w-xl">
+              Compare hygienic home-style tiffin services around your campus, view authentic daily menus, and subscribe with Cash on Delivery.
+            </p>
+          </div>
 
-      ${_hasActiveSub ? `<div class="alert alert-info" style="margin-bottom:16px">You have an active subscription with <strong>${subscription.vendor.name}</strong>. Cancel it first to switch vendors.</div>` : ''}
-
-      <!-- Search + Filter -->
-      <div class="search-bar">
-        <div class="search-input-wrap">
-          <span class="search-icon" aria-hidden="true">🔍</span>
-          <input type="text" id="vendor-search" class="form-control" placeholder="Search by name, location, cuisine..." aria-label="Search vendors" oninput="handleVendorSearch(this.value)" />
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3.5 py-2 rounded-xl" id="results-count">
+              ${vendors.length} kitchens available
+            </span>
+          </div>
         </div>
-        <div class="filter-chips" role="group" aria-label="Filter by cuisine">
-          ${buildFilterChips(vendors)}
+
+        ${_hasActiveSub ? `
+          <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-center gap-3 text-xs text-blue-900 shadow-sm">
+            <span class="material-symbols-outlined text-blue-600 text-[20px]">info</span>
+            <div>
+              You are currently subscribed to <strong>${subscription.vendor.name}</strong>. You can switch vendors anytime via the <strong>One-Click Vendor Switch</strong> on your subscription page.
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Search & Filter Controls -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div class="relative w-full md:w-96">
+            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+            <input type="text" id="vendor-search" class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 transition-all" placeholder="Search by name, locality, cuisine..." aria-label="Search vendors" oninput="handleVendorSearch(this.value)" />
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 w-full md:w-auto" role="group" aria-label="Filter by cuisine">
+            ${buildFilterChips(vendors)}
+          </div>
         </div>
-      </div>
 
-      <!-- Results count -->
-      <p id="results-count" style="font-size:0.82rem;color:var(--color-text-muted);margin-bottom:12px">${vendors.length} vendors found</p>
+        <!-- Vendor Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="vendor-list">
+          ${vendors.map(v => renderVendorCard(v, _hasActiveSub)).join('')}
+        </div>
 
-      <!-- Vendor Grid -->
-      <div class="vendor-grid" id="vendor-list">
-        ${vendors.map(v => renderVendorCard(v, _hasActiveSub)).join('')}
       </div>
     `);
   } catch (err) {
@@ -57,16 +95,20 @@ async function renderFindTiffin() {
 function buildFilterChips(vendors) {
   const cuisines = ['All', ...new Set(vendors.map(v => v.cuisine))];
   return cuisines.map(c => `
-    <button class="chip ${c === 'All' ? 'active' : ''}" onclick="setFilter('${c}')" aria-pressed="${c === 'All'}">${c}</button>
+    <button class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all border ${c === 'All' ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'} chip" 
+      onclick="setFilter('${c}')" aria-pressed="${c === 'All'}">${c}</button>
   `).join('');
 }
 
 function setFilter(cuisine) {
   _activeFilter = cuisine;
-  // Update chip styles
   document.querySelectorAll('.chip').forEach(chip => {
     const isActive = chip.textContent.trim() === cuisine;
-    chip.classList.toggle('active', isActive);
+    if (isActive) {
+      chip.className = 'px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all border bg-emerald-700 text-white border-emerald-700 shadow-sm chip';
+    } else {
+      chip.className = 'px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all border bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 chip';
+    }
     chip.setAttribute('aria-pressed', isActive);
   });
   applyFilters();
@@ -80,12 +122,10 @@ function handleVendorSearch(query) {
 function applyFilters() {
   let filtered = _allVendors;
 
-  // Apply cuisine filter
   if (_activeFilter !== 'All') {
     filtered = filtered.filter(v => v.cuisine === _activeFilter);
   }
 
-  // Apply search query
   if (_searchQuery) {
     filtered = filtered.filter(v =>
       v.name.toLowerCase().includes(_searchQuery) ||
@@ -94,20 +134,19 @@ function applyFilters() {
     );
   }
 
-  // Update count
   const countEl = document.getElementById('results-count');
-  if (countEl) countEl.textContent = filtered.length + ' vendor' + (filtered.length !== 1 ? 's' : '') + ' found';
+  if (countEl) countEl.textContent = filtered.length + ' kitchen' + (filtered.length !== 1 ? 's' : '') + ' found';
 
-  // Update grid
   const grid = document.getElementById('vendor-list');
   if (!grid) return;
 
   if (filtered.length === 0) {
     grid.innerHTML = `
-      <div class="no-results">
-        <div class="nr-icon">🔍</div>
-        <p>No vendors match your search.</p>
-        <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="setFilter('All'); document.getElementById('vendor-search').value=''; _searchQuery='';">Clear Filters</button>
+      <div class="col-span-full text-center py-12 px-4 bg-white rounded-3xl border border-slate-200 shadow-sm">
+        <span class="material-symbols-outlined text-slate-300 text-5xl mb-2">search_off</span>
+        <h3 class="font-bold text-slate-800 text-base">No matching kitchens found</h3>
+        <p class="text-xs text-slate-500 mt-1">Try adjusting your search terms or clearing the filter.</p>
+        <button class="btn btn-outline btn-sm text-xs mt-4" onclick="setFilter('All'); document.getElementById('vendor-search').value=''; _searchQuery='';">Reset Search</button>
       </div>
     `;
   } else {
@@ -117,30 +156,71 @@ function applyFilters() {
 
 function renderVendorCard(vendor, hasActiveSub) {
   const rating = vendor.overall_rating;
+  const vendorImg = getVendorImage(vendor.vendor_id);
+
   return `
-    <div class="vendor-card" id="vendor-card-${vendor.vendor_id}" role="article" aria-label="${vendor.name}">
-      <div class="vendor-card-header">
-        <div>
-          <div class="vendor-name">${vendor.name}</div>
-          <div class="vendor-locale">📍 ${vendor.locality}, ${vendor.city}</div>
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col justify-between overflow-hidden group" id="vendor-card-${vendor.vendor_id}" role="article" aria-label="${vendor.name}">
+      
+      <!-- Top Image Banner -->
+      <div class="relative h-44 w-full overflow-hidden bg-slate-100">
+        <img src="${vendorImg}" alt="${vendor.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='/images/thali_special.png'" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20"></div>
+        
+        <div class="absolute top-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-bold text-emerald-800 shadow-sm">
+          <span class="material-symbols-outlined text-[14px] text-emerald-600">verified</span>
+          Verified
         </div>
-        <div class="vendor-price">From ${formatINR(vendor.min_price)}/mo</div>
+
+        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-bold text-slate-900 shadow-sm flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px] text-amber-500">star</span>
+          ${rating ? rating.toFixed(1) : 'New'}
+        </div>
+
+        <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
+          <div>
+            <h3 class="font-heading font-extrabold text-base leading-tight">${vendor.name}</h3>
+            <div class="text-[11px] text-slate-200 flex items-center gap-1 mt-0.5">
+              <span class="material-symbols-outlined text-[13px]">location_on</span>
+              ${vendor.locality}, ${vendor.city}
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] text-slate-300 uppercase font-semibold">Starts at</div>
+            <div class="font-extrabold text-emerald-300 text-sm">${formatINR(vendor.min_price)}<span class="text-[10px] font-normal text-slate-200">/mo</span></div>
+          </div>
+        </div>
       </div>
-      <div class="vendor-meta">
-        <span>🍽️ ${vendor.cuisine}</span>
-        <span>👥 ${vendor.active_subscribers} students</span>
-        <span>${rating ? '⭐ ' + rating.toFixed(1) : '⭐ New'}</span>
+
+      <!-- Content Area -->
+      <div class="p-5 flex flex-col flex-1 justify-between gap-4">
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-semibold px-2.5 py-0.5 rounded-lg flex items-center gap-1">
+              🍽️ ${vendor.cuisine}
+            </span>
+            <span class="bg-slate-100 text-slate-700 font-semibold px-2.5 py-0.5 rounded-lg flex items-center gap-1">
+              👥 ${vendor.active_subscribers} subscribers
+            </span>
+          </div>
+          <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+            Fresh homestyle preparation with quality ingredients. Daily menu rotation with lunch & dinner options.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 pt-3 border-t border-slate-100">
+          <button class="btn btn-outline btn-sm flex-1 text-xs font-semibold" onclick="navigateTo('vendorDetails', '${vendor.vendor_id}')" id="btn-details-${vendor.vendor_id}">
+            View Plans
+          </button>
+          <button class="btn btn-primary btn-sm flex-1 text-xs font-semibold"
+            ${hasActiveSub ? 'disabled title="Switch via your subscription page"' : ''}
+            onclick="openSubscribeModal('${vendor.vendor_id}')"
+            id="btn-subscribe-${vendor.vendor_id}"
+            aria-label="Subscribe to ${vendor.name}">
+            ${hasActiveSub ? 'Subscribed' : 'Subscribe'}
+          </button>
+        </div>
       </div>
-      <div class="vendor-actions">
-        <button class="btn btn-outline btn-sm" onclick="navigateTo('vendorDetails', '${vendor.vendor_id}')" id="btn-details-${vendor.vendor_id}">View Details</button>
-        <button class="btn btn-primary btn-sm"
-          ${hasActiveSub ? 'disabled title="Cancel current plan first"' : ''}
-          onclick="openSubscribeModal('${vendor.vendor_id}')"
-          id="btn-subscribe-${vendor.vendor_id}"
-          aria-label="Subscribe to ${vendor.name}">
-          ${hasActiveSub ? '🔒 Subscribed' : '+ Subscribe'}
-        </button>
-      </div>
+
     </div>
   `;
 }
