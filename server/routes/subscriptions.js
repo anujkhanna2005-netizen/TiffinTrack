@@ -39,23 +39,25 @@ router.get('/', async (req, res) => {
     const amountDue = s.amount_due !== null && s.amount_due !== undefined ? parseFloat(s.amount_due) : lockedPrice;
 
     // Delivery Accounting
-    const [delivStats] = await db.query(
+    const delivStats = await db.query(
       'SELECT COUNT(*) as delivered_count FROM deliveries WHERE subscription_id = ? AND status = "delivered"',
       [s.sub_id]
     );
-    const [skipRows] = await db.query(
+    const skipRows = await db.query(
       'SELECT skip_id, subscription_id, customer_id, date, reason, refund_amount, refund_credited, applied_to_next_bill, created_at FROM skip_requests WHERE subscription_id = ? ORDER BY date DESC, created_at DESC',
       [s.sub_id]
     );
-    const [recentDelivs] = await db.query(
+    const recentDelivs = await db.query(
       'SELECT delivery_id, date, meal_type, status, notes, delivered_time FROM deliveries WHERE subscription_id = ? ORDER BY date DESC LIMIT 30',
       [s.sub_id]
     );
 
+    const allSkips = Array.isArray(skipRows) ? skipRows : [];
+    const allDelivs = Array.isArray(recentDelivs) ? recentDelivs : [];
     const deliveredCount = (delivStats && delivStats[0]) ? parseInt(delivStats[0].delivered_count, 10) : 0;
-    const skippedCount = (skipRows || []).length;
+    const skippedCount = allSkips.length;
     const daysRemaining = Math.max(0, lockedMeals - deliveredCount - skippedCount);
-    const totalRefundCredited = (skipRows || []).reduce((acc, r) => acc + (parseFloat(r.refund_amount) || 0), 0);
+    const totalRefundCredited = allSkips.reduce((acc, r) => acc + (parseFloat(r.refund_amount) || 0), 0);
 
     res.json({
       sub_id: s.sub_id,
@@ -78,17 +80,17 @@ router.get('/', async (req, res) => {
       delivered_count: deliveredCount,
       skipped_count: skippedCount,
       total_refund_credited: totalRefundCredited,
-      skips: skipRows || [],
-      skip_history: skipRows || [],
-      delivery_history: recentDelivs || [],
+      skips: allSkips,
+      skip_history: allSkips,
+      delivery_history: allDelivs,
       delivery_stats: {
         total_days: lockedMeals,
         delivered_count: deliveredCount,
         skipped_count: skippedCount,
         days_remaining: daysRemaining,
         total_refund_credited: totalRefundCredited,
-        skips: skipRows || [],
-        recent_deliveries: recentDelivs || []
+        skips: allSkips,
+        recent_deliveries: allDelivs
       },
       bread_preference: s.bread_preference || customer.bread_preference || 'standard',
       spice_level: s.spice_level || customer.spice_level || 'medium',
