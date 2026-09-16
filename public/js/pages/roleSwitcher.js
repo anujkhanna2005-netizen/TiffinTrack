@@ -250,57 +250,11 @@ function renderSignupForm() {
   `;
 }
 
-      <div class="form-group">
-        <label for="signup-password" style="font-weight:600">Password</label>
-        <input type="password" id="signup-password" class="form-control" placeholder="At least 6 characters" required minlength="6" />
-      </div>
-
-      <!-- Student Fields -->
-      <div id="fields-student">
-        <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
-          <div class="form-group">
-            <label for="signup-residence" style="font-weight:600">Hostel / Flat</label>
-            <input type="text" id="signup-residence" class="form-control" placeholder="e.g. Ganga Hostel, Block B" />
-          </div>
-          <div class="form-group">
-            <label for="signup-room" style="font-weight:600">Room No</label>
-            <input type="text" id="signup-room" class="form-control" placeholder="e.g. 204" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="signup-locality" style="font-weight:600">Campus Locality</label>
-          <input type="text" id="signup-locality" class="form-control" placeholder="e.g. Campus Area / Indrapuri" />
-        </div>
-      </div>
-
-      <!-- Vendor Fields -->
-      <div id="fields-vendor" style="display:none">
-        <div class="form-group">
-          <label for="signup-address" style="font-weight:600">Kitchen Address</label>
-          <input type="text" id="signup-address" class="form-control" placeholder="e.g. Plot 14, Zone II, MP Nagar" />
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="form-group">
-            <label for="signup-cuisine" style="font-weight:600">Cuisine</label>
-            <input type="text" id="signup-cuisine" class="form-control" placeholder="e.g. North Indian" />
-          </div>
-          <div class="form-group">
-            <label for="signup-vlocality" style="font-weight:600">Locality</label>
-            <input type="text" id="signup-vlocality" class="form-control" placeholder="e.g. MP Nagar" />
-          </div>
-        </div>
-      </div>
-
-      <button type="submit" class="btn btn-primary" id="btn-signup" style="width:100%;margin-top:12px;padding:11px;font-size:0.95rem;font-weight:600">
-        Create Account & Sign In
-      </button>
-    </form>
-  `;
-}
-
 function toggleSignupFields(role) {
-  document.getElementById('fields-student').style.display = (role === 'student' || role === 'customer') ? 'block' : 'none';
-  document.getElementById('fields-vendor').style.display = (role === 'vendor') ? 'block' : 'none';
+  const sf = document.getElementById('fields-student');
+  const vf = document.getElementById('fields-vendor');
+  if (sf) sf.style.display = (role === 'student' || role === 'customer') ? 'block' : 'none';
+  if (vf) vf.style.display = (role === 'vendor') ? 'block' : 'none';
 }
 
 async function handlePortalLogin(e) {
